@@ -1,0 +1,30 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Menu / dropdown</title><link rel="stylesheet" href="_card.css"></head>
+<body class="card" style="padding:16px">
+<style>
+  .menu{
+    width:300px; background:#EBEFF6; border:1px solid #A5B2CA;
+    padding: 10px 0; font:400 16px/1 'NanumSquare', sans-serif; color:#0A1C3C; letter-spacing:.02em;
+  }
+  .row{ display:flex; align-items:center; justify-content:space-between; height:30px; padding: 0 20px }
+  .row:hover{ background:#F1F5FC }
+  .row .kbd{ font:400 12px/1 'NanumSquare', sans-serif; color:#6B7C9B; text-align:right }
+  .sep{ height:1px; background:#A5B2CA; margin: 5px 20px }
+</style>
+<div style="display:flex; gap:24px; flex-wrap:wrap">
+  <div class="menu">
+    <div class="row"><span>열기</span><span class="kbd">Ctrl+O</span></div>
+    <div class="row"><span>저장</span><span class="kbd">Ctrl+S</span></div>
+    <div class="row"><span>다른이름으로 저장</span><span class="kbd">Ctrl+Shift+S</span></div>
+    <div class="sep"></div>
+    <div class="row"><span>최근 프로젝트</span></div>
+    <div class="row"><span>종료</span></div>
+  </div>
+  <div class="menu">
+    <div class="row"><span>장비추가</span></div>
+    <div class="row"><span>장비 연결 설정</span></div>
+    <div class="sep"></div>
+    <div class="row"><span>전체 측정 시작</span><span class="kbd">F6</span></div>
+    <div class="row"><span>전체 측정 중지</span><span class="kbd">F7</span></div>
+  </div>
+</div>
+</body></html>

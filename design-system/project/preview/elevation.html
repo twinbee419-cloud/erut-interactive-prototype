@@ -1,0 +1,28 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Elevation — inset glow</title><link rel="stylesheet" href="_card.css"></head>
+<body class="card">
+<div style="display:flex; gap:24px; align-items:center; flex-wrap: wrap">
+  <div class="col" style="gap:8px">
+    <div style="display:flex; align-items:center; gap:6px; padding:6px 10px; background:#F7F9FC; border-radius:100px; box-shadow: inset 2px 2px 4px rgba(36,80,158,0.4)">
+      <span style="width:14px; height:14px; border-radius:50%; background: radial-gradient(rgba(255,0,94,0) 0%, rgba(255,0,94,0.26) 54%, rgba(255,0,94,0) 100%); position: relative">
+        <span style="position:absolute; left:4px; top:4px; width:6px; height:6px; border-radius:50%; background:#FF005E"></span>
+      </span>
+      <span style="font:700 12px/1 var(--font-kr); color:#0A1C3C; letter-spacing:.02em">장비 미연결</span>
+    </div>
+    <div class="tok">status-pill inset</div>
+    <div class="val">inset 2px 2px 4px rgba(36,80,158,0.4)</div>
+  </div>
+  <div class="col" style="gap:8px">
+    <div style="width:140px; height:48px; background:#F1F5FC; border:1px solid #A5B2CA"></div>
+    <div class="tok">card · flat</div>
+    <div class="val">no drop shadow</div>
+  </div>
+  <div class="col" style="gap:8px">
+    <div style="width:140px; height:48px; background: linear-gradient(rgba(34,133,239,0.1), rgba(34,133,239,0.1)), #F1F5FC; border:1px solid #2285EF"></div>
+    <div class="tok">card · selected</div>
+    <div class="val">10% brand wash + emphasis border</div>
+  </div>
+</div>
+<div style="margin-top:14px; font:700 12px/1.4 var(--font-kr); color:var(--content-low); letter-spacing: var(--letterspacing-default)">
+  ERUT is flat. The only depth cue is the inset glow inside status pills.
+</div>
+</body></html>

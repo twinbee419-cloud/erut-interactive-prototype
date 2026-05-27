@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <title>ERUT — Ultrasonic Monitoring System (Interactive Prototype)</title>
+  <link rel="stylesheet" href="../../colors_and_type.css"/>
+  <link rel="stylesheet" href="kit.css"/>
+  <style>
+    html, body { margin:0; padding:0; background:#1B2237; min-height:100vh; overflow:auto; }
+    body { display:flex; align-items:flex-start; justify-content:center; }
+    .stage { width:1920px; height:1080px; transform-origin: top center; flex: none; margin: 24px 0; }
+  </style>
+</head>
+<body>
+
+<!-- React + Babel pinned per project conventions -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="Icons.jsx"></script>
+<script type="text/babel" src="Controls.jsx"></script>
+<script type="text/babel" src="Chrome.jsx"></script>
+<script type="text/babel" src="Screens.jsx"></script>
+
+<div class="stage" id="stage">
+  <div id="app"></div>
+</div>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// Canonical flow (per ServiceFlow_Analysis SSOT):
+// [0] project → [1] main → [1-1] dashboard → [2] device → [11] realtime
+//   (장비 추가: [1] → connect → [1] · failed 시 connect 재진입)
+
+const TITLE_BY_SCREEN = {
+  project:   "ERUT - Ultrasonic Monitoring System",
+  connect:   "ERUT - Ultrasonic Monitoring System  ·  장비 연결",
+  main:      "ERUT - Ultrasonic Monitoring System  ·  SK에너지 울산 #2 라인",
+  dashboard: "ERUT - Ultrasonic Monitoring System  ·  PIPE-A-204 (검사 대상)",
+  device:    "ERUT - Ultrasonic Monitoring System  ·  MCuF-001 (장비 상세)",
+  gate:      "ERUT - Ultrasonic Monitoring System  ·  CH 04 Gate 설정",
+  realtime:  "ERUT - Ultrasonic Monitoring System  ·  실시간 스캔 · PIPE-A-204 · 세션 #047",
+  manage:    "ERUT - Ultrasonic Monitoring System  ·  검사 대상 관리",
+  settings:  "ERUT - Ultrasonic Monitoring System  ·  장비 연결 설정",
+};
+
+// Screens where the device is "connected" (status bar green LEDs)
+const CONNECTED_SCREENS = new Set(["main", "dashboard", "device", "gate", "realtime", "manage", "settings"]);
+
+function App() {
+  const [screen, setScreen]                   = useState("project");
+  const [selectedTarget, setSelectedTarget]   = useState("PIPE-A-204");
+  const [selectedChannel, setSelectedChannel] = useState(null);
+  const [pickedProject, setPickedProject]     = useState(null);
+  const [showNewProject, setShowNewProject]   = useState(false);
+
+  const [menuOpen, setMenuOpen]     = useState(null);
+  const [activeMenu, setActiveMenu] = useState(null);
+  const [toolKey, setToolKey]       = useState(null);
+
+  // 측정 상태 (lifted up from RealtimeScan — toolbar에서도 표시)
+  const [measureState, setMeasureState] = useState("measuring"); // "stopped" | "measuring" | "paused"
+  const [elapsed, setElapsed]           = useState(272);          // seconds
+
+  // [4] 장비 연결 설정 진입 시 sub-view 지정용 (예: + 장비 추가 → mc-add)
+  const [settingsInitialSubView, setSettingsInitialSubView] = useState(null);
+  // settings 화면을 떠날 때 초기 sub-view 리셋 (다음 진입 시 list부터)
+  useEffect(() => {
+    if (screen !== "settings") setSettingsInitialSubView(null);
+  }, [screen]);
+
+  // 토스트 (gear 아이콘 등 미구현 항목 안내용 — 메인 기획 보류)
+  const [toast, setToast] = useState(null);
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const deviceConnected = CONNECTED_SCREENS.has(screen);
+  const mqttConnected   = CONNECTED_SCREENS.has(screen);
+
+  function closeMenus() { setMenuOpen(null); setActiveMenu(null); }
+  function goto(s) { closeMenus(); setScreen(s); }
+
+  const fileMenu = [
+    { label: "프로젝트 열기", shortcut: "Ctrl+O", onClick: () => goto("project") },
+    { label: "저장",          shortcut: "Ctrl+S" },
+    { label: "다른 이름으로 저장", shortcut: "Ctrl+Shift+S" },
+    { divider: true },
+    { label: "최근 프로젝트" },
+    { label: "보고서 출력", shortcut: "Ctrl+P" },
+    { divider: true },
+    { label: "종료", shortcut: "Alt+F4" },
+  ];
+  const deviceMenu = [
+    { label: "장비 추가",       onClick: () => goto("settings") },
+    { label: "장비 연결 설정",  onClick: () => goto("settings") },
+    { divider: true },
+    { label: "전체 연결" },
+    { label: "전체 연결 해제" },
+    { divider: true },
+    { label: "전체 측정 시작", shortcut: "F6", onClick: () => goto("realtime") },
+    { label: "전체 측정 중지", shortcut: "F7" },
+  ];
+
+  const tools = [
+    { key: "home",   label: "메인 페이지", icon: <window.EIcon.Home/> },
+    { divider: true },
+    { key: "add",    label: "장비 추가",   icon: <window.EIcon.AddMachine/> },
+    { divider: true },
+    { key: "play",   label: "측정 시작",   icon: <window.EIcon.Play/> },
+    { key: "pause",  label: "측정 중지",   icon: <window.EIcon.Pause/> },
+    { divider: true },
+    { key: "set",    label: "설정",        icon: <window.EIcon.Setting/> },
+  ];
+
+  const navItems = [
+    { id: "project",   label: "[0] 프로젝트" },
+    { id: "main",      label: "[1] 메인" },
+    { id: "dashboard", label: "[1-1] 대시보드" },
+    { id: "device",    label: "[2] 장비 상세" },
+    { id: "gate",      label: "[3] Gate 설정" },
+    { id: "settings",  label: "[4] 장비 연결 설정" },
+    { id: "manage",    label: "[6] 검사 대상 관리" },
+    { id: "realtime",  label: "[11] 실시간" },
+  ];
+
+  // ===== Keyboard =====
+  useEffect(() => {
+    const onKey = (e) => {
+      const tag = (e.target && e.target.tagName) || "";
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.key === "Escape") { closeMenus(); setShowNewProject(false); return; }
+      if (e.key === "F6") { e.preventDefault(); goto("realtime"); setMeasureState("measuring"); }
+      if (screen === "realtime") {
+        if (e.key === "F7") { e.preventDefault(); setMeasureState("stopped"); }
+        if (e.code === "Space") { e.preventDefault(); setMeasureState(s => s === "measuring" ? "paused" : "measuring"); }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [screen]);
+
+  // 측정 중일 때만 경과 시간 카운트업
+  useEffect(() => {
+    if (measureState !== "measuring") return;
+    const t = setInterval(() => setElapsed(e => e + 1), 1000);
+    return () => clearInterval(t);
+  }, [measureState]);
+
+  // 시간 포맷터 + 잔여 시간
+  const fmtTime = (sec) => {
+    const m = Math.floor(sec / 60).toString().padStart(2, "0");
+    const s = (sec % 60).toString().padStart(2, "0");
+    return m + ":" + s;
+  };
+  const remaining = Math.max(0, 600 - elapsed); // 10분 기준 세션
+
+  // toolbar 우측 측정 상태 hint (realtime 화면 전용)
+  let toolbarHint = null;
+  if (screen === "realtime") {
+    const c = measureState === "measuring" ? "var(--system-error)"
+            : measureState === "paused"    ? "var(--system-caution)"
+            : "var(--content-low)";
+    toolbarHint = (
+      <span className="erut-tb-hint" style={{ color: c, display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <span style={{
+          display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: c,
+          ...(measureState === "measuring" ? { animation: "erut-sensor-breathe 1.4s ease-in-out infinite", transformOrigin: "center" } : {})
+        }}/>
+        {measureState === "measuring" && <span>측정 중 · {fmtTime(elapsed)} 경과 · 잔여 {fmtTime(remaining)}</span>}
+        {measureState === "paused"    && <span>일시정지 · {fmtTime(elapsed)} 경과 (멈춤)</span>}
+        {measureState === "stopped"   && <span>정지</span>}
+      </span>
+    );
+  }
+
+  const handleMenuPick = (label) => {
+    setActiveMenu(activeMenu === label ? null : label);
+    setMenuOpen(
+      label === "파일" ? (menuOpen === "file" ? null : "file")
+      : label === "장비" ? (menuOpen === "device" ? null : "device")
+      : null
+    );
+  };
+
+  const handleToolPick = (k) => {
+    setToolKey(k);
+    if (k === "home")  goto("main");
+    if (k === "add")   goto("settings");
+    if (k === "play")  {
+      setMeasureState("measuring");
+      if (screen !== "realtime") { setSelectedChannel(null); goto("realtime"); }
+    }
+    if (k === "pause") setMeasureState("paused");
+    if (k === "set")   setToast("환경 설정 — 추후 메인 기획에서 검토 예정");
+  };
+
+  const handleMenuItemClick = (item) => {
+    if (item.onClick) item.onClick();
+    closeMenus();
+  };
+
+  return (
+    <div className="erut-window">
+      <window.TitleBar title={TITLE_BY_SCREEN[screen] || TITLE_BY_SCREEN.project}/>
+      <div style={{ position: "relative" }}>
+        <window.MenuBar
+          items={["파일","장비","설정","도움말"]}
+          active={activeMenu}
+          onPick={handleMenuPick}
+        />
+        {menuOpen === "file" && (
+          <div style={{ position: "absolute", left: 10, top: 40, zIndex: 50 }}>
+            <window.ContextMenu items={fileMenu.map(i => i.divider ? i : { ...i, onClick: () => handleMenuItemClick(i) })}/>
+          </div>
+        )}
+        {menuOpen === "device" && (
+          <div style={{ position: "absolute", left: 60, top: 40, zIndex: 50 }}>
+            <window.ContextMenu items={deviceMenu.map(i => i.divider ? i : { ...i, onClick: () => handleMenuItemClick(i) })}/>
+          </div>
+        )}
+      </div>
+      <window.Toolbar items={tools} activeKey={toolKey} onPick={handleToolPick} hint={toolbarHint}/>
+      <div className="erut-window__content" onClick={closeMenus} style={{ position: "relative" }}>
+        {screen === "project" && (
+          <window.ProjectPicker
+            onPick={(pid) => { setPickedProject(pid); goto("main"); }}
+            onNew={() => setShowNewProject(true)}
+            onLoad={() => goto("main")}
+          />
+        )}
+        {screen === "connect" && (
+          <window.EquipmentConnect onContinue={() => goto("main")}/>
+        )}
+        {screen === "main" && (
+          <window.MainScreen
+            onPickTarget={(id) => { setSelectedTarget(id); setSelectedChannel(null); goto("dashboard"); }}
+            onAddTarget={() => goto("manage")}
+            onAddDevice={() => { setSettingsInitialSubView("mc-add"); goto("settings"); }}
+            onOpenDevice={() => { setSelectedChannel(null); goto("device"); }}
+            onChangeProject={() => goto("project")}
+          />
+        )}
+        {screen === "dashboard" && (
+          <window.InspectionDashboard
+            targetId={selectedTarget}
+            onBack={() => goto("main")}
+            onOpenDevice={(channel) => { setSelectedChannel(channel); goto("device"); }}
+            onStartInspection={() => { setSelectedChannel(null); goto("device"); }}
+            onOpenManage={() => goto("manage")}
+          />
+        )}
+        {screen === "device" && (
+          <window.DeviceDetail
+            targetId={selectedTarget}
+            focusChannel={selectedChannel}
+            onBack={() => goto("dashboard")}
+            onStartMeasure={(channel) => { setSelectedChannel(channel); goto("realtime"); }}
+            onOpenGate={(channel) => { setSelectedChannel(channel); goto("gate"); }}
+          />
+        )}
+        {screen === "gate" && (
+          <window.GateSetup
+            channel={selectedChannel || "ch04"}
+            onBack={() => goto("device")}
+            onPrevChannel={() => {}}
+            onNextChannel={() => {}}
+          />
+        )}
+        {screen === "manage" && (
+          <window.TargetManage
+            targetId={selectedTarget}
+            onBack={() => goto("main")}
+          />
+        )}
+        {screen === "settings" && (
+          <window.EquipmentSettings
+            initialMenu="mc"
+            initialSubView={settingsInitialSubView}
+            onBack={() => goto("main")}
+          />
+        )}
+        {screen === "realtime" && (
+          <window.RealtimeScan
+            targetId={selectedTarget}
+            channel={selectedChannel}
+            state={measureState}
+            setState={setMeasureState}
+            elapsed={elapsed}
+            setElapsed={setElapsed}
+            onBack={() => goto("device")}
+          />
+        )}
+
+        {/* 새 프로젝트 모달 */}
+        {showNewProject && (
+          <window.NewProjectModal
+            onClose={() => setShowNewProject(false)}
+            onCreate={() => { setShowNewProject(false); goto("main"); }}
+          />
+        )}
+      </div>
+      <window.StatusBar
+        deviceConnected={deviceConnected}
+        mqttConnected={mqttConnected}
+        prf={deviceConnected ? "2,000 Hz" : "---"}
+        temp={deviceConnected ? "23.4 °C" : "---"}
+        version={deviceConnected ? "v1.4.2" : "v0.0.0.0"}
+      />
+
+      {/* Mini prototype navigator */}
+      <div className="erut-protonav">
+        <div className="erut-protonav__label">화면</div>
+        {navItems.map((n) => (
+          <button
+            key={n.id}
+            className={screen === n.id ? "on" : ""}
+            onClick={() => { setSelectedChannel(null); goto(n.id); }}
+          >{n.label}</button>
+        ))}
+      </div>
+
+      {/* 토스트 (미구현 항목 안내) — 상단 중앙 · z-index 매우 높음 */}
+      {toast && (
+        <div style={{
+          position: "absolute", left: "50%", top: 140, transform: "translateX(-50%)",
+          background: "var(--content-high)", color: "var(--on-primary)",
+          padding: "14px 24px",
+          font: "700 14px/1.4 var(--font-kr)", letterSpacing: ".02em",
+          border: "2px solid var(--content-medium)",
+          zIndex: 2000,
+          minWidth: 340, textAlign: "center",
+          animation: "erut-fade-in 200ms ease-out",
+        }}>{toast}</div>
+      )}
+
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("app"));
+root.render(<App/>);
+
+function fit() {
+  const stage = document.getElementById("stage");
+  if (!stage) return;
+  const wAvail = window.innerWidth - 48;
+  const scale  = Math.min(1, wAvail / 1920);
+  stage.style.transform = "scale(" + scale + ")";
+  stage.style.marginBottom = (24 + (1080 * (1 - scale))) + "px";
+}
+window.addEventListener("resize", fit);
+fit();
+setTimeout(fit, 200);
+</script>
+</body>
+</html>

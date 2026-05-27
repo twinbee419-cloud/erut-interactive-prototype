@@ -1,0 +1,47 @@
+<!doctype html><html><head><meta charset="utf-8"><title>File menu &amp; toolbar</title><link rel="stylesheet" href="_card.css"></head>
+<body class="card" style="padding:16px; background: var(--surface-base)">
+<style>
+  .bar{ height:40px; background:var(--surface-subtle-1); border: 0; border-bottom: 1px solid var(--border-medium); display:flex; align-items:center; padding:0 10px }
+  /* Both bars: buttons have no fill and no border in enabled.
+     Hover uses overlay/medium (rgba(0,0,0,0.10)). */
+  .menu, .tool{
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: var(--content-high);
+  }
+  .menu{
+    display:inline-flex; align-items:center; height:40px; padding:0 12px;
+    font:400 14px/1 'NanumSquare', sans-serif; letter-spacing:.02em;
+  }
+  .menu:hover{ background: var(--overlay-medium); }
+  .tool{
+    width:64px; height:40px;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .tool:hover{ background: var(--overlay-medium); }
+  .sep{ width:1px; height:20px; background:var(--border-low); margin: 0 4px }
+</style>
+<div class="bar" style="margin-bottom:6px">
+  <button class="menu">파일</button>
+  <button class="menu">장비</button>
+  <button class="menu">설정</button>
+  <button class="menu">도움말</button>
+</div>
+<div class="bar">
+  <button class="tool" title="저장">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v6h8V4"/><rect x="8" y="13" width="8" height="6"/></svg>
+  </button>
+  <span class="sep"></span>
+  <button class="tool" title="장비추가">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="14" height="12"/><line x1="19" y1="9" x2="19" y2="15"/><line x1="22" y1="11" x2="22" y2="13"/><line x1="16" y1="12" x2="20" y2="12"/></svg>
+  </button>
+  <span class="sep"></span>
+  <button class="tool" title="설정">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+  </button>
+</div>
+<div style="margin-top:10px; font:700 12px/1.4 var(--font-kr); color:var(--content-low); letter-spacing:.02em">
+  Buttons in both bars have no fill, no border. Hover only: <code>overlay/medium</code> (<code>rgba(0,0,0,0.10)</code>).
+</div>
+</body></html>

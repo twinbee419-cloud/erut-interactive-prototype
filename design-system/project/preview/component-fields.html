@@ -1,0 +1,48 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Fields</title><link rel="stylesheet" href="_card.css"></head>
+<body class="card" style="background: var(--surface-base)">
+<style>
+  .fld{ width:240px; height:40px; padding:8px 10px; background:var(--surface-base); border:1px solid var(--border-high);
+        font:400 14px/1 var(--font-kr); color:var(--content-high); box-sizing:border-box; letter-spacing:.02em; outline:none }
+  .fld::placeholder{ color: var(--content-low); }
+  .fld:focus{ border-color: var(--border-emphasis) }
+  .fld.disabled{ background:var(--surface-subtle-1); color:var(--surface-disabled); border-color:var(--surface-disabled) }
+  .drop{ width:240px; height:40px; padding:8px 10px; background:var(--surface-base); border:1px solid var(--border-high);
+         display:flex; align-items:center; justify-content:space-between; box-sizing:border-box;
+         font:400 14px/1 var(--font-kr); color:var(--content-high); letter-spacing:.02em }
+  .caret{ width:14px; height:14px; color:var(--content-low) }
+  .lbl-row{ display:flex; gap:18px; align-items:center; flex-wrap:wrap }
+  .lbl{ font:700 11px/1 var(--font-kr); color:var(--content-low); text-transform:uppercase; letter-spacing:.04em }
+</style>
+<div style="display:flex; flex-direction:column; gap:18px">
+  <div class="lbl-row">
+    <div style="display:flex; flex-direction:column; gap:6px">
+      <input class="fld" placeholder="입력해주세요." />
+      <span class="lbl">placeholder · basic/content/low</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:6px">
+      <input class="fld" value="UT-001" />
+      <span class="lbl">filled · basic/content/high</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:6px">
+      <input class="fld disabled" value="비활성" disabled />
+      <span class="lbl">disabled</span>
+    </div>
+  </div>
+  <div class="lbl-row">
+    <div style="display:flex; flex-direction:column; gap:6px">
+      <div class="drop">
+        <span>고정형 장비</span>
+        <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <span class="lbl">select · default</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:6px">
+      <div class="drop" style="border-color:var(--border-emphasis)">
+        <span style="color:var(--brand-primary)">이동형 장비</span>
+        <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="1.5"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <span class="lbl">select · open</span>
+    </div>
+  </div>
+</div>
+</body></html>

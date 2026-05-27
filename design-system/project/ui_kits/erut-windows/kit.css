@@ -1,0 +1,677 @@
+/* ============================================================
+   ERUT Windows UI Kit · component styles
+   Tokens come from ../../colors_and_type.css (linked first).
+   Naming: BEM-ish, all components prefixed erut-*
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+/* ---------- Frame ---------- */
+.erut-window{
+  width: 1920px; height: 1080px;
+  background: var(--surface-base);
+  color: var(--content-high);
+  font-family: var(--font-kr);
+  letter-spacing: var(--letterspacing-default);
+  display: flex; flex-direction: column;
+  border: 1px solid var(--border-medium);
+  position: relative;
+}
+.erut-window__content{
+  flex: 1; min-height: 0;
+  background: var(--surface-base);
+  padding: 20px 40px;
+  position: relative; overflow: hidden;
+}
+
+/* ---------- Title bar ---------- */
+.erut-titlebar{
+  height: 40px;
+  background: var(--content-medium);
+  color: var(--content-inverse);
+  display: flex; align-items: center;
+  padding: 0 0 0 12px;
+  position: relative;
+  gap: 10px;
+}
+.erut-titlebar__title{
+  position: absolute; left: 0; right: 0; text-align: center;
+  font: 700 16px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-inverse);
+  pointer-events: none;
+}
+.erut-winbtn{
+  width: 46px; height: 40px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: 0; box-shadow: none; padding: 0;
+  cursor: pointer;
+  color: var(--content-inverse);
+}
+.erut-winbtn:hover{ background: var(--overlay-low); box-shadow: none; }
+
+/* ---------- Bars (menu / toolbar) ---------- */
+.erut-bar{
+  height: 40px;
+  background: var(--surface-subtle-1);
+  border: 0;
+  border-bottom: 1px solid var(--border-medium);
+  display: flex; align-items: center;
+  padding: 0 10px;
+}
+.erut-menubar{ }
+.erut-menu{
+  height: 40px; padding: 0 12px;
+  background: transparent; border: 0; cursor: pointer;
+  font: 400 14px/1 var(--font-kr-2);
+  letter-spacing: var(--letterspacing-default);
+  color: var(--content-high);
+}
+.erut-menu:hover, .erut-menu.is-active{ background: var(--overlay-medium); }
+
+.erut-toolbar .erut-tb{
+  width: 64px; height: 40px;
+  background: transparent; border: 0; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--content-high);
+}
+.erut-toolbar .erut-tb:hover{ background: var(--overlay-medium); }
+.erut-toolbar .erut-tb.is-active{
+  color: var(--brand-primary);
+  background: var(--overlay-medium);
+}
+.erut-tb-sep{ width: 1px; height: 20px; background: var(--border-low); margin: 0 4px; }
+.erut-tb-hint{
+  font: 700 12px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-low);
+  padding-right: 10px;
+}
+
+/* ---------- Status bar ---------- */
+.erut-statusbar{
+  height: 46px;
+  background: var(--surface-subtle-1);
+  border: 1px solid var(--border-medium);
+  backdrop-filter: blur(100px);
+  display: flex; align-items: center;
+  gap: 20px; padding: 0 10px;
+}
+.erut-statusbar__text{
+  font: 700 12px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-low);
+}
+.erut-statusbar__grip{
+  color: var(--content-low);
+  display: inline-flex; align-items: center;
+}
+
+/* ---------- Status pill ---------- */
+.erut-pill{
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px;
+  background: var(--surface-base);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--tag-shadow-inset);
+  font: 700 12px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-high);
+}
+.erut-led{
+  position: relative; width: 14px; height: 14px; border-radius: 50%;
+  flex: none;
+}
+.erut-led__halo{ position: absolute; inset: 0; border-radius: 50%; }
+.erut-led__dot{ position: absolute; left: 4px; top: 4px; width: 6px; height: 6px; border-radius: 50%; }
+.erut-led.is-red   .erut-led__halo{ background: radial-gradient(rgba(255,0,94,0) 0%, rgba(255,0,94,0.26) 54%, rgba(255,0,94,0) 100%); }
+.erut-led.is-red   .erut-led__dot { background: var(--system-error); }
+.erut-led.is-green .erut-led__halo{ background: radial-gradient(rgba(24,227,57,0) 0%, rgba(24,227,57,0.26) 54%, rgba(24,227,57,0) 100%); }
+.erut-led.is-green .erut-led__dot { background: var(--system-success); }
+
+/* ---------- Buttons ---------- */
+.erut-btn{
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 45px; padding: 12px 20px; min-width: 160px;
+  background: var(--surface-base);
+  border: 1px solid var(--border-high); /* basic/border/high */
+  color: var(--content-high);
+  font: 700 14px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  cursor: pointer;
+}
+/* All non-disabled buttons share the same hover treatment: a 10% black
+   overlay (overlay/medium) layered over whatever the resting fill is. */
+.erut-btn:hover{
+  background-image: linear-gradient(var(--overlay-medium), var(--overlay-medium));
+}
+.erut-btn--active{
+  background: linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-subtle-2);
+  border-color: var(--border-emphasis);
+  color: var(--content-emphasis);
+}
+.erut-btn--active:hover{
+  background:
+    linear-gradient(var(--overlay-medium), var(--overlay-medium)),
+    linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)),
+    var(--surface-subtle-2);
+}
+.erut-btn--subtle{
+  background: var(--surface-base);
+  border-color: var(--border-medium);
+  color: var(--brand-primary);
+}
+.erut-btn--subtle:hover{
+  background:
+    linear-gradient(var(--overlay-medium), var(--overlay-medium)),
+    var(--surface-base);
+}
+.erut-btn--disabled{
+  background: var(--surface-subtle-1);
+  color: var(--surface-disabled);
+  border-color: var(--surface-disabled);
+  cursor: not-allowed;
+}
+.erut-btn--disabled:hover{ background-image: none; }
+.erut-btn--m{ min-width: 160px; }
+.erut-btn--l{ min-width: 315px; }
+.erut-btn--sm{ height: 32px; min-width: 80px; padding: 6px 12px; font-size: 13px; }
+
+.erut-btn--emphasis{
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--on-primary);
+}
+.erut-btn--emphasis:hover{
+  background:
+    linear-gradient(var(--overlay-medium), var(--overlay-medium)),
+    var(--brand-primary);
+}
+
+/* ---------- Fields ---------- */
+.erut-field{
+  height: 40px; padding: 8px 10px;
+  background: var(--surface-base);
+  border: 1px solid #697893;
+  font: 400 14px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-high);
+  outline: none;
+}
+.erut-field::placeholder{ color: var(--content-low); }
+.erut-field:focus{ border-color: var(--border-emphasis); }
+.erut-field.is-disabled{
+  background: var(--surface-subtle-1);
+  color: var(--surface-disabled);
+  border-color: var(--surface-disabled);
+}
+
+/* ---------- Select ---------- */
+.erut-select__trigger{
+  width: 100%; height: 40px; padding: 8px 10px;
+  background: var(--surface-base);
+  border: 1px solid #697893;
+  display: flex; align-items: center; justify-content: space-between;
+  font: 400 14px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-high);
+  cursor: pointer;
+}
+.erut-select__trigger.is-open{ border-color: var(--border-emphasis); }
+.erut-select__menu{
+  position: absolute; top: 41px; left: 0; right: 0; z-index: 30;
+  background: var(--surface-subtle-1);
+  border: 1px solid var(--border-medium);
+  display: flex; flex-direction: column; padding: 10px 0;
+}
+.erut-select__opt{
+  height: 30px; padding: 0 16px;
+  background: transparent; border: 0; text-align: left; cursor: pointer;
+  font: 400 14px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-high);
+}
+.erut-select__opt:hover{ background: var(--surface-subtle-2); color: var(--brand-primary); }
+
+/* ---------- Checkbox ---------- */
+.erut-cb{ display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.erut-cb__box{
+  width: 16px; height: 16px;
+  background: var(--surface-base);
+  border: 1px solid #697893;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.erut-cb__box.is-on{ background: var(--brand-primary); border-color: var(--brand-primary); }
+.erut-cb__label{
+  font: 700 14px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-medium);
+}
+
+/* ---------- Toggle Switch ---------- */
+.erut-toggle{ display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.erut-toggle__track{
+  position: relative;
+  width: 36px; height: 20px;
+  background: var(--surface-subtle-1);
+  border: 1px solid var(--border-high);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+.erut-toggle__thumb{
+  position: absolute;
+  top: 1px; left: 1px;
+  width: 16px; height: 16px;
+  background: var(--border-high);
+}
+.erut-toggle__track.is-on{
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+.erut-toggle__track.is-on .erut-toggle__thumb{
+  left: 17px;
+  background: var(--on-primary);
+}
+.erut-toggle__track.is-disabled{
+  background: var(--surface-disabled);
+  border-color: var(--surface-disabled);
+  cursor: not-allowed;
+}
+.erut-toggle__track.is-disabled .erut-toggle__thumb{
+  background: var(--content-low);
+}
+.erut-toggle__label{
+  font: 700 14px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-medium);
+}
+.erut-toggle__label--sm{ font-size: 12px; }
+
+/* ---------- Card ---------- */
+.erut-card{
+  background: var(--surface-subtle-2);
+  border: 1px solid var(--border-medium);
+  padding: 64px 40px;
+  display: flex; flex-direction: column;
+  justify-content: space-between; align-items: center;
+}
+.erut-card.is-selected{
+  background: linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-subtle-2);
+  border-color: var(--border-emphasis);
+}
+
+/* ---------- Context / dropdown menu ---------- */
+.erut-cmenu{
+  background: var(--surface-subtle-1);
+  border: 1px solid var(--border-medium);
+  padding: 10px 0;
+  color: var(--content-high);
+  font-family: var(--font-kr-2);
+  letter-spacing: var(--letterspacing-default);
+}
+.erut-cmenu__row{
+  display: flex; align-items: center; justify-content: space-between;
+  height: 30px; padding: 0 20px;
+  font: 400 16px/1 var(--font-kr-2);
+  cursor: pointer;
+}
+.erut-cmenu__row:hover{ background: var(--surface-subtle-2); color: var(--brand-primary); }
+.erut-cmenu__kbd{
+  font: 400 12px/1 var(--font-kr-2);
+  color: var(--content-low);
+}
+.erut-cmenu__sep{ height: 1px; background: var(--border-medium); margin: 5px 20px; }
+
+/* ---------- Badge ---------- */
+.erut-badge{
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 6px 12px;
+  font: 700 14px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  background: var(--brand-primary); color: var(--on-primary);
+}
+.erut-badge--soft{
+  background: rgba(34,133,239,0.12); color: var(--brand-primary);
+}
+
+/* ---------- Hero (heading + sub) ---------- */
+.erut-hero{ display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.erut-hero__h{ font: 700 24px/1 var(--font-kr); letter-spacing: var(--letterspacing-default); color: var(--content-high); text-align: center; }
+.erut-hero__sub{ font: 700 18px/1 var(--font-kr); letter-spacing: var(--letterspacing-default); color: var(--content-low); text-align: center; }
+
+/* ---------- Equipment row (장비 연결) ---------- */
+.erut-eqrow{
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px 20px;
+  background: var(--surface-subtle-2);
+  border: 1px solid var(--border-medium);
+}
+.erut-eqrow .erut-eqrow__title{ font: 700 16px/1 var(--font-kr); letter-spacing: var(--letterspacing-default); color: var(--content-high); }
+.erut-eqrow .erut-eqrow__meta { font: 400 14px/1.4 var(--font-kr); letter-spacing: var(--letterspacing-default); color: var(--content-low); }
+
+/* ---------- Side panel (left list / right detail) ---------- */
+.erut-panel{
+  background: var(--surface-base);
+  border: 1px solid var(--border-medium);
+  display: flex; flex-direction: column;
+}
+.erut-panel__header{
+  height: 40px;
+  background: var(--surface-subtle-1);
+  border-bottom: 1px solid var(--border-medium);
+  display: flex; align-items: center; padding: 0 16px;
+  font: 700 14px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-high);
+}
+.erut-panel__body{ padding: 12px 16px; flex: 1; min-height: 0; overflow: hidden; }
+
+/* ---------- Method row (Equipment Connect) ---------- */
+.erut-method{
+  display: flex; align-items: center; gap: 20px;
+  padding: 20px 24px;
+  background: var(--surface-subtle-2);
+  border: 1px solid var(--border-medium);
+  cursor: pointer;
+  transition: background-color 60ms linear, border-color 60ms linear;
+}
+.erut-method.is-hover{
+  background: linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-subtle-2);
+  border-color: var(--border-emphasis);
+}
+.erut-method__icon{
+  width: 40px; height: 40px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--content-medium);
+}
+.erut-method.is-hover .erut-method__icon{ color: var(--brand-primary); }
+.erut-method__body{ display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.erut-method__title{ font: 700 16px/1 var(--font-kr); letter-spacing: var(--letterspacing-default); color: var(--content-high); }
+.erut-method.is-hover .erut-method__title{ color: var(--brand-primary); }
+.erut-method__meta{ font: 400 14px/1.4 var(--font-kr); letter-spacing: var(--letterspacing-default); color: var(--content-low); }
+
+/* ---------- Brand mark (used in TitleBar) ---------- */
+.erut-titlebar__brand{ width: 24px; height: 24px; flex: none; }
+.erut-titlebar__brand img{ width: 24px; height: 24px; display: block; }
+
+/* ---------- Layout helpers ---------- */
+.erut-vstack{ display:flex; flex-direction:column; }
+.erut-hstack{ display:flex; flex-direction:row; }
+.erut-center{ justify-content: center; align-items: center; }
+
+/* ============================================================
+   NEW (2026-05-26) — Interactive Prototype Extensions
+   APPEND-ONLY. No existing class above this line was modified.
+   ============================================================ */
+
+/* ---------- Page transition ---------- */
+.erut-page-enter{ animation: erut-page-in 220ms ease-out; }
+@keyframes erut-page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Modal Dialog ---------- */
+.erut-modal__backdrop{
+  position: absolute; inset: 0;
+  background: rgba(10,28,60,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+  animation: erut-fade-in 200ms ease-out;
+}
+.erut-modal{
+  background: var(--surface-base);
+  border: 1px solid var(--border-medium);
+  min-width: 520px; max-width: 760px;
+  display: flex; flex-direction: column;
+  animation: erut-modal-in 200ms ease-out;
+}
+.erut-modal__header{
+  height: 48px; background: var(--content-medium); color: var(--content-inverse);
+  display: flex; align-items: center; padding: 0 20px;
+  font: 700 16px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+}
+.erut-modal__body{ padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+.erut-modal__footer{
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 16px 24px; border-top: 1px solid var(--border-low);
+  background: var(--surface-subtle-1);
+}
+@keyframes erut-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes erut-modal-in {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Sensor breathe (warning · 차분한 호흡) ---------- */
+@keyframes erut-sensor-breathe {
+  0%, 100% { transform: scale(1);   opacity: 1;    }
+  50%      { transform: scale(1.3); opacity: 0.85; }
+}
+.erut-sensor-breathe{
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: erut-sensor-breathe 2s ease-in-out infinite;
+}
+
+/* ---------- Channel cell (64ch grid) ---------- */
+.erut-ch-cell{
+  background: var(--surface-base);
+  border: 1px solid var(--border-medium);
+  padding: 6px 8px;
+  display: flex; flex-direction: column; gap: 3px;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 100ms ease-out, border-color 100ms ease-out;
+}
+.erut-ch-cell:hover{ background: var(--surface-subtle-2); }
+.erut-ch-cell__id{ font: 700 11px/1 var(--font-kr); letter-spacing: .02em; color: var(--content-medium); }
+.erut-ch-cell__val{ font: 700 13px/1 'Consolas','Menlo',monospace; color: var(--content-high); }
+.erut-ch-cell.is-active{
+  background: linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-subtle-2);
+  border-color: var(--border-emphasis);
+}
+.erut-ch-cell.is-active .erut-ch-cell__id{ color: var(--brand-primary); }
+.erut-ch-cell.is-warning{
+  border-color: var(--system-caution);
+  background: rgba(255,146,0,0.06);
+}
+.erut-ch-cell.is-warning .erut-ch-cell__id{ color: var(--system-caution); }
+.erut-ch-cell.is-error{
+  border-color: var(--system-error);
+  background: rgba(255,0,94,0.06);
+}
+.erut-ch-cell.is-focused{
+  animation: erut-focus-pulse 1.2s ease-out;
+}
+@keyframes erut-focus-pulse{
+  0%   { box-shadow: 0 0 0 0 rgba(34,133,239,0.7); }
+  60%  { box-shadow: 0 0 0 10px rgba(34,133,239,0.0); }
+  100% { box-shadow: 0 0 0 0 rgba(34,133,239,0); }
+}
+
+/* ---------- Roll indicator (측정 중) ---------- */
+@keyframes erut-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.erut-roll{
+  display: inline-block;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: conic-gradient(from 0deg, var(--system-error) 0deg, rgba(255,0,94,0.08) 270deg, var(--system-error) 360deg);
+  animation: erut-rotate 1s linear infinite;
+}
+
+/* ---------- Tooltip ---------- */
+.erut-tooltip{
+  position: absolute; z-index: 80;
+  background: var(--surface-base);
+  border: 1px solid var(--content-medium);
+  padding: 10px 12px;
+  font: 400 11px/1.55 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-high);
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(10,28,60,0.18);
+  min-width: 200px;
+}
+.erut-tooltip__title{ display: flex; justify-content: space-between; align-items: baseline; font-weight: 700; color: var(--content-high); margin-bottom: 6px; }
+.erut-tooltip__title .warn{ color: var(--system-caution); }
+.erut-tooltip__row{ display: flex; justify-content: space-between; gap: 8px; line-height: 1.4; }
+.erut-tooltip__row .label{ color: var(--content-low); }
+.erut-tooltip__row .value{ color: var(--content-high); font-weight: 700; }
+.erut-tooltip__sparklabel{ margin-top: 6px; color: var(--content-low); font-size: 10px; }
+.erut-tooltip__hint{ margin-top: 6px; color: var(--brand-primary); font-weight: 700; font-size: 11px; }
+
+/* ---------- Mini sparkline ---------- */
+.erut-sparkline{ display: block; width: 100%; height: 22px; }
+
+/* ---------- A-scan dark canvas ---------- */
+.erut-ascan{
+  background: var(--content-high);
+  position: relative;
+  border: 1px solid var(--border-medium);
+  overflow: hidden;
+}
+.erut-ascan__grid{
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.erut-ascan__wave{ position: absolute; inset: 0; }
+.erut-ascan__gate{
+  position: absolute; top: 0; bottom: 0;
+  border-left: 1px solid var(--system-caution);
+  border-right: 1px solid var(--system-caution);
+  background: rgba(255,146,0,0.16);
+}
+.erut-ascan__gate-label{
+  position: absolute; top: 4px; font: 700 10px/1 var(--font-kr); letter-spacing: .02em;
+  color: var(--system-caution);
+}
+
+/* ---------- Breadcrumb ---------- */
+.erut-bread{
+  display: flex; align-items: center; gap: 6px;
+  font: 400 12px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-low);
+}
+.erut-bread__sep{ color: var(--content-low); }
+.erut-bread__cur{ color: var(--brand-primary); font-weight: 700; }
+
+/* ---------- 검사 대상 카드 (Main screen) ---------- */
+.erut-target-card{
+  background: var(--surface-base);
+  border: 1px solid var(--border-medium);
+  padding: 18px 20px;
+  cursor: pointer;
+  display: flex; flex-direction: column; gap: 10px;
+  transition: background-color 120ms ease-out, border-color 120ms ease-out;
+  min-height: 180px;
+  position: relative;
+}
+.erut-target-card:hover{
+  background: var(--surface-subtle-2);
+  border-color: var(--border-emphasis);
+}
+.erut-target-card__name{ font: 700 18px/1 var(--font-kr); letter-spacing: var(--letterspacing-default); color: var(--content-high); }
+.erut-target-card__desc{ font: 400 12px/1.5 var(--font-kr); letter-spacing: var(--letterspacing-default); color: var(--content-low); }
+.erut-target-card__meta{ display: flex; gap: 16px; font: 400 11px/1 var(--font-kr); color: var(--content-low); margin-top: auto; }
+.erut-target-card__statusdot{
+  position: absolute; top: 14px; right: 16px;
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.erut-target-card__statusdot.ok   { background: var(--system-success); }
+.erut-target-card__statusdot.warn { background: var(--system-caution); }
+.erut-target-card__statusdot.err  { background: var(--system-error); }
+
+/* ---------- Add tile ---------- */
+.erut-add-tile{
+  background: var(--surface-subtle-2);
+  border: 1px dashed var(--border-high);
+  padding: 18px;
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  min-height: 180px;
+  color: var(--content-low);
+  font: 700 14px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+}
+.erut-add-tile:hover{ background: var(--surface-subtle-1); color: var(--brand-primary); border-color: var(--brand-primary); }
+
+/* ---------- Tabs (inline tabs) ---------- */
+.erut-tabs{ display: flex; gap: 0; border-bottom: 1px solid var(--border-medium); }
+.erut-tab{
+  height: 36px; padding: 0 22px;
+  background: transparent; border: 0; cursor: pointer;
+  font: 700 14px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-medium);
+}
+.erut-tab:hover{ color: var(--brand-primary); }
+.erut-tab.is-active{
+  color: var(--brand-primary);
+  box-shadow: inset 0 -2px 0 0 var(--brand-primary);
+}
+
+/* ---------- Side mini-nav (interactive prototype only) ---------- */
+.erut-protonav{
+  position: fixed; top: 16px; right: 16px; z-index: 1000;
+  background: rgba(255,255,255,0.95); border: 1px solid var(--border-medium);
+  padding: 8px; display: flex; gap: 4px; flex-wrap: wrap; max-width: 480px;
+  font: 700 11px/1 var(--font-kr); letter-spacing: .02em;
+  box-shadow: 0 4px 12px rgba(10,28,60,0.10);
+}
+.erut-protonav__label{
+  padding: 6px 8px; color: var(--content-low);
+  border-right: 1px solid var(--border-low); margin-right: 4px;
+}
+.erut-protonav button{
+  background: transparent; border: 1px solid transparent; padding: 6px 10px;
+  font: inherit; cursor: pointer; color: var(--content-medium);
+}
+.erut-protonav button.on{
+  border-color: var(--brand-primary); color: var(--brand-primary);
+  background: rgba(34,133,239,0.06);
+}
+.erut-protonav button:hover{ background: rgba(34,133,239,0.06); }
+
+/* ---------- Monitoring widget (상시 모니터링) ---------- */
+.erut-mon-widget{
+  background: linear-gradient(rgba(34,133,239,0.05), rgba(34,133,239,0.05)), var(--surface-base);
+  border: 1px solid var(--border-medium);
+  border-left: 3px solid var(--brand-primary);
+  padding: 12px 16px;
+}
+.erut-mon-widget__head{ display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.erut-mon-widget__title{ font: 700 12px/1 var(--font-kr); letter-spacing: .08em; color: var(--content-emphasis); text-transform: uppercase; }
+.erut-mon-widget__tag{ font: 700 10px/1 var(--font-kr); color: var(--brand-primary); letter-spacing: .02em; }
+.erut-mon-widget__grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; font: 400 12px/1.4 var(--font-kr); letter-spacing: .02em; }
+.erut-mon-widget__cell .l{ color: var(--content-low); font-size: 10px; }
+.erut-mon-widget__cell .v{ color: var(--content-high); font-weight: 700; }
+.erut-mon-widget__cell .v.warn{ color: var(--system-caution); }
+
+/* ---------- 4분할 실시간 뷰 ---------- */
+.erut-quad{
+  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+  gap: 6px; background: var(--border-medium);
+  border: 1px solid var(--border-medium);
+}
+.erut-quad__pane{
+  background: var(--surface-base);
+  position: relative; overflow: hidden;
+}
+.erut-quad__label{
+  position: absolute; top: 8px; left: 12px; z-index: 5;
+  font: 700 11px/1 var(--font-kr); letter-spacing: .08em;
+  color: var(--content-low); text-transform: uppercase;
+  background: rgba(247,249,252,0.85); padding: 4px 8px;
+}
+
+/* ---------- 측정 컨트롤 ---------- */
+.erut-measure-bar{
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px;
+  background: var(--surface-subtle-1);
+  border: 1px solid var(--border-medium);
+}
+.erut-measure-status{
+  display: inline-flex; align-items: center; gap: 8px;
+  font: 700 13px/1 var(--font-kr); letter-spacing: .02em;
+}
+.erut-measure-status.is-measuring{ color: var(--system-error); }
+.erut-measure-status.is-paused{ color: var(--system-caution); }
+.erut-measure-status.is-stopped{ color: var(--content-low); }
+
+/* ---------- Project header ---------- */
+.erut-projheader{
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px; background: var(--surface-subtle-1);
+  border: 1px solid var(--border-medium);
+}
+.erut-projheader__name{ font: 700 18px/1.2 var(--font-kr); letter-spacing: .02em; color: var(--content-high); }
+.erut-projheader__meta{ font: 400 12px/1 var(--font-kr); color: var(--content-low); margin-top: 4px; }

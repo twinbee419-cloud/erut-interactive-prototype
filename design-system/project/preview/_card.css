@@ -1,0 +1,38 @@
+/* Cards share this. Cards themselves should not declare backgrounds —
+   keep the system tab background visible behind them. */
+@import url("../colors_and_type.css");
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--content-high);
+}
+body.card {
+  padding: 24px;
+  box-sizing: border-box;
+  font-family: var(--font-kr);
+  letter-spacing: var(--letterspacing-default);
+}
+
+/* Small label used on every card (e.g. token name) */
+.tok {
+  font: 700 11px/1 var(--font-en);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--content-low);
+}
+.val {
+  font: 500 12px/1 var(--font-num);
+  color: var(--content-medium);
+}
+
+/* A square swatch — no radius, matching the brand stance */
+.swatch {
+  width: 56px; height: 56px;
+  border: 1px solid var(--border-medium);
+  box-sizing: border-box;
+}
+.row { display: flex; align-items: center; gap: 16px; }
+.col { display: flex; flex-direction: column; gap: 6px; }
+.grid { display: grid; gap: 16px; }

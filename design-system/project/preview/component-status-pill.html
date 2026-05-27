@@ -1,0 +1,25 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Status pill / LED</title><link rel="stylesheet" href="_card.css"></head>
+<body class="card">
+<style>
+  .pill{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; background:#F7F9FC; border-radius:100px;
+         box-shadow: inset 2px 2px 4px rgba(36,80,158,0.4); font:700 12px/1 var(--font-kr); color:#0A1C3C; letter-spacing:.02em }
+  .led{ position:relative; width:14px; height:14px; border-radius:50% }
+  .led .halo{ position:absolute; inset:0; border-radius:50% }
+  .led .dot{ position:absolute; left:4px; top:4px; width:6px; height:6px; border-radius:50% }
+  .led.red .halo{ background: radial-gradient(rgba(255,0,94,0) 0%, rgba(255,0,94,0.26) 54%, rgba(255,0,94,0) 100%) }
+  .led.red .dot{ background:#FF005E }
+  .led.green .halo{ background: radial-gradient(rgba(24,227,57,0) 0%, rgba(24,227,57,0.26) 54%, rgba(24,227,57,0) 100%) }
+  .led.green .dot{ background:#18E339 }
+</style>
+<div style="display:flex; flex-direction:column; gap:14px">
+  <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+    <span class="pill"><span class="led red"><span class="halo"></span><span class="dot"></span></span>장비 미연결</span>
+    <span class="pill"><span class="led green"><span class="halo"></span><span class="dot"></span></span>장비 연결됨</span>
+    <span class="pill"><span class="led red"><span class="halo"></span><span class="dot"></span></span>MQTT 미연결</span>
+    <span class="pill"><span class="led green"><span class="halo"></span><span class="dot"></span></span>MQTT 연결됨</span>
+  </div>
+  <div style="font:700 12px/1.4 var(--font-kr); color:var(--content-low); letter-spacing:.02em">
+    Inset shadow + radial halo + hard center dot. Red = disconnected, Green = connected.
+  </div>
+</div>
+</body></html>

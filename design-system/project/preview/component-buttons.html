@@ -1,0 +1,39 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Buttons</title><link rel="stylesheet" href="_card.css"></head>
+<body class="card" style="background: var(--surface-base)">
+<style>
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    height:45px; padding: 12px 20px; min-width:160px;
+    background: var(--surface-base);
+    border: 1px solid var(--border-high);
+    color: var(--content-high);
+    font:700 14px/1 var(--font-kr); letter-spacing:.02em; cursor:pointer;
+  }
+  /* Every non-disabled variant darkens by overlay/medium on hover. */
+  .btn:hover{ background-image: linear-gradient(var(--overlay-medium), var(--overlay-medium)); }
+  .btn.subtle{ background: var(--surface-base); border-color: var(--border-medium); color: var(--brand-primary) }
+  .btn.subtle:hover{ background: linear-gradient(var(--overlay-medium), var(--overlay-medium)), var(--surface-base); }
+  .btn.active{ background: linear-gradient(rgba(34,133,239,0.1),rgba(34,133,239,0.1)), var(--surface-subtle-2); border-color: var(--border-emphasis); color: var(--brand-primary) }
+  .btn.active:hover{ background: linear-gradient(var(--overlay-medium), var(--overlay-medium)), linear-gradient(rgba(34,133,239,0.1),rgba(34,133,239,0.1)), var(--surface-subtle-2); }
+  .btn.disabled{ background: var(--surface-subtle-1); color: var(--surface-disabled); border-color: var(--surface-disabled); cursor:not-allowed }
+  .btn.disabled:hover{ background-image: none; }
+  .btn.emphasis{ background: var(--brand-primary); border-color: var(--brand-primary); color: var(--on-primary) }
+  .btn.emphasis:hover{ background: linear-gradient(var(--overlay-medium), var(--overlay-medium)), var(--brand-primary); }
+</style>
+<div style="display:flex; flex-direction:column; gap:14px">
+  <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+    <button class="btn">확인</button>
+    <button class="btn subtle">확인</button>
+    <button class="btn active">확인</button>
+    <button class="btn disabled" disabled>확인</button>
+    <button class="btn emphasis">선택</button>
+  </div>
+  <div style="display:flex; gap:24px; font:700 11px/1 var(--font-kr); color:var(--content-low); letter-spacing:.04em; text-transform:uppercase">
+    <span style="width:160px; text-align:center">enabled · border/high</span>
+    <span style="width:160px; text-align:center">subtle · border/medium</span>
+    <span style="width:160px; text-align:center">active · border/emphasis</span>
+    <span style="width:160px; text-align:center">disabled</span>
+    <span style="width:160px; text-align:center">emphasis · cta</span>
+  </div>
+</div>
+</body></html>

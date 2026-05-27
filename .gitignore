@@ -1,0 +1,47 @@
+# ERUT 프로토타입 repo — 보수적 .gitignore (2026-05-27)
+# Vercel 배포 대상은 design-system/ 폴더만. 그 외 NDA 자료·메인 기획서는 git 제외.
+
+# ───── Mac 시스템 파일 ─────
+.DS_Store
+**/.DS_Store
+
+# ───── Claude Code 작업 폴더 (로컬 도구) ─────
+.claude/
+
+# ───── 메인 기획서·작업 문서 (사용자 선택: 보수적) ─────
+ERUT_ServiceFlow_Analysis.html
+ERUT_FixedRobot_Plan_UI.html
+ERUT_RealtimeScan_Plan_UI.html
+ERUT_UI_Design_Draft_v6.html
+ERUT_UI_Flow_GAP_Analysis.html
+ERUT_UI_Flow_GAP_Analysis.md
+
+# ───── archive (이전 버전 누적 백업 — 별도 보관) ─────
+archive/
+
+# ───── 도메인·참고 자료 (NDA 가능성 + diff 불가) ─────
+*.pdf
+*.pptx
+*.docx
+*.fig
+*.fbx
+*.step
+*.stp
+*.stl
+*.iges
+*.igs
+
+# ───── 에디터·IDE 설정 ─────
+.vscode/
+.idea/
+*.swp
+*~
+
+# ───── Node (혹시 향후 도입 시) ─────
+node_modules/
+package-lock.json
+
+# ───── 로그·임시 파일 ─────
+*.log
+*.tmp
+.cache/
