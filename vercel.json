@@ -1,0 +1,11 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/design-system/project/ui_kits/erut-windows/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)\\.jsx",
+      "headers": [{ "key": "Content-Type", "value": "text/javascript; charset=utf-8" }]
+    }
+  ]
+}

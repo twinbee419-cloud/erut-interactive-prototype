@@ -1,0 +1,151 @@
+/* ============================================================
+   ERUT Design System — colors & typography tokens
+   Source of truth: ERUT.fig (Style-Guide, page/Component, page/section)
+   ------------------------------------------------------------
+   Visual character: square-cornered (NO border-radius on UI
+   surfaces — the brief is "각진 형태"), cool navy + light surface,
+   blue brand used ONLY for emphasis / selected / interactive.
+   ============================================================ */
+
+/* -------- Fonts (NanumSquare ONLY — Korean & English) -------- */
+/* Brand-supplied OTF files live in /fonts. ".acR" / ".acB" are the
+   modern "all-cover" weights (extended Hangul + Latin coverage);
+   the plain R / B are kept as fallbacks. */
+@font-face {
+  font-family: "NanumSquare";
+  font-style: normal;
+  font-weight: 400;
+  src: url("fonts/NanumSquareOTF_acR.otf") format("opentype"),
+       url("fonts/NanumSquareR.otf") format("opentype");
+  font-display: swap;
+}
+@font-face {
+  font-family: "NanumSquare";
+  font-style: normal;
+  font-weight: 700;
+  src: url("fonts/NanumSquareOTF_acB.otf") format("opentype"),
+       url("fonts/NanumSquareB.otf") format("opentype");
+  font-display: swap;
+}
+
+:root {
+  /* ---------- Color · absolute ---------- */
+  --color-white: #FFFFFF;
+  --color-black: #000000;
+
+  /* ---------- Color · basic / content (text & icon) ---------- */
+  --content-high:     #0A1C3C; /* primary text, headings */
+  --content-medium:   #273A5C; /* secondary text, title-bar bg */
+  --content-low:      #6B7C9B; /* tertiary text, captions, status meta */
+  --content-inverse:  #FFFFFF;
+  --content-emphasis: #2285EF; /* brand-tinted text (active/selected) */
+
+  /* ---------- Color · basic / surface (backgrounds) ---------- */
+  --surface-base:     #F7F9FC; /* canvas / window content fill */
+  --surface-strong:   #E0E6F1;
+  --surface-subtle-1: #EBEFF6; /* toolbar, menu bar, status bar */
+  --surface-subtle-2: #F1F5FC; /* card fill, hover row */
+  --surface-disabled: #AEB8CA;
+
+  /* ---------- Color · basic / border ---------- */
+  --border-high:      #697893; /* strong stroke — buttons, fields, form inputs */
+  --border-medium:    #A5B2CA; /* default 1px box border */
+  --border-low:       #E0E6F1; /* subtle dividers */
+  --border-emphasis:  #2285EF; /* selected / active stroke */
+
+  /* ---------- Color · brand / primary ---------- */
+  --brand-primary:    #2285EF; /* sole brand accent — use sparingly */
+  --on-primary:       #FFFFFF;
+
+  /* ---------- Color · system (semantic) ---------- */
+  --system-success:   #18E339;
+  --system-caution:   #FF9200;
+  --system-error:     #FF005E;
+  --system-info:      #2BAEFF; /* cyan-blue, distinct from brand emphasis */
+  --system-disabled:  #8C8C8C;
+
+  /* ---------- Color · overlay ---------- */
+  --overlay-medium:   rgba(0,0,0,0.10);
+  --overlay-low:      rgba(255,255,255,0.10);
+
+  /* ---------- Color · status-tag inner glow (status-bar pills) ---------- */
+  --tag-shadow-inset: inset 2px 2px 4px 0 rgba(36,80,158,0.4);
+
+  /* ---------- Spacing scale (12 steps, from Variables/space) ---------- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ---------- Borders & corners ----------
+     The brand brief is explicit: NO radius on UI surfaces.
+     Radii exist only on micro-elements (pills, dots, app icon). */
+  --radius-none: 0;
+  --radius-pill: 100px;     /* status-tag chips */
+  --radius-dot:  50%;       /* light dots */
+  --stroke-1: 1px solid var(--border-medium);
+  --stroke-1-low: 1px solid var(--border-low);
+  --stroke-1-emphasis: 1px solid var(--border-emphasis);
+
+  /* ---------- Type families ----------
+     NanumSquare ONLY — Korean and English alike. The legacy aliases
+     remain so older markup keeps working; they all resolve to one face. */
+  --font-kr:   "NanumSquare", system-ui, sans-serif;
+  --font-kr-2: "NanumSquare", system-ui, sans-serif;
+  --font-en:   "NanumSquare", system-ui, sans-serif;
+  --font-num:  "NanumSquare", system-ui, sans-serif;
+
+  /* ---------- Type roles ----------
+     Sizes derived from NanumSquare usage histogram in the .fig:
+     16px is the workhorse, 14px secondary, 12px caption, 18px heading. */
+  --h1-size: 24px;  --h1-weight: 700; --h1-lh: 1.1;
+  --h2-size: 20px;  --h2-weight: 700; --h2-lh: 1.1;
+  --h3-size: 18px;  --h3-weight: 700; --h3-lh: 1.1;
+  --h4-size: 16px;  --h4-weight: 700; --h4-lh: 1.1;
+
+  --body-lg-size: 16px;
+  --body-md-size: 14px;
+  --body-sm-size: 12px;
+
+  --caption-size: 12px;
+  --caption-color: var(--content-low);
+
+  --letterspacing-default: 0.020em; /* tracked +20 across most text */
+}
+
+/* ---------- Semantic element rules ---------- */
+html, body {
+  font-family: var(--font-kr);
+  font-size: var(--body-md-size);
+  letter-spacing: var(--letterspacing-default);
+  color: var(--content-high);
+  background: var(--surface-base);
+}
+
+h1, .h1 { font: var(--h1-weight) var(--h1-size)/var(--h1-lh) var(--font-kr); color: var(--content-high); letter-spacing: var(--letterspacing-default); }
+h2, .h2 { font: var(--h2-weight) var(--h2-size)/var(--h2-lh) var(--font-kr); color: var(--content-high); letter-spacing: var(--letterspacing-default); }
+h3, .h3 { font: var(--h3-weight) var(--h3-size)/var(--h3-lh) var(--font-kr); color: var(--content-high); letter-spacing: var(--letterspacing-default); }
+h4, .h4 { font: var(--h4-weight) var(--h4-size)/var(--h4-lh) var(--font-kr); color: var(--content-high); letter-spacing: var(--letterspacing-default); }
+
+.body-lg      { font: 400 var(--body-lg-size)/1.4 var(--font-kr); }
+.body-lg-bold { font: 700 var(--body-lg-size)/1.4 var(--font-kr); }
+.body-md      { font: 400 var(--body-md-size)/1.4 var(--font-kr); }
+.body-md-bold { font: 700 var(--body-md-size)/1.4 var(--font-kr); }
+.caption      { font: 700 var(--caption-size)/1.0 var(--font-kr); color: var(--caption-color); letter-spacing: var(--letterspacing-default); }
+
+.num          { font: 500 var(--body-md-size)/1.0 var(--font-num); }
+.mono         { font-family: var(--font-num); }
+
+/* Tiny helper for the ERUT logo: any container with .erut-logo
+   colors the inline SVG (which uses fill="currentColor"). */
+.erut-logo { color: var(--brand-primary); display: inline-block; line-height: 0; }
+.erut-logo.on-dark   { color: var(--content-inverse); }
+.erut-logo.on-light  { color: var(--content-high); }

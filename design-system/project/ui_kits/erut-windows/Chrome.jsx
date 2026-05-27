@@ -9,7 +9,7 @@ window.TitleBar = function TitleBar({ title = "ERUT - Ultrasonic Monitoring Syst
   return (
     <div className="erut-titlebar">
       <div className="erut-titlebar__brand" aria-label="ERUT logo">
-        <img src="../../assets/logo/erut-app-icon.png" alt=""/>
+        <img src="assets/logo/erut-app-icon.png" alt=""/>
       </div>
       <span className="erut-titlebar__title">{title}</span>
       <span style={{ flex: 1 }}/>
