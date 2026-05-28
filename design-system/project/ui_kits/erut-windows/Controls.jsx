@@ -203,6 +203,7 @@ window.ChannelGrid = function ChannelGrid({
   onCellClick,
   onCellDoubleClick,
   title,
+  showTitle = true,        // v9.7: 외부 erut-panel__header 사용 시 false로 — 제목 영역 제거
   showAttachCounters = true,
   showDefectLegend = true,
 }) {
@@ -231,17 +232,27 @@ window.ChannelGrid = function ChannelGrid({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {/* 헤더: 제목 + 부착 카운터 */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>{headerTitle}</span>
-        {showAttachCounters && (
-          <div style={{ display: "flex", gap: 10, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+      {/* v9.7: 헤더 — showTitle=true는 기존(제목+카운터 space-between) / false는 카운터만 좌측 정렬 */}
+      {showTitle ? (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>{headerTitle}</span>
+          {showAttachCounters && (
+            <div style={{ display: "flex", gap: 10, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-success)" }}/>정상 {counts.normal}</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-caution)" }}/>약함 {counts.weak}</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-error)" }}/>미부착 {counts.unattached}</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        showAttachCounters && (
+          <div style={{ display: "flex", justifyContent: "flex-start", gap: 10, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-success)" }}/>정상 {counts.normal}</span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-caution)" }}/>약함 {counts.weak}</span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-error)" }}/>미부착 {counts.unattached}</span>
           </div>
-        )}
-      </div>
+        )
+      )}
 
       {/* 셀 그리드 */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: isRealtime ? 3 : 6, maxHeight: isRealtime ? undefined : 320, overflowY: isRealtime ? undefined : "auto", paddingRight: isRealtime ? 0 : 4 }}>

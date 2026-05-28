@@ -2647,7 +2647,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
   };
 
   return (
-    <div className="erut-page-enter" style={{ padding: "20px 24px", height: "100%", display: "grid", gridTemplateColumns: "340px 1fr", gridTemplateRows: "40px auto 540px", alignContent: "start", columnGap: 14, rowGap: 20 }}>
+    <div className="erut-page-enter" style={{ padding: "20px 24px", height: "100%", display: "grid", gridTemplateColumns: "1fr 340px 320px", gridTemplateRows: "40px auto 540px", alignContent: "start", columnGap: 14, rowGap: 20 }}>
       {/* v8.5 Breadcrumb */}
       <window.Breadcrumb
         onBack={onBack}
@@ -2678,66 +2678,64 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
         </div>
       )}
 
-      {/* v9.6: A-scan/64ch — 우측 큰 영역으로 이동 (column 2) */}
-      <div style={{ gridRow: 3, gridColumn: 2, minWidth: 0 }}>
-        {/* v8.5: 2분할 (A-scan + 64ch) — 진폭 트렌드 삭제 · A-scan 정적 / v8.8: 540px (우측 패널과 동일) */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 8, height: 540 }}>
-          {/* 좌: A-scan (정적, 선택 채널) */}
-          <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", position: "relative" }}>
-            {/* v8.5: 채널명 강조 (20px content-high) */}
-            <div style={{ position: "absolute", top: 8, left: 14, display: "flex", alignItems: "baseline", gap: 10 }}>
-              <span style={{ font: "700 20px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>CH {String(selectedCh).padStart(2, "0")}</span>
-              <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".04em", color: "var(--content-low)", textTransform: "uppercase" }}>A-SCAN</span>
-            </div>
-            {/* Gate A */}
-            <div style={{ position: "absolute", top: 48, bottom: 36, left: "18%", width: "22%", background: "var(--system-error)", opacity: 0.12, borderLeft: "2px solid var(--system-error)", borderRight: "2px solid var(--system-error)" }}/>
-            <div style={{ position: "absolute", top: 56, left: "19%", font: "700 11px/1 var(--font-kr)", color: "var(--system-error)" }}>Gate A · 94%</div>
-            {/* Gate B */}
-            <div style={{ position: "absolute", top: 48, bottom: 36, left: "55%", width: "25%", background: "var(--brand-primary)", opacity: 0.12, borderLeft: "2px solid var(--brand-primary)", borderRight: "2px solid var(--brand-primary)" }}/>
-            <div style={{ position: "absolute", top: 56, left: "56%", font: "700 11px/1 var(--font-kr)", color: "var(--brand-primary)" }}>Gate B · 68%</div>
-            {/* Threshold */}
-            <div style={{ position: "absolute", left: 0, right: 0, top: "30%", borderTop: "1px dashed var(--system-error)" }}/>
-            {/* 정적 파형 SVG (애니메이션 제거) */}
-            <svg viewBox="0 0 800 300" preserveAspectRatio="none" width="100%" height="calc(100% - 76px)" style={{ position: "absolute", top: 40, left: 0, right: 0 }}>
-              <line x1="0" y1="250" x2="800" y2="250" stroke="var(--border-low)" strokeWidth="1"/>
-              <line x1="0" y1="170" x2="800" y2="170" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="2,4"/>
-              <line x1="0" y1="85"  x2="800" y2="85"  stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="2,4"/>
-              <path d="M0 250 L140 250 L160 215 L172 30 L184 270 L196 250 L420 250 L440 220 L452 85 L464 265 L476 250 L800 250" stroke="var(--brand-primary)" strokeWidth="2" fill="none"/>
-            </svg>
-            {/* 측정값 stripe (하단) */}
-            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, display: "flex", gap: 14, padding: "8px 14px", background: "var(--surface-subtle-2)", borderTop: "1px solid var(--border-low)", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
-              <span>Gate A 피크 <strong style={{ fontWeight: 700, color: "var(--system-error)" }}>94% FSH</strong></span>
-              <span>ToF <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>5.8 μs</strong></span>
-              <span>두께 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>17.4 mm</strong></span>
-              <span>Gate B ToF <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>19.2 μs</strong></span>
-              <span style={{ marginLeft: "auto" }}>샘플링 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>100 MHz</strong></span>
-            </div>
-          </div>
-
-          {/* v9.5 (NDT 1.8): 우 64ch 그리드 — ChannelGrid 통합 컴포넌트로 교체 */}
-          <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "12px", position: "relative", display: "flex", flexDirection: "column", gap: 8 }}>
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <label className="erut-toggle" style={{ flexDirection: "row-reverse" }} onClick={() => setAutoSwitch(!autoSwitch)}>
-                <span className={"erut-toggle__track" + (autoSwitch ? " is-on" : "")}>
-                  <span className="erut-toggle__thumb"/>
-                </span>
-                <span className="erut-toggle__label erut-toggle__label--sm">결함 검출 시 자동 전환</span>
-              </label>
-            </div>
-            <window.ChannelGrid
-              cells={cells64}
-              totalCh={64}
-              selectedCh={selectedCh}
-              variant="realtime"
-              forceStrongAll={true}
-              onCellClick={(n) => setSelectedCh(n)}
-            />
-          </div>
+      {/* v9.7: A-scan — column 1 (1fr, 가장 큰 영역) */}
+      <div style={{ gridRow: 3, gridColumn: 1, minWidth: 0, height: 540, background: "var(--surface-base)", border: "1px solid var(--border-medium)", position: "relative" }}>
+        {/* v8.5: 채널명 강조 (20px content-high) */}
+        <div style={{ position: "absolute", top: 8, left: 14, display: "flex", alignItems: "baseline", gap: 10 }}>
+          <span style={{ font: "700 20px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>CH {String(selectedCh).padStart(2, "0")}</span>
+          <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".04em", color: "var(--content-low)", textTransform: "uppercase" }}>A-SCAN</span>
+        </div>
+        {/* Gate A */}
+        <div style={{ position: "absolute", top: 48, bottom: 36, left: "18%", width: "22%", background: "var(--system-error)", opacity: 0.12, borderLeft: "2px solid var(--system-error)", borderRight: "2px solid var(--system-error)" }}/>
+        <div style={{ position: "absolute", top: 56, left: "19%", font: "700 11px/1 var(--font-kr)", color: "var(--system-error)" }}>Gate A · 94%</div>
+        {/* Gate B */}
+        <div style={{ position: "absolute", top: 48, bottom: 36, left: "55%", width: "25%", background: "var(--brand-primary)", opacity: 0.12, borderLeft: "2px solid var(--brand-primary)", borderRight: "2px solid var(--brand-primary)" }}/>
+        <div style={{ position: "absolute", top: 56, left: "56%", font: "700 11px/1 var(--font-kr)", color: "var(--brand-primary)" }}>Gate B · 68%</div>
+        {/* Threshold */}
+        <div style={{ position: "absolute", left: 0, right: 0, top: "30%", borderTop: "1px dashed var(--system-error)" }}/>
+        {/* 정적 파형 SVG */}
+        <svg viewBox="0 0 800 300" preserveAspectRatio="none" width="100%" height="calc(100% - 76px)" style={{ position: "absolute", top: 40, left: 0, right: 0 }}>
+          <line x1="0" y1="250" x2="800" y2="250" stroke="var(--border-low)" strokeWidth="1"/>
+          <line x1="0" y1="170" x2="800" y2="170" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="2,4"/>
+          <line x1="0" y1="85"  x2="800" y2="85"  stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="2,4"/>
+          <path d="M0 250 L140 250 L160 215 L172 30 L184 270 L196 250 L420 250 L440 220 L452 85 L464 265 L476 250 L800 250" stroke="var(--brand-primary)" strokeWidth="2" fill="none"/>
+        </svg>
+        {/* 측정값 stripe (하단) */}
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, display: "flex", gap: 14, padding: "8px 14px", background: "var(--surface-subtle-2)", borderTop: "1px solid var(--border-low)", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
+          <span>Gate A 피크 <strong style={{ fontWeight: 700, color: "var(--system-error)" }}>94% FSH</strong></span>
+          <span>ToF <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>5.8 μs</strong></span>
+          <span>두께 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>17.4 mm</strong></span>
+          <span>Gate B ToF <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>19.2 μs</strong></span>
+          <span style={{ marginLeft: "auto" }}>샘플링 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>100 MHz</strong></span>
         </div>
       </div>
 
-      {/* v9.6: 검사 대상·부착 상태·측정 제어 — 좌측 작은 영역으로 이동 (column 1, 340px) */}
-      <div className="erut-panel" style={{ gridRow: 3, gridColumn: 1, minWidth: 0 }}>
+      {/* v9.7: 64CH 채널 상태 — column 3 (320px). erut-panel 헤더 적용 */}
+      <div className="erut-panel" style={{ gridRow: 3, gridColumn: 3, minWidth: 0 }}>
+        <div className="erut-panel__header">64CH 채널 상태</div>
+        <div className="erut-panel__body" style={{ overflow: "visible", padding: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <label className="erut-toggle" style={{ flexDirection: "row-reverse" }} onClick={() => setAutoSwitch(!autoSwitch)}>
+              <span className={"erut-toggle__track" + (autoSwitch ? " is-on" : "")}>
+                <span className="erut-toggle__thumb"/>
+              </span>
+              <span className="erut-toggle__label erut-toggle__label--sm">결함 검출 시 자동 전환</span>
+            </label>
+          </div>
+          <window.ChannelGrid
+            cells={cells64}
+            totalCh={64}
+            selectedCh={selectedCh}
+            variant="realtime"
+            forceStrongAll={true}
+            showTitle={false}
+            onCellClick={(n) => setSelectedCh(n)}
+          />
+        </div>
+      </div>
+
+      {/* v9.7: 검사 대상·부착 상태·측정 제어 — column 2 (340px, 중앙) */}
+      <div className="erut-panel" style={{ gridRow: 3, gridColumn: 2, minWidth: 0 }}>
         <div className="erut-panel__header">검사 대상 · 부착 상태 · 측정 제어</div>
         <div className="erut-panel__body" style={{ overflow: "visible", padding: 14 }}>
 
