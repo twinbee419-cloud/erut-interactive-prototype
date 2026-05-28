@@ -757,18 +757,18 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
           </div>
         </div>
 
-        {/* v9.8: 1행 안내+버튼 / 2행 h3 제목+카운터 (위아래 swap). h3 원래 스타일 (15px, content-high) 복구 */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 8 }}>
-          <p style={{ font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", margin: 0 }}>더블 클릭 → 우측 패널 A-scan 확대</p>
+        {/* v9.9: 1행 = h3 + 우측 서브 안내 + 우측 끝 버튼 / 2행 = 카운터 좌측 정렬 */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+            <h3 style={{ font: "700 15px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>64CH 채널 상태</h3>
+            <span style={{ font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>더블 클릭 → 우측 패널 A-scan 확대</span>
+          </div>
           <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => setShowAddSensor(true)}>+ 센서 추가</button>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <h3 style={{ font: "700 15px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>64CH 채널 상태</h3>
-          <div style={{ display: "flex", gap: 10, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-success)" }}/>정상 {okCount}</span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-caution)" }}/>약함 {warnCount}</span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-error)" }}/>미부착 {errCount}</span>
-          </div>
+        <div style={{ display: "flex", justifyContent: "flex-start", gap: 10, marginBottom: 8, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-success)" }}/>정상 {okCount}</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-caution)" }}/>약함 {warnCount}</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-error)" }}/>미부착 {errCount}</span>
         </div>
         <window.ChannelGrid
           cells={cells}
