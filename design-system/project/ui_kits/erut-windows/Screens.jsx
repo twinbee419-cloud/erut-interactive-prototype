@@ -2618,8 +2618,8 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
         </div>
       </div>
 
-      {/* ───── v8.7 우측: 선택 채널 컨텍스트로 통일 (검사 대상 · 부착 상태 · 측정 제어) ───── */}
-      <div className="erut-panel" style={{ gridRow: 2, gridColumn: 2, minWidth: 0 }}>
+      {/* ───── v8.7 우측: 선택 채널 컨텍스트로 통일 (검사 대상 · 부착 상태 · 측정 제어) — v8.8: 높이 440px / 하단 정렬 ───── */}
+      <div className="erut-panel" style={{ gridRow: 2, gridColumn: 2, minWidth: 0, height: 440, alignSelf: "end" }}>
         <div className="erut-panel__header">검사 대상 · 부착 상태 · 측정 제어</div>
         <div className="erut-panel__body" style={{ overflowY: "auto", padding: 14 }}>
 
