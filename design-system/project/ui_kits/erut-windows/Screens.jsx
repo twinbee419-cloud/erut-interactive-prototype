@@ -760,7 +760,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
 
       {/* ───── 우측 사이드패널 (main 매칭) ───── */}
       <div className="erut-panel" style={{ gridRow: 2, gridColumn: 2, minWidth: 0 }}>
-        <div className="erut-panel__header">선택 채널 · {selected.toUpperCase().replace("CH","CH ")} — 더블클릭으로 A-scan 확대</div>
+        <div className="erut-panel__header">{selected.toUpperCase().replace("CH","CH ")}</div>
         <div className="erut-panel__body" style={{ overflowY: "auto", padding: 16, display: "flex", flexDirection: "column" }}>
 
           {/* v8.8: 채널 메타 한 줄 이동 — 측정 통계 컨테이너 하단으로 (아래로 옮김) */}
