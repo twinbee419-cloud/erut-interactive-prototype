@@ -776,13 +776,17 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
             const warn = s && s.state === "warn";
             const isSel = c.id === selected && active;
             const isFocus = isSel && focusActive;
-            // v9.0 (NDT 1.7): 선택된 검사 대상의 결함 채널 강조 — v9.1: kit.css 클래스로 처리
-            const showDefect = selectedTargetCard && c.targetName === selectedTargetCard && c.defectLevel;
+            // v9.2 (NDT 1.7 옵션 D): 모든 결함 셀 default breathing + 선택 카드의 결함은 strong
+            const hasDefect = c.defectLevel != null;
+            const isDefectInSelected = hasDefect && selectedTargetCard && c.targetName === selectedTargetCard;
             const clsParts = ["erut-ch-cell"];
             if (isSel) clsParts.push("is-active");
             if (warn)  clsParts.push("is-warning");
             if (isFocus) clsParts.push("is-focused");
-            if (showDefect) clsParts.push("is-defect-" + c.defectLevel);
+            if (hasDefect) {
+              clsParts.push("is-defect-" + c.defectLevel);
+              if (isDefectInSelected) clsParts.push("is-strong");
+            }
             return (
               <div
                 key={c.id}
