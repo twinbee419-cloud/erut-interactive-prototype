@@ -4,6 +4,24 @@
 const I = window.EIcon;
 const { useState: $s } = React;
 
+// =================== v8.5: Breadcrumb 통일 컴포넌트 ===================
+// 사용법: <window.Breadcrumb onBack={fn} items={[{label}, {label}, {label, current:true}]} />
+window.Breadcrumb = function Breadcrumb({ items, onBack, style }) {
+  return (
+    <div className="erut-crumb" style={style}>
+      {onBack && <button className="erut-crumb__back" onClick={onBack}>← 이전으로</button>}
+      <div className="erut-crumb__path">
+        {(items || []).map((item, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <span className="sep">›</span>}
+            <span className={item.current ? "current" : "item"}>{item.label}</span>
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // =================== Screen · EQUIPMENT CONNECT ===================
 // Matches /page/section frame 2: hero text + 3 connection-method rows + divider.
 window.EquipmentConnect = function EquipmentConnect({ onContinue }) {
@@ -495,6 +513,16 @@ window.MainScreen = function MainScreen({ onPickTarget, onAddTarget, onAddDevice
 
   return (
     <div className="erut-page-enter" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      {/* v8.5 Breadcrumb */}
+      <window.Breadcrumb
+        onBack={onChangeProject}
+        items={[
+          { label: "프로젝트 (" + proj.name + ")" },
+          { label: "메인", current: true },
+        ]}
+        style={{ margin: "20px 40px 16px" }}
+      />
+
       {/* ▼ 프로젝트 헤더 + Tab (통합 패널) ▼ */}
       <div style={{ background: "var(--surface-subtle-1)", borderBottom: "1px solid var(--border-medium)", padding: "14px 40px 0" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 12 }}>
@@ -920,9 +948,19 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   ];
 
   return (
-    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: 20, padding: "20px 40px", height: "100%" }}>
+    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "1fr 400px", gridTemplateRows: "40px 1fr", alignContent: "start", columnGap: 20, rowGap: 20, padding: "20px 40px", height: "100%" }}>
+      {/* v8.5 Breadcrumb */}
+      <window.Breadcrumb
+        onBack={onBack}
+        items={[
+          { label: "메인" },
+          { label: "장비 상세 (MCuF-001)", current: true },
+        ]}
+        style={{ gridRow: 1, gridColumn: "1 / -1" }}
+      />
+
       {/* ───── 좌측: MC보드 정보 + 센서 그리드 ───── */}
-      <div style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <div style={{ gridRow: 2, gridColumn: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         {/* ▼ MC보드 메타 정보 패널 (main 매칭) ▼ */}
         <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "12px 16px", marginBottom: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -1056,7 +1094,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
       </div>
 
       {/* ───── 우측 사이드패널 (main 매칭) ───── */}
-      <div className="erut-panel">
+      <div className="erut-panel" style={{ gridRow: 2, gridColumn: 2, minWidth: 0 }}>
         <div className="erut-panel__header">선택 채널 · {selected.toUpperCase().replace("CH","CH ")} — 더블클릭으로 A-scan 확대</div>
         <div className="erut-panel__body" style={{ overflowY: "auto", padding: 16, display: "flex", flexDirection: "column" }}>
           {/* 채널 메타 한 줄 */}
@@ -1418,6 +1456,16 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
 
       {/* ───── 우측 콘텐츠 ───── */}
       <div style={{ padding: "20px 30px", overflowY: "auto" }}>
+        {/* v8.5 Breadcrumb */}
+        <window.Breadcrumb
+          onBack={onBack}
+          items={[
+            { label: "메인" },
+            { label: "설정" },
+            { label: "장비 연결" },
+            { label: menu === "mc" ? "MC보드 연결" : menu === "mqtt" ? "MQTT 설정" : menu === "probe" ? "탐촉자 설정" : "장비 연결 설정", current: true },
+          ]}
+        />
         {menu === "mc" && !subView && <MCBoardList onAdd={() => setSubView("mc-add")} onEdit={(id) => { setEditingBoardId(id); setSubView("mc-edit"); }}/>}
         {menu === "mc" && subView && <MCBoardForm mode={subView} editingId={editingBoardId} onCancel={() => setSubView(null)} onSave={() => setSubView(null)}/>}
         {menu === "mqtt" && <MQTTSettings/>}
@@ -2061,6 +2109,14 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
 
       {/* ───── 우측: 상세 입력 폼 + 프리셋 ───── */}
       <div style={{ padding: "20px 30px", overflowY: "auto" }}>
+        {/* v8.5 Breadcrumb */}
+        <window.Breadcrumb
+          onBack={onBack}
+          items={[
+            { label: "메인" },
+            { label: "검사 대상 관리", current: true },
+          ]}
+        />
         {/* 헤더 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
@@ -2537,9 +2593,20 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
   }
 
   return (
-    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 20, padding: "20px 40px", height: "100%" }}>
+    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "1fr 360px", gridTemplateRows: "40px 1fr", alignContent: "start", columnGap: 20, rowGap: 20, padding: "20px 40px", height: "100%" }}>
+      {/* v8.5 Breadcrumb */}
+      <window.Breadcrumb
+        onBack={onBack}
+        items={[
+          { label: "메인" },
+          { label: "장비 상세 (MCuF-001)" },
+          { label: "Gate 설정 (CH " + chNum + ")", current: true },
+        ]}
+        style={{ gridRow: 1, gridColumn: "1 / -1" }}
+      />
+
       {/* ───── 좌측: 헤더 + 드래그 안내 + A-scan 차트 + 측정값 ───── */}
-      <div style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <div style={{ gridRow: 2, gridColumn: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         {/* 채널 헤더 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <div>
@@ -2652,7 +2719,7 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
       </div>
 
       {/* ───── 우측: 정밀 input 패널 (양방향 sync) ───── */}
-      <div style={{ background: "var(--surface-subtle-1)", border: "1px solid var(--border-medium)", padding: 16, overflowY: "auto" }}>
+      <div style={{ gridRow: 2, gridColumn: 2, minWidth: 0, background: "var(--surface-subtle-1)", border: "1px solid var(--border-medium)", padding: 16, overflowY: "auto" }}>
         <div style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 4 }}>Gate 파라미터 — 정밀 설정</div>
         <div style={{ font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 14 }}>차트 드래그와 양방향 sync. 권장값은 채널·탐촉자·주파수 기준 자동 계산.</div>
 
@@ -2678,7 +2745,7 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
   );
 };
 
-window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed, setElapsed }) {
+window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed, setElapsed, onBack }) {
   // state(measureState) · elapsed는 App에서 lift up — toolbar 우측에 표시.
   // 일시정지/측정 중지/긴급 정지/측정 재개 버튼은 setState로 동일하게 상태 전환.
   // 메인 [11]의 "전체 진행률 · 81/150 라인" 진행 바는 고정형 컨텍스트(라인 스캔 없음)에 부적합하여 제외.
@@ -2708,7 +2775,16 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
 
   return (
     <div className="erut-page-enter" style={{ padding: "20px 24px", height: "100%", display: "grid", gridTemplateColumns: "1fr 340px", gridTemplateRows: "40px 1fr", alignContent: "start", columnGap: 14, rowGap: 20 }}>
-      {/* Breadcrumb은 Phase 6에서 추가 예정 */}
+      {/* v8.5 Breadcrumb */}
+      <window.Breadcrumb
+        onBack={onBack}
+        items={[
+          { label: "메인" },
+          { label: "장비 상세 (MCuF-001)" },
+          { label: "실시간 스캔 · 세션 #047", current: true },
+        ]}
+        style={{ gridRow: 1, gridColumn: "1 / -1" }}
+      />
 
       {/* ───── 좌측: 알림 + 2분할 (A-scan + 64ch) ───── */}
       <div style={{ gridRow: 2, gridColumn: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 10 }}>
