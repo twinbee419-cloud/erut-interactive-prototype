@@ -548,34 +548,8 @@ window.MainScreen = function MainScreen({ onPickTarget, onAddTarget, onAddDevice
           </div>
         </div>
 
-        {/* ▼ 검사 대상 목록 헤더 ▼ */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div>
-            <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 4 }}>검사 대상 목록</h2>
-            <p style={{ font: "400 13px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", margin: 0 }}>총 {targets.length}개의 검사 대상이 등록되어 있습니다.</p>
-          </div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <input className="erut-field" placeholder="검사 대상 검색" style={{ width: 260 }}/>
-          </div>
-        </div>
-
-        {/* ▼ 검사 대상 카드 grid (4 cols × 2 rows) ▼ */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-          {targets.slice(0, 3).map((t, idx) => (
-            <InspectCard key={t.id} target={t} featured={idx === 0} judgeColor={judgeColor} onClick={() => onPickTarget(t.id)}/>
-          ))}
-          {/* 4번째 자리: 검사 대상 추가 카드 */}
-          <div
-            onClick={onAddTarget}
-            style={{ border: "1px dashed var(--border-medium)", background: "var(--surface-subtle-1)", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 8, minHeight: 220, cursor: "pointer" }}
-          >
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--content-low)" strokeWidth="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <div style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>검사 대상 추가</div>
-          </div>
-          {targets.slice(3).map((t) => (
-            <InspectCard key={t.id} target={t} judgeColor={judgeColor} onClick={() => onPickTarget(t.id)}/>
-          ))}
-        </div>
+        {/* v8.5: 검사 대상 그리드 삭제 — MC보드 자산 중심 모델 */}
+        {/* 검사 대상은 [2] 장비 상세에서 MC보드별로 표시. MC보드 카드 "상세 →" 클릭 → [2] 진입. */}
       </div>
     </div>
   );
