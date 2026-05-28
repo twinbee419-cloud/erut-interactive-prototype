@@ -730,7 +730,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
                   >
                     {hasDefect && (
                       <span style={{
-                        position: "absolute", top: -8, right: 10,
+                        position: "absolute", top: 8, right: 8,
                         font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em",
                         padding: "4px 8px", color: "var(--on-primary)",
                         background: defectColor,

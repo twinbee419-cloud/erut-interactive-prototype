@@ -482,10 +482,10 @@
 .target-card-v9 .target-card__edit-link { display: none; }
 .target-card-v9:hover .target-card__edit-link { display: inline; }
 
-/* ---------- v9.2 NDT 1.7 (옵션 D): 전 결함 셀 default breathing + 선택 카드 strong ---------- */
+/* ---------- v9.3 NDT 1.7: default 강도 50% → 30% (×0.6). strong은 100% 유지 ---------- */
 .erut-ch-cell.is-defect-critical{
-  --defect-low:  rgba(255,0,94,0.09);
-  --defect-high: rgba(255,0,94,0.21);
+  --defect-low:  rgba(255,0,94,0.05);
+  --defect-high: rgba(255,0,94,0.13);
   border-color: var(--system-error);
   animation: erut-defect-breathe 1.6s ease-in-out infinite;
 }
@@ -494,8 +494,8 @@
   --defect-high: rgba(255,0,94,0.42);
 }
 .erut-ch-cell.is-defect-major{
-  --defect-low:  rgba(255,146,0,0.10);
-  --defect-high: rgba(255,146,0,0.22);
+  --defect-low:  rgba(255,146,0,0.06);
+  --defect-high: rgba(255,146,0,0.13);
   border-color: var(--system-caution);
   animation: erut-defect-breathe 1.6s ease-in-out infinite;
 }
@@ -504,8 +504,8 @@
   --defect-high: rgba(255,146,0,0.44);
 }
 .erut-ch-cell.is-defect-minor{
-  --defect-low:  rgba(107,124,155,0.10);
-  --defect-high: rgba(107,124,155,0.22);
+  --defect-low:  rgba(107,124,155,0.06);
+  --defect-high: rgba(107,124,155,0.13);
   border-color: var(--content-low);
   animation: erut-defect-breathe 1.6s ease-in-out infinite;
 }
