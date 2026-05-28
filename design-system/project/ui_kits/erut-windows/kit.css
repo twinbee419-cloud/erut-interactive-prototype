@@ -444,7 +444,7 @@
 
 /* ---------- Channel cell (64ch grid) ---------- */
 .erut-ch-cell{
-  background: var(--surface-base);
+  background: transparent;
   border: 1px solid var(--border-medium);
   padding: 6px 8px;
   display: flex; flex-direction: column; gap: 3px;

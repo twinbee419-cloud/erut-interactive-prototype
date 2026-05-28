@@ -636,8 +636,8 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
 
       {/* ───── 좌측: MC보드 정보 + 센서 그리드 ───── */}
       <div style={{ gridRow: 2, gridColumn: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-        {/* ▼ MC보드 메타 정보 패널 (main 매칭) ▼ */}
-        <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "12px 16px", marginBottom: 16 }}>
+        {/* ▼ MC보드 메타 정보 패널 (main 매칭) — v8.7: fill 제거, 검사 대상 목록 통합 ▼ */}
+        <div style={{ background: "transparent", border: "1px solid var(--border-medium)", padding: "12px 16px", marginBottom: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
               <span style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>MCuF-001</span>
@@ -668,34 +668,34 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
               </div>
             ))}
           </div>
-        </div>
 
-        {/* ▼ v8.5 신규: 검사 대상 목록 (MC보드 채널이 분산된 검사체) ▼ */}
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-              <h3 style={{ font: "700 15px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>검사 대상</h3>
-              <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>이 MC보드가 현재 검사 중인 대상 3개 · 채널 모두 할당</span>
-            </div>
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onAddTarget}>+ 검사 대상 추가</button>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-            {[
-              { name: "PIPE-A-204",   meta: "탄소강 · 외경 300mm · 두께 10mm",     range: "ch01–24 · 24ch" },
-              { name: "TANK-B-101",   meta: "SS 304 · 구형 · ∅ 1500mm · 두께 6mm",   range: "ch25–48 · 24ch" },
-              { name: "VESSEL-C-301", meta: "압력 용기 · 800 × 400mm · 두께 12mm",  range: "ch49–64 · 16ch" },
-            ].map(t => (
-              <div key={t.name} className="target-card">
-                <div className="target-card__name">{t.name}</div>
-                <div className="target-card__meta">{t.meta}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
-                  <span className="target-card__range">{t.range}</span>
-                  <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-success)", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                    <span style={{ width: 6, height: 6, background: "var(--system-success)", borderRadius: "50%" }}/>측정 중
-                  </span>
-                </div>
+          {/* v8.7: 검사 대상 목록을 MC보드 정보 컨테이너 안으로 통합 */}
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border-low)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+                <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>검사 대상</span>
+                <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>3개 · 채널 모두 할당</span>
               </div>
-            ))}
+              <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onAddTarget}>+ 검사 대상 추가</button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+              {[
+                { name: "PIPE-A-204",   meta: "탄소강 · 외경 300mm · 두께 10mm",     range: "ch01–24 · 24ch" },
+                { name: "TANK-B-101",   meta: "SS 304 · 구형 · ∅ 1500mm · 두께 6mm",   range: "ch25–48 · 24ch" },
+                { name: "VESSEL-C-301", meta: "압력 용기 · 800 × 400mm · 두께 12mm",  range: "ch49–64 · 16ch" },
+              ].map(t => (
+                <div key={t.name} className="target-card">
+                  <div className="target-card__name">{t.name}</div>
+                  <div className="target-card__meta">{t.meta}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
+                    <span className="target-card__range">{t.range}</span>
+                    <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-success)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ width: 6, height: 6, background: "var(--system-success)", borderRadius: "50%" }}/>측정 중
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -2564,11 +2564,23 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             </div>
           </div>
 
-          {/* 우: 64ch 채널 상태 그리드 (v8.5: 자동 전환 토글 통합) */}
+          {/* 우: 64ch 채널 상태 그리드 (v8.5: 자동 전환 토글 통합 / v8.7: 부착 상태 카운터 추가) */}
           <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "12px", position: "relative", display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
               <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>64ch 채널 상태</span>
               <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>셀 클릭 → A-scan 전환</span>
+            </div>
+            {/* v8.7 신규: 부착 상태 카운터 (전체 모니터링) */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 8, padding: "6px 8px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)", font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "var(--system-success)" }}>
+                <span style={{ width: 7, height: 7, background: "var(--system-success)", borderRadius: "50%" }}/>부착 정상 <strong>{channelAttachStatus.normal}</strong>
+              </span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "var(--system-caution)" }}>
+                <span style={{ width: 7, height: 7, background: "var(--system-caution)", borderRadius: "50%" }}/>약함 <strong>{channelAttachStatus.weak}</strong>
+              </span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "var(--system-error)" }}>
+                <span style={{ width: 7, height: 7, background: "var(--system-error)", borderRadius: "50%" }}/>미부착 <strong>{channelAttachStatus.unattached}</strong>
+              </span>
             </div>
             {/* v8.5: 자동 전환 토글 (우측 패널 셀렉트박스에서 이동) */}
             <div style={{ marginBottom: 8 }}>
@@ -2609,13 +2621,13 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
         </div>
       </div>
 
-      {/* ───── v8.5 우측: 사이드패널 (검사 대상 · 부착 상태 · 결함) ───── */}
+      {/* ───── v8.7 우측: 선택 채널 컨텍스트로 통일 (검사 대상 · 부착 상태 · 측정 제어) ───── */}
       <div className="erut-panel" style={{ gridRow: 2, gridColumn: 2, minWidth: 0 }}>
-        <div className="erut-panel__header">검사 대상 · 부착 상태 · 결함</div>
+        <div className="erut-panel__header">검사 대상 · 부착 상태 · 측정 제어</div>
         <div className="erut-panel__body" style={{ overflowY: "auto", padding: 14 }}>
 
-          {/* v8.5 신규: 검사 대상 정보 (현재 선택 채널 기준) */}
-          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 6 }}>검사 대상 · 현재 CH {String(selectedCh).padStart(2, "0")}</div>
+          {/* 검사 대상 정보 (현재 선택 채널의 검사체) */}
+          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 6 }}>검사 대상</div>
           <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
             <div style={{ marginBottom: 4 }}>
               <span style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>PIPE-A-204</span>
@@ -2631,48 +2643,33 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
                 <div key={k}><span style={{ color: "var(--content-low)" }}>{k}</span> <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{v}</strong></div>
               ))}
             </div>
+            {/* v8.7 B-1: 현재 채널 상태 요약 (결함 있을 때 표시) */}
+            <div style={{ borderTop: "1px solid var(--border-low)", marginTop: 8, paddingTop: 8, font: "700 11px/1.3 var(--font-kr)", letterSpacing: ".02em" }}>
+              <span style={{ color: "var(--content-low)" }}>현재 채널 상태</span>
+              <div style={{ color: "var(--system-error)", marginTop: 4 }}>⚠ Critical · Amp 94% · 두께 17.4mm</div>
+            </div>
           </div>
 
-          {/* v8.5 신규: 채널 부착 상태 위젯 */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "14px 0 6px" }}>
-            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>채널 부착 상태</div>
-            <div style={{ font: "400 9px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>신호 강도 임계값 기준</div>
-          </div>
+          {/* v8.7: 선택 채널 부착 상태 (단순화 — 신호 강도 + 상태만) */}
+          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", margin: "14px 0 6px" }}>선택 채널 부착 상태</div>
           <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
-            <div style={{ display: "flex", gap: 10, marginBottom: 8, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em" }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-success)" }}>
-                <span style={{ width: 8, height: 8, background: "var(--system-success)", borderRadius: "50%" }}/>정상 <strong>{channelAttachStatus.normal}</strong>
-              </span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-caution)" }}>
-                <span style={{ width: 8, height: 8, background: "var(--system-caution)", borderRadius: "50%" }}/>약함 <strong>{channelAttachStatus.weak}</strong>
-              </span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-error)" }}>
-                <span style={{ width: 8, height: 8, background: "var(--system-error)", borderRadius: "50%" }}/>미부착 <strong>{channelAttachStatus.unattached}</strong>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>신호 강도</span>
+              <strong style={{ font: "700 14px/1 var(--font-kr)", color: "var(--system-success)" }}>92%</strong>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+              <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>부착 상태</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, font: "700 12px/1 var(--font-kr)", color: "var(--system-success)" }}>
+                <span style={{ width: 8, height: 8, background: "var(--system-success)", borderRadius: "50%" }}/>정상
               </span>
             </div>
-            <div style={{ borderTop: "1px solid var(--border-low)", paddingTop: 8 }}>
-              {channelAttachStatus.detail.map(d => (
-                <div key={d.ch} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", font: "400 11px/1.3 var(--font-kr)", letterSpacing: ".02em" }}>
-                  <span style={{ color: "var(--content-medium)" }}><strong style={{ fontWeight: 700 }}>CH {String(d.ch).padStart(2, "0")}</strong> · {d.target} · 신호 {d.signal}%</span>
-                  <span style={{ color: d.status === "미부착" ? "var(--system-error)" : "var(--system-caution)", fontWeight: 700 }}>{d.status}</span>
-                </div>
-              ))}
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4 }}>+ 5 채널 더 · 커플런트 보충·재부착 필요</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+              <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>커플런트</span>
+              <span style={{ font: "700 11px/1 var(--font-kr)", color: "var(--content-medium)" }}>양호</span>
             </div>
           </div>
 
-          {/* 결함 검출 (with target abbreviation) */}
-          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", margin: "14px 0 6px" }}>결함 검출 ({defects.length})</div>
-          {defects.map((d) => {
-            const c  = d.type === "Critical" ? "var(--system-error)" : "var(--system-caution)";
-            const bg = d.type === "Critical" ? "rgba(255,0,94,0.05)" : "rgba(255,146,0,0.05)";
-            return (
-              <div key={d.id} style={{ background: "linear-gradient(" + bg + "," + bg + "), var(--surface-subtle-2)", border: "1px solid var(--border-medium)", borderLeft: "3px solid " + c, padding: "8px 10px", marginBottom: 4 }}>
-                <div style={{ font: "700 12px/1.2 var(--font-kr)", color: "var(--content-high)" }}>{d.type} · CH {String(d.channel).padStart(2, "0")}</div>
-                <div style={{ font: "400 11px/1.4 var(--font-kr)", color: "var(--content-low)", marginTop: 2 }}>Amp {d.amp} % · ToF {d.tof} μs · 두께 {d.thickness} mm</div>
-              </div>
-            );
-          })}
+          {/* v8.7: 결함 검출 카드 삭제 — 64ch 그리드 색상 + 자동 전환 토글로 충분 */}
 
           {/* 측정 제어 (v8.5: 일시정지 토글 + 측정 중지 2버튼. 긴급정지 폐기) */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "14px 0 6px" }}>
