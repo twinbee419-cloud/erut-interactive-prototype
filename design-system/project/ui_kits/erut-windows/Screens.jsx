@@ -583,6 +583,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   const [selected, setSelected] = $s(focusChannel || "ch01");
   const [focusActive, setFocusActive] = $s(!!focusChannel);
   const [showAddSensor, setShowAddSensor] = $s(false);
+  const [showCalibration, setShowCalibration] = $s(false);
 
   React.useEffect(() => {
     if (focusChannel) {
@@ -842,7 +843,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
           footer={(
             <>
               <button className="erut-btn erut-btn--default erut-btn--m" onClick={() => setShowAddSensor(false)}>취소</button>
-              <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => setShowAddSensor(false)}>등록 + 교정 마법사 시작</button>
+              <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => { setShowAddSensor(false); setShowCalibration(true); }}>등록 + 교정 마법사 시작</button>
             </>
           )}
         >
@@ -871,6 +872,9 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
           </div>
         </window.Modal>
       )}
+
+      {/* v8.10: 등록 후 교정 마법사 자동 트리거 */}
+      {showCalibration && <window.CalibrationWizard onClose={() => setShowCalibration(false)}/>}
     </div>
   );
 };
