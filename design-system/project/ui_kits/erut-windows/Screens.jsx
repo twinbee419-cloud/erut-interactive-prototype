@@ -651,7 +651,6 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
               </span>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onBack}>← 메인</button>
               <button className="erut-btn erut-btn--default erut-btn--sm">진단 / 로그</button>
             </div>
           </div>
@@ -727,17 +726,17 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
               <div
                 key={c.id}
                 className={clsParts.join(" ")}
-                style={{ aspectRatio: "20 / 5.6", opacity: active ? 1 : 0.55, position: "relative", padding: "4px 8px", gap: 0, justifyContent: "center" }}
+                style={{ aspectRatio: "20 / 7", opacity: active ? 1 : 0.55, position: "relative", padding: "4px 8px", gap: 0, justifyContent: "center" }}
                 onClick={() => active && setSelected(c.id)}
                 onDoubleClick={() => active && onStartMeasure && onStartMeasure(c.id)}
               >
-                {/* v8.6: target full-name (현재 채널명 스타일) + LED */}
+                {/* v8.7: 위 = 채널명 (두께 스타일) + LED */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span className="erut-ch-cell__id" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{active ? c.targetName : "—"}</span>
+                  <span className="erut-ch-cell__val">{c.id.toUpperCase().replace("CH", "CH ")}</span>
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: active ? (warn ? "var(--system-caution)" : "var(--system-success)") : "var(--surface-disabled)", flexShrink: 0 }}/>
                 </div>
-                {/* v8.6: 채널명 (두께 수치 스타일) */}
-                <div className="erut-ch-cell__val">{c.id.toUpperCase().replace("CH", "CH ")}</div>
+                {/* v8.7: 아래 = target full-name (채널명 스타일) */}
+                <span className="erut-ch-cell__id" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{active ? c.targetName : "—"}</span>
               </div>
             );
           })}
