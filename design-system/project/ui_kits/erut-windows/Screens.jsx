@@ -598,10 +598,10 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   const isCurWarn = cur.state === "warn";
 
   // 32 cells (4 rows × 8 cols). First 8 map to real sensors.
-  // v8.6: 다중 검사체 분산 부착 — ch01-12 PIPE-A-204 · ch13-24 TANK-B-101 · ch25-32 VESSEL-C-301
-  const getTargetName = (i) => i <= 12 ? "PIPE-A-204" : i <= 24 ? "TANK-B-101" : "VESSEL-C-301";
+  // v8.8: 64채널 다중 검사체 분산 부착 — ch01-24 PIPE-A-204 · ch25-48 TANK-B-101 · ch49-64 VESSEL-C-301
+  const getTargetName = (i) => i <= 24 ? "PIPE-A-204" : i <= 48 ? "TANK-B-101" : "VESSEL-C-301";
   const cells = [];
-  for (let i = 1; i <= 32; i++) {
+  for (let i = 1; i <= 64; i++) {
     const id = "ch" + String(i).padStart(2, "0");
     cells.push({ id, sensor: sensorMap[id], targetName: getTargetName(i) });
   }
@@ -609,7 +609,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   const okCount       = window.MOCK.sensors.filter(s => s.state === "ok").length;
   const warnCount     = window.MOCK.sensors.filter(s => s.state === "warn").length;
   const errCount      = window.MOCK.sensors.filter(s => s.state === "err").length;
-  const inactiveCount = 32 - window.MOCK.sensors.length;
+  const inactiveCount = 64 - window.MOCK.sensors.length;
 
   // 메타 정보 stripe — main lines 1784-1813과 매칭
   const META = [
@@ -681,9 +681,9 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
             {[
-              { name: "PIPE-A-204",   meta: "탄소강 · 외경 300mm · 두께 10mm",     range: "ch01–12 · 12ch" },
-              { name: "TANK-B-101",   meta: "SS 304 · 구형 · ∅ 1500mm · 두께 6mm",   range: "ch13–24 · 12ch" },
-              { name: "VESSEL-C-301", meta: "압력 용기 · 800 × 400mm · 두께 12mm",  range: "ch25–32 · 8ch" },
+              { name: "PIPE-A-204",   meta: "탄소강 · 외경 300mm · 두께 10mm",     range: "ch01–24 · 24ch" },
+              { name: "TANK-B-101",   meta: "SS 304 · 구형 · ∅ 1500mm · 두께 6mm",   range: "ch25–48 · 24ch" },
+              { name: "VESSEL-C-301", meta: "압력 용기 · 800 × 400mm · 두께 12mm",  range: "ch49–64 · 16ch" },
             ].map(t => (
               <div key={t.name} className="target-card">
                 <div className="target-card__name">{t.name}</div>
@@ -703,15 +703,15 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <div>
             <h3 style={{ font: "700 15px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>
-              센서 채널 32ch <span style={{ fontWeight: 400, color: "var(--content-low)", fontSize: 12 }}>· 셀 좌하단 약자 = 검사 대상</span>
+              센서 채널 64ch
             </h3>
-            <p style={{ font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 2, marginBottom: 0 }}>한 클릭 → Gate 설정 · 더블 클릭 → 우측 패널 A-scan 확대</p>
+            <p style={{ font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 2, marginBottom: 0 }}>더블 클릭 → 우측 패널 A-scan 확대</p>
           </div>
           <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => setShowAddSensor(true)}>+ 센서 추가</button>
         </div>
 
-        {/* ▼ 셀 그리드 (스타일·데이터 그대로 유지) ▼ */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 6 }}>
+        {/* ▼ v8.8: 64ch 셀 그리드 — 스크롤 가능 ▼ */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 6, maxHeight: 320, overflowY: "auto", paddingRight: 4 }}>
           {cells.map((c) => {
             const s = c.sensor;
             const active = s != null;
@@ -763,14 +763,11 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
       <div className="erut-panel" style={{ gridRow: 2, gridColumn: 2, minWidth: 0 }}>
         <div className="erut-panel__header">선택 채널 · {selected.toUpperCase().replace("CH","CH ")} — 더블클릭으로 A-scan 확대</div>
         <div className="erut-panel__body" style={{ overflowY: "auto", padding: 16, display: "flex", flexDirection: "column" }}>
-          {/* 채널 메타 한 줄 */}
-          <div style={{ font: "400 12px/1.7 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", padding: "4px 0 12px", borderBottom: "1px solid var(--border-low)" }}>
-            주파수 5 MHz · Gain 28 dB · Pulser 200V<br/>
-            영점 정상 · 마지막 측정 {cur.age}
-          </div>
+
+          {/* v8.8: 채널 메타 한 줄 이동 — 측정 통계 컨테이너 하단으로 (아래로 옮김) */}
 
           {/* A-SCAN 미리보기 */}
-          <div style={{ marginTop: 12 }}>
+          <div style={{ marginTop: 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
               <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>A-SCAN</div>
               <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>0 – 100 μs · Gate A · Gate B</div>
@@ -828,18 +825,52 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
             </div>
           </div>
 
+          {/* v8.8: 채널 메타 한 줄 (측정 통계 컨테이너 하단으로 이동) */}
+          <div style={{ font: "400 12px/1.7 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", padding: "12px 0 0", marginTop: 12, borderTop: "1px solid var(--border-low)" }}>
+            주파수 5 MHz · Gain 28 dB · Pulser 200V<br/>
+            영점 정상 · 마지막 측정 {cur.age}
+          </div>
+
           {/* 액션 버튼 (사이드패널 하단) */}
           <button className="erut-btn erut-btn--default erut-btn--m" style={{ width: "100%", marginTop: 12 }} onClick={() => onOpenGate && onOpenGate(selected)}>[3] Gate 설정 →</button>
           <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%", marginTop: 8 }} onClick={() => onStartMeasure && onStartMeasure(selected)}>[11] 실시간 전체 화면 ↗</button>
         </div>
       </div>
 
-      {/* "+ 센서 추가" 모달 */}
+      {/* v8.8: "+ 센서 추가" 모달 — 임시 mockup (AddSensorModal 컴포넌트 누락 버그 수정) */}
       {showAddSensor && (
-        <window.AddSensorModal
-          onClose={() => setShowAddSensor(false)}
-          onAdd={() => setShowAddSensor(false)}
-        />
+        <window.Modal title="센서 채널 추가 — MCF-2024-001" onClose={() => setShowAddSensor(false)}
+          footer={(
+            <>
+              <button className="erut-btn erut-btn--default erut-btn--m" onClick={() => setShowAddSensor(false)}>취소</button>
+              <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => setShowAddSensor(false)}>등록 + 교정 마법사 시작</button>
+            </>
+          )}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 480 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>채널 번호 <span style={{ color: "var(--system-error)" }}>*</span></div>
+                <input className="erut-field" placeholder="예: ch33" style={{ width: "100%" }}/>
+              </div>
+              <div>
+                <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>탐촉자 SN <span style={{ color: "var(--system-error)" }}>*</span></div>
+                <input className="erut-field" placeholder="예: PXT-2024-033" style={{ width: "100%" }}/>
+              </div>
+              <div>
+                <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>주파수</div>
+                <select className="erut-field" style={{ width: "100%" }}><option>5 MHz</option><option>2.25 MHz</option><option>10 MHz</option></select>
+              </div>
+              <div>
+                <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>직경</div>
+                <select className="erut-field" style={{ width: "100%" }}><option>10 mm</option><option>6 mm</option><option>12 mm</option></select>
+              </div>
+            </div>
+            <div style={{ background: "linear-gradient(rgba(255,146,0,0.05),rgba(255,146,0,0.05)), var(--surface-subtle-2)", border: "1px solid var(--system-caution)", padding: "8px 12px", font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
+              <strong style={{ color: "var(--system-caution)", fontWeight: 700 }}>교정 필수</strong>: 신규 채널은 등록 직후 영점·음속·감도 3단계 교정이 자동 트리거됩니다 (KS B 0817 · ASNT 표준).
+            </div>
+          </div>
+        </window.Modal>
       )}
     </div>
   );
@@ -1171,6 +1202,8 @@ function MCBoardList({ onAdd, onEdit }) {
         </div>
       </div>
 
+      {/* v8.8: 2컬럼 레이아웃 (MQTT 설정 페이지 매칭) — 좌: MC보드 리스트 / 우: 영점 검증 요약 */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {boards.map((b, idx) => {
           const isSelected = idx === 0; // 첫 카드 = 선택 시뮬레이션
@@ -1215,8 +1248,10 @@ function MCBoardList({ onAdd, onEdit }) {
         })}
       </div>
 
-      {/* 영점 색검증 요약 (선택 보드) */}
-      <div style={{ marginTop: 24, background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "16px 18px" }}>
+      </div>
+
+      {/* 영점 색검증 요약 (선택 보드) — v8.8: 2컬럼 우측으로 이동 */}
+      <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "16px 18px", alignSelf: "start" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <div>
             <h3 style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>선택 보드 채널 영점 — {boards[0].id}</h3>
@@ -1240,6 +1275,7 @@ function MCBoardList({ onAdd, onEdit }) {
           <div><span style={{ display: "inline-block", width: 10, height: 10, background: "var(--system-caution)", verticalAlign: "middle", marginRight: 4 }}/>편차 2 (CH 7 · 43)</div>
           <div><span style={{ display: "inline-block", width: 10, height: 10, background: "var(--system-error)", verticalAlign: "middle", marginRight: 4 }}/>오류 1 (CH 16)</div>
         </div>
+      </div>
       </div>
     </>
   );

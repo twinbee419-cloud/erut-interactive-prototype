@@ -240,7 +240,7 @@ function App() {
           <window.ProjectPicker
             onPick={(pid) => { setPickedProject(pid); goto("main"); }}
             onNew={() => setShowNewProject(true)}
-            onLoad={() => goto("main")}
+            onLoad={() => {}} /* v8.8: 추후 윈도우 파일 탐색기 연동 예정 — 현재는 no-op */
           />
         )}
         {screen === "connect" && (
