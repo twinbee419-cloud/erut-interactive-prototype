@@ -1036,12 +1036,15 @@ window.CalibrationWizard = function CalibrationWizard({ onClose }) {
             {/* A-scan */}
             <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", height: 240, position: "relative" }}>
               <div style={{ position: "absolute", top: 8, left: 12, font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>A-SCAN · 참조 블록 측정</div>
-              <div style={{ position: "absolute", top: 8, right: 12, font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>측정 중 · 시계열 3.2s</div>
+              <div style={{ position: "absolute", top: 8, right: 12, font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>최신 프레임 · 시계열 3.2s</div>
               <div style={{ position: "absolute", top: 30, bottom: 30, left: "38%", width: 8, background: "var(--system-success)", opacity: 0.5 }}/>
               <div style={{ position: "absolute", top: 34, left: "39%", font: "700 10px/1 var(--font-kr)", color: "var(--system-success)" }}>후면 에코</div>
-              <div style={{ position: "absolute", top: 30, left: 0, right: 0, height: 200 }}>
-                <window.AnimatedAscan fault={false} color="var(--brand-primary)" viewBox="0 0 1000 200" showGrid={false}/>
-              </div>
+              {/* v8.10: 정적 파형 SVG */}
+              <svg viewBox="0 0 1000 200" preserveAspectRatio="none" width="100%" height="200" style={{ position: "absolute", top: 30, left: 0, right: 0 }}>
+                <line x1="0" y1="170" x2="1000" y2="170" stroke="var(--border-low)" strokeWidth="1"/>
+                <line x1="0" y1="110" x2="1000" y2="110" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="2,4"/>
+                <path d="M0 170 L120 170 L140 145 L155 30 L170 180 L185 170 L380 170 L400 150 L412 50 L424 180 L436 170 L1000 170" stroke="var(--brand-primary)" strokeWidth="2" fill="none"/>
+              </svg>
             </div>
             {/* 측정 결과 */}
             <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
