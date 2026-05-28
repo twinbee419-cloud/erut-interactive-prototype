@@ -34,20 +34,20 @@ const { useState, useEffect } = React;
 // [0] project → [1] main → [1-1] dashboard → [2] device → [11] realtime
 //   (장비 추가: [1] → connect → [1] · failed 시 connect 재진입)
 
+// v8.5: [1-1] dashboard 라우트 폐기 (MC보드 자산 중심 모델)
 const TITLE_BY_SCREEN = {
   project:   "ERUT - Ultrasonic Monitoring System",
   connect:   "ERUT - Ultrasonic Monitoring System  ·  장비 연결",
   main:      "ERUT - Ultrasonic Monitoring System  ·  SK에너지 울산 #2 라인",
-  dashboard: "ERUT - Ultrasonic Monitoring System  ·  PIPE-A-204 (검사 대상)",
   device:    "ERUT - Ultrasonic Monitoring System  ·  MCuF-001 (장비 상세)",
   gate:      "ERUT - Ultrasonic Monitoring System  ·  CH 04 Gate 설정",
-  realtime:  "ERUT - Ultrasonic Monitoring System  ·  실시간 스캔 · PIPE-A-204 · 세션 #047",
+  realtime:  "ERUT - Ultrasonic Monitoring System  ·  MCuF-001 · 실시간 스캔 · 3개 대상 · 세션 #047",
   manage:    "ERUT - Ultrasonic Monitoring System  ·  검사 대상 관리",
   settings:  "ERUT - Ultrasonic Monitoring System  ·  장비 연결 설정",
 };
 
 // Screens where the device is "connected" (status bar green LEDs)
-const CONNECTED_SCREENS = new Set(["main", "dashboard", "device", "gate", "realtime", "manage", "settings"]);
+const CONNECTED_SCREENS = new Set(["main", "device", "gate", "realtime", "manage", "settings"]);
 
 function App() {
   const [screen, setScreen]                   = useState("project");
@@ -106,21 +106,23 @@ function App() {
     { label: "전체 측정 중지", shortcut: "F7" },
   ];
 
+  // v8.5: 측정 제어 3개 버튼 (시작·일시정지·중지). 긴급 정지 폐기.
   const tools = [
-    { key: "home",   label: "메인 페이지", icon: <window.EIcon.Home/> },
+    { key: "home",   label: "메인 페이지",      icon: <window.EIcon.Home/> },
     { divider: true },
-    { key: "add",    label: "장비 추가",   icon: <window.EIcon.AddMachine/> },
+    { key: "add",    label: "장비 추가",        icon: <window.EIcon.AddMachine/> },
     { divider: true },
-    { key: "play",   label: "측정 시작",   icon: <window.EIcon.Play/> },
-    { key: "pause",  label: "측정 중지",   icon: <window.EIcon.Pause/> },
+    { key: "play",   label: "측정 시작 (F6)",   icon: <window.EIcon.Play/> },
+    { key: "pause",  label: "일시정지 (Space)", icon: <window.EIcon.Pause/> },
+    { key: "stop",   label: "측정 중지 (F7)",   icon: <window.EIcon.Stop/> },
     { divider: true },
-    { key: "set",    label: "설정",        icon: <window.EIcon.Setting/> },
+    { key: "set",    label: "설정",             icon: <window.EIcon.Setting/> },
   ];
 
+  // v8.5: [1-1] 대시보드 폐기
   const navItems = [
     { id: "project",   label: "[0] 프로젝트" },
     { id: "main",      label: "[1] 메인" },
-    { id: "dashboard", label: "[1-1] 대시보드" },
     { id: "device",    label: "[2] 장비 상세" },
     { id: "gate",      label: "[3] Gate 설정" },
     { id: "settings",  label: "[4] 장비 연결 설정" },
@@ -195,7 +197,8 @@ function App() {
       setMeasureState("measuring");
       if (screen !== "realtime") { setSelectedChannel(null); goto("realtime"); }
     }
-    if (k === "pause") setMeasureState("paused");
+    if (k === "pause") setMeasureState(s => s === "measuring" ? "paused" : "measuring"); // 토글
+    if (k === "stop")  setMeasureState("stopped");
     if (k === "set")   setToast("환경 설정 — 추후 메인 기획에서 검토 예정");
   };
 
@@ -238,27 +241,19 @@ function App() {
         )}
         {screen === "main" && (
           <window.MainScreen
-            onPickTarget={(id) => { setSelectedTarget(id); setSelectedChannel(null); goto("dashboard"); }}
+            onPickTarget={(id) => { setSelectedTarget(id); setSelectedChannel(null); goto("device"); }}
             onAddTarget={() => goto("manage")}
             onAddDevice={() => { setSettingsInitialSubView("mc-add"); goto("settings"); }}
             onOpenDevice={() => { setSelectedChannel(null); goto("device"); }}
             onChangeProject={() => goto("project")}
           />
         )}
-        {screen === "dashboard" && (
-          <window.InspectionDashboard
-            targetId={selectedTarget}
-            onBack={() => goto("main")}
-            onOpenDevice={(channel) => { setSelectedChannel(channel); goto("device"); }}
-            onStartInspection={() => { setSelectedChannel(null); goto("device"); }}
-            onOpenManage={() => goto("manage")}
-          />
-        )}
+        {/* v8.5: [1-1] dashboard 라우트 폐기 — MC보드 자산 중심 모델 */}
         {screen === "device" && (
           <window.DeviceDetail
             targetId={selectedTarget}
             focusChannel={selectedChannel}
-            onBack={() => goto("dashboard")}
+            onBack={() => goto("main")}
             onStartMeasure={(channel) => { setSelectedChannel(channel); goto("realtime"); }}
             onOpenGate={(channel) => { setSelectedChannel(channel); goto("gate"); }}
           />
