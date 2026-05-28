@@ -443,15 +443,11 @@ window.MainScreen = function MainScreen({ onAddDevice, onOpenDevice, onChangePro
     const isMeasuring = d.state === "measuring";
     const isOffline   = d.state === "offline";
 
-    // v9.11: 측정 중 카드 — hover-like 톤(surface-subtle-2 lift). brand wash + emphasis border 제거
-    const cardStyle = isMeasuring
-      ? { border: "1px solid var(--border-medium)", background: "var(--surface-subtle-2)", padding: "12px 14px" }
-      : isOffline
-        ? { border: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)", padding: "12px 14px" }
-        : { border: "1px solid var(--border-medium)", background: "var(--surface-base)", padding: "12px 14px" };
+    // v9.13: border/padding/background를 kit.css로 이동. 상태 클래스로 분기 (inline specificity 문제 해결)
+    const cardCls = "erut-device-card" + (isMeasuring ? " is-measuring" : isOffline ? " is-offline" : "");
 
     return (
-      <div key={d.id} className="erut-device-card" style={cardStyle}>
+      <div key={d.id} className={cardCls}>
         {/* v9.11: 상단 — 연결 상태 pill만 유지. 측정 중/대기/오프라인 badge 삭제 (좌하단 액션 버튼으로 인지) */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>

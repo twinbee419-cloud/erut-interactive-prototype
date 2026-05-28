@@ -482,15 +482,25 @@
 .target-card-v9 .target-card__edit-link { display: none; }
 .target-card-v9:hover .target-card__edit-link { display: inline; }
 
-/* ---------- v9.12: [1] 장비 카드 hover lift ---------- */
+/* ---------- v9.13: [1] 장비 카드 hover lift (inline background 제거 → 상태 클래스로) ---------- */
 .erut-device-card {
+  border: 1px solid var(--border-medium);
+  padding: 12px 14px;
   cursor: pointer;
-  transition: background-color 120ms ease;
+  background: var(--surface-base);
+  transition: background 120ms ease;
 }
+.erut-device-card.is-measuring { background: var(--surface-subtle-2); }
+.erut-device-card.is-offline   { background: var(--surface-subtle-1); }
 .erut-device-card:hover {
   background:
     linear-gradient(var(--overlay-medium), var(--overlay-medium)),
     var(--surface-subtle-2);
+}
+.erut-device-card.is-offline:hover {
+  background:
+    linear-gradient(var(--overlay-medium), var(--overlay-medium)),
+    var(--surface-subtle-1);
 }
 
 /* ---------- v9.4 NDT 1.7: fill + border 모두 breathing ---------- */
