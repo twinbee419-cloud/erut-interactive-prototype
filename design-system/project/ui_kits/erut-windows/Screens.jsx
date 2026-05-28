@@ -451,7 +451,7 @@ window.MainScreen = function MainScreen({ onAddDevice, onOpenDevice, onChangePro
         : { border: "1px solid var(--border-medium)", background: "var(--surface-base)", padding: "12px 14px" };
 
     return (
-      <div key={d.id} style={cardStyle}>
+      <div key={d.id} className="erut-device-card" style={cardStyle}>
         {/* v9.11: 상단 — 연결 상태 pill만 유지. 측정 중/대기/오프라인 badge 삭제 (좌하단 액션 버튼으로 인지) */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>

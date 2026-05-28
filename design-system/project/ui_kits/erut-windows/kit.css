@@ -482,6 +482,17 @@
 .target-card-v9 .target-card__edit-link { display: none; }
 .target-card-v9:hover .target-card__edit-link { display: inline; }
 
+/* ---------- v9.12: [1] 장비 카드 hover lift ---------- */
+.erut-device-card {
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+.erut-device-card:hover {
+  background:
+    linear-gradient(var(--overlay-medium), var(--overlay-medium)),
+    var(--surface-subtle-2);
+}
+
 /* ---------- v9.4 NDT 1.7: fill + border 모두 breathing ---------- */
 .erut-ch-cell.is-defect-critical{
   --defect-fill-low:    rgba(255,0,94,0.05);
