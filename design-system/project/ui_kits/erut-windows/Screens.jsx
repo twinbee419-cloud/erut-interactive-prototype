@@ -2570,17 +2570,13 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
               <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>64ch 채널 상태</span>
               <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>셀 클릭 → A-scan 전환</span>
             </div>
-            {/* v8.7 신규: 부착 상태 카운터 (전체 모니터링) */}
-            <div style={{ display: "flex", gap: 8, marginBottom: 8, padding: "6px 8px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)", font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em" }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "var(--system-success)" }}>
-                <span style={{ width: 7, height: 7, background: "var(--system-success)", borderRadius: "50%" }}/>부착 정상 <strong>{channelAttachStatus.normal}</strong>
-              </span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "var(--system-caution)" }}>
-                <span style={{ width: 7, height: 7, background: "var(--system-caution)", borderRadius: "50%" }}/>약함 <strong>{channelAttachStatus.weak}</strong>
-              </span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "var(--system-error)" }}>
-                <span style={{ width: 7, height: 7, background: "var(--system-error)", borderRadius: "50%" }}/>미부착 <strong>{channelAttachStatus.unattached}</strong>
-              </span>
+            {/* v8.7 신규: 센서 부착 상태 카운터 (전체 모니터링) */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, padding: "6px 8px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)", font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em" }}>
+              <span style={{ color: "var(--content-low)", textTransform: "uppercase", letterSpacing: "0.06em" }}>센서 부착 상태</span>
+              <span style={{ width: 1, height: 10, background: "var(--border-medium)" }}/>
+              <span style={{ color: "var(--system-success)" }}>정상 <strong>{channelAttachStatus.normal}</strong></span>
+              <span style={{ color: "var(--system-caution)" }}>약함 <strong>{channelAttachStatus.weak}</strong></span>
+              <span style={{ color: "var(--system-error)" }}>미부착 <strong>{channelAttachStatus.unattached}</strong></span>
             </div>
             {/* v8.5: 자동 전환 토글 (우측 패널 셀렉트박스에서 이동) */}
             <div style={{ marginBottom: 8 }}>
