@@ -279,7 +279,7 @@ window.NewProjectModal = function NewProjectModal({ onCreate, onClose }) {
       <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginRight: "auto" }}>
         <span style={{ color: "var(--system-error)" }}>*</span> 필수 항목
       </span>
-      <window.Button variant="subtle" size="sm" onClick={onClose}>취소</window.Button>
+      <window.Button variant="subtle" size="sm" onClick={onClose}>닫기</window.Button>
       <window.Button variant={valid ? "emphasis" : "disabled"} size="sm" onClick={valid ? () => onCreate(form) : undefined}>프로젝트 생성 → [1] 메인</window.Button>
     </>
   );
@@ -612,14 +612,11 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   const errCount      = window.MOCK.sensors.filter(s => s.state === "err").length;
   const inactiveCount = 64 - window.MOCK.sensors.length;
 
-  // 메타 정보 stripe — main lines 1784-1813과 매칭
+  // v8.8: 메타 정보 stripe 7-col → 4-col 축소. Config/샘플링/펌웨어는 진단/로그 모달로 이동
   const META = [
     { label: "SN (시리얼)",   value: "MCF-2024-001" },
     { label: "IP 주소",       value: "192.168.1.100" },
-    { label: "Config 파일",   value: "default.cfg ↗", link: true },
-    { label: "샘플링 속도",   value: "32,000 /s" },
     { label: "활성 채널",     value: "32 / 64 CH", emphasis: true },
-    { label: "펌웨어",        value: "v2.1.4" },
     { label: "마지막 통신",   value: "실시간 (0.3s)", success: true },
   ];
 
@@ -655,8 +652,8 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
               <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowDiagnostics(true)}>진단 / 로그</button>
             </div>
           </div>
-          {/* 메타 정보 7-col stripe */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10, paddingTop: 10, borderTop: "1px solid var(--border-low)" }}>
+          {/* v8.8: 메타 정보 4-col stripe (Config/샘플링/펌웨어는 진단/로그 모달로 이동) */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, paddingTop: 10, borderTop: "1px solid var(--border-low)" }}>
             {META.map((m) => (
               <div key={m.label}>
                 <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>{m.label}</div>
@@ -847,7 +844,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
                 여러 채널 일괄 등록 / 관리 → [4-3] 탐촉자 설정
               </a>
               <div style={{ display: "flex", gap: 6 }}>
-                <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={() => setShowAddSensor(false)}>취소</button>
+                <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={() => setShowAddSensor(false)}>닫기</button>
                 <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowAddSensor(false)}>추가만</button>
                 <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => { setShowAddSensor(false); setShowCalibration(true); }}>추가 + 교정</button>
               </div>
@@ -885,21 +882,22 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
 
 // =================== v8.8: 진단 / 로그 모달 (좌측 탭 메뉴 + 우측 콘텐츠) ===================
 window.DiagnosticsModal = function DiagnosticsModal({ onClose }) {
-  const [tab, setTab] = $s("hw"); // hw / conn / meas / calib / err
+  const [tab, setTab] = $s("hw"); // hw / err / conn / meas / calib
+  // v8.8: 에러 로그를 2번째 위치로 이동
   const tabs = [
     { id: "hw",    label: "하드웨어 진단" },
+    { id: "err",   label: "에러 로그", badge: 2 },
     { id: "conn",  label: "연결 로그" },
     { id: "meas",  label: "측정 로그" },
     { id: "calib", label: "교정 이력" },
-    { id: "err",   label: "에러 로그", badge: 2 },
   ];
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 1100, maxHeight: "90vh", background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
-        {/* 헤더 */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderBottom: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
-          <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>진단 / 로그 — MCuF-001</div>
-          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose} aria-label="닫기">✕</button>
+        {/* v8.8: 헤더 — titlebar 컬러 통일 */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderBottom: "1px solid var(--border-medium)", background: "var(--content-medium)" }}>
+          <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>진단 / 로그 — MCuF-001</div>
+          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose} aria-label="닫기" style={{ color: "var(--content-inverse)" }}>✕</button>
         </div>
         {/* 본문 (좌: 탭 메뉴 / 우: 콘텐츠) */}
         <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", minHeight: 480 }}>
@@ -923,11 +921,15 @@ window.DiagnosticsModal = function DiagnosticsModal({ onClose }) {
           {/* 우측 콘텐츠 (탭별) */}
           <div style={{ padding: "18px 24px", overflowY: "auto" }}>
             {tab === "hw" && <DiagHardware/>}
+            {tab === "err" && <DiagLogPlaceholder title="에러 로그" desc="오류 코드 · timestamp · 채널/원인 · 해결 여부 (검색·필터 가능)"/>}
             {tab === "conn" && <DiagLogPlaceholder title="연결 로그" desc="MC보드 연결/해제·timeout·IP 변경 이력 (시계열 테이블)"/>}
             {tab === "meas" && <DiagLogPlaceholder title="측정 로그" desc="세션 시작/종료·일시정지/재개·데이터 전송 오류 (시계열 테이블)"/>}
             {tab === "calib" && <DiagLogPlaceholder title="교정 이력" desc="채널별 영점·음속·감도 교정 이력 + 다음 권장 교정 시점"/>}
-            {tab === "err" && <DiagLogPlaceholder title="에러 로그" desc="오류 코드 · timestamp · 채널/원인 · 해결 여부 (검색·필터 가능)"/>}
           </div>
+        </div>
+        {/* v8.8: footer — 닫기 단일 버튼 (다른 모달과 일관성) */}
+        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", padding: "12px 18px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
+          <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onClose}>닫기</button>
         </div>
       </div>
     </div>
@@ -943,6 +945,7 @@ function DiagHardware() {
     { label: "패킷 손실",     value: "0.3", unit: "%",      status: "경계 (1% 이상 경고)", tone: "caution" },
   ];
   const toneColor = (t) => t === "success" ? "var(--system-success)" : t === "caution" ? "var(--system-caution)" : "var(--system-error)";
+  // v8.8: Config 파일 항목 추가 ([2] 메타 stripe에서 이동)
   const info = [
     ["시리얼 (SN)", "MCF-2024-001"],
     ["펌웨어", "v2.1.4 (2026-04-18)"],
@@ -952,6 +955,7 @@ function DiagHardware() {
     ["최대 채널 수", "64 ch"],
     ["IP 주소", "192.168.1.100 : 8080"],
     ["MAC 주소", "B8:27:EB:1F:4C:A2"],
+    ["Config 파일", "default.cfg ↗", "link"],
   ];
   return (
     <>
@@ -970,8 +974,11 @@ function DiagHardware() {
       </div>
       <h4 style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: "0 0 10px" }}>시스템 정보</h4>
       <div style={{ border: "1px solid var(--border-low)", padding: "12px 14px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px 24px", font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em" }}>
-        {info.map(([k, v]) => (
-          <div key={k}><span style={{ color: "var(--content-low)" }}>{k}</span> <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{v}</strong></div>
+        {info.map(([k, v, type]) => (
+          <div key={k} style={type === "link" ? { gridColumn: "1 / -1" } : undefined}>
+            <span style={{ color: "var(--content-low)" }}>{k}</span>{" "}
+            <strong style={{ fontWeight: 700, color: type === "link" ? "var(--content-emphasis)" : "var(--content-high)", textDecoration: type === "link" ? "underline" : "none", cursor: type === "link" ? "pointer" : "default" }}>{v}</strong>
+          </div>
         ))}
       </div>
       <div style={{ marginTop: 14, padding: "10px 14px", background: "linear-gradient(rgba(34,133,239,0.05),rgba(34,133,239,0.05)), var(--surface-base)", borderLeft: "3px solid var(--border-emphasis)", font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
@@ -1099,13 +1106,13 @@ window.CalibrationWizard = function CalibrationWizard({ onClose }) {
   return (
     <div className="erut-modal__backdrop" onClick={onClose} style={{ background: "rgba(10,28,60,0.15)" }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 1100, maxHeight: 760, background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
-        {/* 헤더 */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
+        {/* v8.8: 헤더 — titlebar 컬러 통일 */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid var(--border-medium)", background: "var(--content-medium)" }}>
           <div>
-            <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>탐촉자 교정 마법사 — CH 09 / 4</div>
-            <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4 }}>PXT-2024-009 · 5 MHz · 신규 등록 후 필수 교정</div>
+            <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>탐촉자 교정 마법사 — CH 09 / 4</div>
+            <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "rgba(255,255,255,0.7)", marginTop: 4 }}>PXT-2024-009 · 5 MHz · 신규 등록 후 필수 교정</div>
           </div>
-          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose} aria-label="닫기">✕</button>
+          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose} aria-label="닫기" style={{ color: "var(--content-inverse)" }}>✕</button>
         </div>
 
         {/* Stepper */}
@@ -2165,15 +2172,15 @@ window.ChannelPlacementWizard = function ChannelPlacementWizard({ targetName, on
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 1100, maxHeight: "90vh", background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
-        {/* 헤더 */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
+        {/* v8.8: 헤더 — titlebar 컬러 통일 */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid var(--border-medium)", background: "var(--content-medium)" }}>
           <div>
             <div style={{ marginBottom: 4 }}>
-              <span style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>채널 배치 마법사 — {targetName}</span>
+              <span style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>채널 배치 마법사 — {targetName}</span>
             </div>
-            <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>각 채널의 부착 위치(θ, Z)를 사전 등록 — NDT 표준 Probe Setup 패턴</div>
+            <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "rgba(255,255,255,0.7)" }}>각 채널의 부착 위치(θ, Z)를 사전 등록 — NDT 표준 Probe Setup 패턴</div>
           </div>
-          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose}>✕ 닫기</button>
+          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose} style={{ color: "var(--content-inverse)" }}>✕ 닫기</button>
         </div>
 
         {/* Stepper */}
