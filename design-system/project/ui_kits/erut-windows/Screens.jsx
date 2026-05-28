@@ -2578,9 +2578,14 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
               <span style={{ color: "var(--system-caution)" }}>약함 <strong>{channelAttachStatus.weak}</strong></span>
               <span style={{ color: "var(--system-error)" }}>미부착 <strong>{channelAttachStatus.unattached}</strong></span>
             </div>
-            {/* v8.5: 자동 전환 토글 (우측 패널 셀렉트박스에서 이동) */}
-            <div style={{ marginBottom: 8 }}>
-              <window.Toggle checked={autoSwitch} onChange={setAutoSwitch} size="sm" label="결함 검출 시 자동 전환"/>
+            {/* v8.5: 자동 전환 토글 / v8.8: 텍스트 좌·스위치 우 + 우측 정렬 */}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+              <label className="erut-toggle" style={{ flexDirection: "row-reverse" }} onClick={() => setAutoSwitch(!autoSwitch)}>
+                <span className={"erut-toggle__track" + (autoSwitch ? " is-on" : "")}>
+                  <span className="erut-toggle__thumb"/>
+                </span>
+                <span className="erut-toggle__label erut-toggle__label--sm">결함 검출 시 자동 전환</span>
+              </label>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 3 }}>
               {cells64.map((c) => {
