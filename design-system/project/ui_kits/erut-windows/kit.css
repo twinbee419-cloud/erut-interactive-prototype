@@ -482,6 +482,26 @@
 .target-card-v9 .target-card__edit-link { display: none; }
 .target-card-v9:hover .target-card__edit-link { display: inline; }
 
+/* ---------- v9.0/v9.1 NDT 1.7: 결함 등급별 셀 강조 (선택 카드 컨텍스트) ---------- */
+.erut-ch-cell.is-defect-critical{
+  background-color: rgba(255,0,94,0.18);
+  border-color: var(--system-error);
+  animation: erut-defect-critical-breathe 1.6s ease-in-out infinite;
+}
+.erut-ch-cell.is-defect-major{
+  background-color: rgba(255,146,0,0.20);
+  border-color: var(--system-caution);
+}
+.erut-ch-cell.is-defect-minor{
+  background-color: rgba(107,124,155,0.15);
+  border-color: var(--content-low);
+}
+/* v9.1: size 유지, 색상 강도만 breathing */
+@keyframes erut-defect-critical-breathe {
+  0%, 100% { background-color: rgba(255,0,94,0.18); }
+  50%      { background-color: rgba(255,0,94,0.42); }
+}
+
 /* ---------- Roll indicator (측정 중) ---------- */
 @keyframes erut-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .erut-roll{

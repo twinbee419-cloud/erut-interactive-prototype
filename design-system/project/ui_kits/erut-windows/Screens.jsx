@@ -597,6 +597,21 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
     }
   }, [focusChannel]);
 
+  // v9.1 (NDT 1.7): 카드 외부 클릭 또는 ESC 키 시 카드 선택 해제 (셀 강조도 함께 해제)
+  React.useEffect(() => {
+    if (!selectedTargetCard) return;
+    const handleKey = (e) => { if (e.key === "Escape") setSelectedTargetCard(null); };
+    const handleClickOutside = (e) => {
+      if (!e.target.closest || !e.target.closest(".target-card-v9")) setSelectedTargetCard(null);
+    };
+    document.addEventListener("keydown", handleKey);
+    document.addEventListener("click", handleClickOutside);
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [selectedTargetCard]);
+
   const cur = sensorMap[selected] || window.MOCK.sensors[0];
   const isCurWarn = cur.state === "warn";
 
@@ -761,31 +776,18 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
             const warn = s && s.state === "warn";
             const isSel = c.id === selected && active;
             const isFocus = isSel && focusActive;
-            // v9.0 (NDT 1.7): 선택된 검사 대상의 결함 채널 강조
+            // v9.0 (NDT 1.7): 선택된 검사 대상의 결함 채널 강조 — v9.1: kit.css 클래스로 처리
             const showDefect = selectedTargetCard && c.targetName === selectedTargetCard && c.defectLevel;
-            const defectFillColor = showDefect ? (
-              c.defectLevel === "critical" ? "rgba(255,0,94,0.20)" :
-              c.defectLevel === "major"    ? "rgba(255,146,0,0.20)" :
-                                              "rgba(107,124,155,0.15)"
-            ) : null;
-            const defectBorderColor = showDefect ? DEFECT_COLOR[c.defectLevel] : null;
             const clsParts = ["erut-ch-cell"];
             if (isSel) clsParts.push("is-active");
             if (warn)  clsParts.push("is-warning");
             if (isFocus) clsParts.push("is-focused");
+            if (showDefect) clsParts.push("is-defect-" + c.defectLevel);
             return (
               <div
                 key={c.id}
                 className={clsParts.join(" ")}
-                style={{
-                  aspectRatio: "20 / 7", opacity: active ? 1 : 0.55, position: "relative", padding: "4px 8px", gap: 0, justifyContent: "center",
-                  ...(showDefect ? {
-                    background: `linear-gradient(${defectFillColor},${defectFillColor}), var(--surface-base)`,
-                    borderColor: defectBorderColor,
-                    animation: c.defectLevel === "critical" ? "erut-sensor-breathe 1.6s ease-in-out infinite" : undefined,
-                    transformOrigin: "center",
-                  } : {}),
-                }}
+                style={{ aspectRatio: "20 / 7", opacity: active ? 1 : 0.55, position: "relative", padding: "4px 8px", gap: 0, justifyContent: "center" }}
                 onClick={() => active && setSelected(c.id)}
                 onDoubleClick={() => active && onStartMeasure && onStartMeasure(c.id)}
               >
