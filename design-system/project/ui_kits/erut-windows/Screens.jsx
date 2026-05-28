@@ -598,12 +598,12 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   const isCurWarn = cur.state === "warn";
 
   // 32 cells (4 rows × 8 cols). First 8 map to real sensors.
-  // v8.5: 다중 검사체 분산 부착 시나리오 — ch01-12 P-A · ch13-24 T-B · ch25-32 V-C
-  const getTargetAbbr = (i) => i <= 12 ? "P-A" : i <= 24 ? "T-B" : "V-C";
+  // v8.6: 다중 검사체 분산 부착 — ch01-12 PIPE-A-204 · ch13-24 TANK-B-101 · ch25-32 VESSEL-C-301
+  const getTargetName = (i) => i <= 12 ? "PIPE-A-204" : i <= 24 ? "TANK-B-101" : "VESSEL-C-301";
   const cells = [];
   for (let i = 1; i <= 32; i++) {
     const id = "ch" + String(i).padStart(2, "0");
-    cells.push({ id, sensor: sensorMap[id], targetAbbr: getTargetAbbr(i) });
+    cells.push({ id, sensor: sensorMap[id], targetName: getTargetName(i) });
   }
 
   const okCount       = window.MOCK.sensors.filter(s => s.state === "ok").length;
@@ -682,12 +682,11 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
             {[
-              { abbr: "P-A", name: "PIPE-A-204",   meta: "탄소강 · 외경 300mm · 두께 10mm",     range: "ch01–12 · 12ch" },
-              { abbr: "T-B", name: "TANK-B-101",   meta: "SS 304 · 구형 · ∅ 1500mm · 두께 6mm",   range: "ch13–24 · 12ch" },
-              { abbr: "V-C", name: "VESSEL-C-301", meta: "압력 용기 · 800 × 400mm · 두께 12mm",  range: "ch25–32 · 8ch" },
+              { name: "PIPE-A-204",   meta: "탄소강 · 외경 300mm · 두께 10mm",     range: "ch01–12 · 12ch" },
+              { name: "TANK-B-101",   meta: "SS 304 · 구형 · ∅ 1500mm · 두께 6mm",   range: "ch13–24 · 12ch" },
+              { name: "VESSEL-C-301", meta: "압력 용기 · 800 × 400mm · 두께 12mm",  range: "ch25–32 · 8ch" },
             ].map(t => (
-              <div key={t.abbr} className="target-card">
-                <span className="target-card__abbr">{t.abbr}</span>
+              <div key={t.name} className="target-card">
                 <div className="target-card__name">{t.name}</div>
                 <div className="target-card__meta">{t.meta}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
@@ -728,24 +727,17 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
               <div
                 key={c.id}
                 className={clsParts.join(" ")}
-                style={{ aspectRatio: "20 / 14", opacity: active ? 1 : 0.55, position: "relative" }}
+                style={{ aspectRatio: "20 / 5.6", opacity: active ? 1 : 0.55, position: "relative", padding: "4px 8px", gap: 0, justifyContent: "center" }}
                 onClick={() => active && setSelected(c.id)}
                 onDoubleClick={() => active && onStartMeasure && onStartMeasure(c.id)}
               >
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span className="erut-ch-cell__id">{c.id}</span>
-                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: active ? (warn ? "var(--system-caution)" : "var(--system-success)") : "var(--surface-disabled)" }}/>
+                {/* v8.6: target full-name (현재 채널명 스타일) + LED */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span className="erut-ch-cell__id" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{active ? c.targetName : "—"}</span>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: active ? (warn ? "var(--system-caution)" : "var(--system-success)") : "var(--surface-disabled)", flexShrink: 0 }}/>
                 </div>
-                <div className="erut-ch-cell__val">{active ? s.thickness.toFixed(2) + " mm" : "—"}</div>
-                {active && (
-                  <svg viewBox="0 0 80 18" style={{ width: "100%", height: 16 }} preserveAspectRatio="none">
-                    <polyline
-                      points={warn ? "0,12 10,11 20,10 30,4 40,2 50,5 60,11 70,12 80,12" : "0,14 10,13 20,12 30,11 40,5 50,11 60,13 70,14 80,14"}
-                      fill="none" stroke={warn ? "var(--system-caution)" : "var(--brand-primary)"} strokeWidth="1.2"/>
-                  </svg>
-                )}
-                {/* v8.5: 셀 좌하단 검사체 약자 (다중 검사체 시나리오) */}
-                <span className="sensor-cell__tag" style={{ position: "absolute", left: 5, bottom: 3 }}>{c.targetAbbr}</span>
+                {/* v8.6: 채널명 (두께 수치 스타일) */}
+                <div className="erut-ch-cell__val">{c.id.toUpperCase().replace("CH", "CH ")}</div>
               </div>
             );
           })}
@@ -794,8 +786,18 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
               {/* Threshold 라인 */}
               <div style={{ position: "absolute", left: 0, right: 0, top: "35%", borderTop: "1px dashed var(--content-low)" }}/>
               <div style={{ position: "absolute", right: 4, top: "32%", font: "400 9px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>Threshold 50%</div>
-              {/* Wave */}
-              <window.AnimatedAscan fault={isCurWarn} color={isCurWarn ? "var(--system-caution)" : "var(--brand-primary)"} viewBox="0 0 300 200" showGrid={false} strokeWidth={1.5}/>
+              {/* v8.6: 정적 파형 SVG (애니메이션 제거) */}
+              <svg viewBox="0 0 300 200" preserveAspectRatio="none" width="100%" height="100%" style={{ position: "absolute", top: 0, left: 0 }}>
+                <line x1="0" y1="170" x2="300" y2="170" stroke="var(--border-low)" strokeWidth="1"/>
+                <path
+                  d={isCurWarn
+                    ? "M0 170 L50 170 L60 145 L66 25 L72 180 L78 170 L155 170 L165 150 L171 60 L177 180 L183 170 L300 170"
+                    : "M0 170 L50 170 L60 165 L70 20 L80 178 L90 168 L155 168 L165 140 L172 60 L180 175 L188 168 L300 168"}
+                  stroke={isCurWarn ? "var(--system-caution)" : "var(--brand-primary)"}
+                  strokeWidth="1.5"
+                  fill="none"
+                />
+              </svg>
             </div>
           </div>
 
@@ -2086,7 +2088,7 @@ window.ChannelPlacementWizard = function ChannelPlacementWizard({ targetName, on
             <div style={{ padding: "14px 18px" }}>
               <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 10 }}>선택 채널 좌표</div>
               <div style={{ background: "linear-gradient(rgba(34,133,239,0.08),rgba(34,133,239,0.08)), var(--surface-subtle-2)", border: "1px solid var(--border-emphasis)", padding: "8px 12px", marginBottom: 12 }}>
-                <div style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>CH 04 (P-A · PIPE-A-204)</div>
+                <div style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>CH 04 · PIPE-A-204</div>
                 <div style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 2 }}>탐촉자 SN: PXT-2024-104 · 5 MHz</div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
@@ -2293,7 +2295,6 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
             <span style={{ width: 1, height: 18, background: "var(--border-medium)" }}/>
             <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onPrevChannel}>← CH {String(Math.max(1, parseInt(chNum, 10) - 1)).padStart(2, "0")}</button>
             <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onNextChannel}>CH {String(parseInt(chNum, 10) + 1).padStart(2, "0")} →</button>
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onBack}>장비 상세로</button>
           </div>
         </div>
 
@@ -2314,10 +2315,13 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
           <div style={{ position: "absolute", top: 8, left: 12, font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>A-SCAN</div>
           <div style={{ position: "absolute", top: 8, right: 12, font: "400 12px/1 var(--font-kr)", color: "var(--content-low)" }}>Range 0 – 50 μs · 시간축</div>
 
-          {/* 파형 (Gate 오버레이 아래 깔리도록 먼저 렌더 · animated) */}
-          <div style={{ position: "absolute", top: 30, left: 0, right: 0, height: 300, pointerEvents: "none" }}>
-            <window.AnimatedAscan fault={true} color="var(--brand-primary)" viewBox="0 0 1000 300"/>
-          </div>
+          {/* v8.6: 정적 파형 SVG (애니메이션 제거) */}
+          <svg viewBox="0 0 1000 300" preserveAspectRatio="none" width="100%" height="300" style={{ position: "absolute", top: 30, left: 0, right: 0, pointerEvents: "none" }}>
+            <line x1="0" y1="250" x2="1000" y2="250" stroke="var(--border-low)" strokeWidth="1"/>
+            <line x1="0" y1="170" x2="1000" y2="170" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="2,4"/>
+            <line x1="0" y1="85" x2="1000" y2="85" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="2,4"/>
+            <path d="M0 250 L175 250 L200 215 L215 30 L230 270 L245 250 L525 250 L550 220 L565 85 L580 265 L595 250 L1000 250" stroke="var(--brand-primary)" strokeWidth="2" fill="none"/>
+          </svg>
 
           {showGateOverlay && gateA.active && (
             <>
@@ -2442,9 +2446,9 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
   const channelAttachStatus = {
     normal: 56, weak: 6, unattached: 2,
     detail: [
-      { ch: 22, target: "P-A", signal: 18, status: "미부착" },
-      { ch: 49, target: "V-C", signal: 22, status: "미부착" },
-      { ch: 31, target: "T-B", signal: 42, status: "약함" },
+      { ch: 22, target: "PIPE-A-204",   signal: 18, status: "미부착" },
+      { ch: 49, target: "VESSEL-C-301", signal: 22, status: "미부착" },
+      { ch: 31, target: "TANK-B-101",   signal: 42, status: "약함" },
     ],
   };
 
@@ -2490,7 +2494,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             {/* v8.5: 채널명 강조 (20px content-high) */}
             <div style={{ position: "absolute", top: 8, left: 14, display: "flex", alignItems: "baseline", gap: 10 }}>
               <span style={{ font: "700 20px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>CH {String(selectedCh).padStart(2, "0")}</span>
-              <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".04em", color: "var(--content-low)", textTransform: "uppercase" }}>P-A · A-SCAN</span>
+              <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".04em", color: "var(--content-low)", textTransform: "uppercase" }}>A-SCAN</span>
             </div>
             <div style={{ position: "absolute", top: 12, right: 14, font: "700 11px/1 var(--font-kr)", color: "var(--content-low)", display: "flex", alignItems: "center", gap: 4 }}>
               <span style={{ width: 8, height: 8, background: "var(--content-low)", borderRadius: "50%" }}/>
@@ -2574,9 +2578,8 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
           {/* v8.5 신규: 검사 대상 정보 (현재 선택 채널 기준) */}
           <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 6 }}>검사 대상 · 현재 CH {String(selectedCh).padStart(2, "0")}</div>
           <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+            <div style={{ marginBottom: 4 }}>
               <span style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>PIPE-A-204</span>
-              <span style={{ font: "700 10px/1 var(--font-kr)", letterSpacing: ".03em", color: "var(--content-low)", textTransform: "uppercase" }}>P-A</span>
             </div>
             <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 8 }}>배관 · 탄소강 · ASME B31.3</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 10px", font: "400 10px/1.3 var(--font-kr)" }}>
@@ -2624,10 +2627,9 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
           {defects.map((d) => {
             const c  = d.type === "Critical" ? "var(--system-error)" : "var(--system-caution)";
             const bg = d.type === "Critical" ? "rgba(255,0,94,0.05)" : "rgba(255,146,0,0.05)";
-            const abbr = d.channel <= 12 ? "P-A" : d.channel <= 24 ? "T-B" : d.channel <= 32 ? "V-C" : "P-A"; // 64채널 매핑 (단순화)
             return (
               <div key={d.id} style={{ background: "linear-gradient(" + bg + "," + bg + "), var(--surface-subtle-2)", border: "1px solid var(--border-medium)", borderLeft: "3px solid " + c, padding: "8px 10px", marginBottom: 4 }}>
-                <div style={{ font: "700 12px/1.2 var(--font-kr)", color: "var(--content-high)" }}>{d.type} · CH {String(d.channel).padStart(2, "0")} <span style={{ fontWeight: 400, color: "var(--content-low)", fontSize: 10 }}>{abbr}</span></div>
+                <div style={{ font: "700 12px/1.2 var(--font-kr)", color: "var(--content-high)" }}>{d.type} · CH {String(d.channel).padStart(2, "0")}</div>
                 <div style={{ font: "400 11px/1.4 var(--font-kr)", color: "var(--content-low)", marginTop: 2 }}>Amp {d.amp} % · ToF {d.tof} μs · 두께 {d.thickness} mm</div>
               </div>
             );
