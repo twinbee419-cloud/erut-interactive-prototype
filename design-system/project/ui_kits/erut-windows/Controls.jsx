@@ -275,9 +275,12 @@ window.ChannelGrid = function ChannelGrid({
             if (isStrong) clsParts.push("is-strong");
           }
 
+          // v9.10: 다른 카드의 정상 채널만 dim 0.6 (결함 채널은 유지). 카드 미선택 시 1.0
+          const isOtherCardNormal = selectedTargetCard && c.targetName && c.targetName !== selectedTargetCard && !hasDefect;
+          const cellOpacity = !active ? 0.55 : isOtherCardNormal ? 0.6 : 1;
           const cellStyle = isRealtime
-            ? { aspectRatio: "1 / 1", opacity: active ? 1 : 0.55, position: "relative", padding: "2px", gap: 0, justifyContent: "center", alignItems: "center" }
-            : { aspectRatio: "20 / 7", opacity: active ? 1 : 0.55, position: "relative", padding: "4px 8px", gap: 0, justifyContent: "center" };
+            ? { aspectRatio: "1 / 1", opacity: cellOpacity, position: "relative", padding: "2px", gap: 0, justifyContent: "center", alignItems: "center" }
+            : { aspectRatio: "20 / 7", opacity: cellOpacity, position: "relative", padding: "4px 8px", gap: 0, justifyContent: "center" };
 
           // 부착 LED dot 색
           const dotColor = !active ? "var(--surface-disabled)"
