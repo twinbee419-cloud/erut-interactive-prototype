@@ -123,10 +123,27 @@ window.MOCK = {
       trend: [9.83, 9.82, 9.82, 9.81, 9.81, 9.80, 9.80] },
     { id: "ch06", theta: 270, z: 3300, state: "ok",   thickness: 9.81, amp: 27, tof: 3.31, age: "1 분 전",
       trend: [9.84, 9.83, 9.83, 9.82, 9.82, 9.81, 9.81] },
-    { id: "ch07", theta:  45, z: 4560, state: "warn", thickness: 9.78, amp: 62, tof: 3.30, age: "1 분 전",
+    { id: "ch07", theta:  45, z: 4560, state: "ok",   thickness: 9.78, amp: 62, tof: 3.30, age: "1 분 전",
       trend: [9.85, 9.84, 9.82, 9.81, 9.80, 9.79, 9.78] },
     { id: "ch08", theta: 180, z: 4560, state: "ok",   thickness: 9.83, amp: 25, tof: 3.32, age: "1 분 전",
       trend: [9.86, 9.85, 9.85, 9.84, 9.84, 9.83, 9.83] },
+    // v9.14: ch09~ch24 부착 정상 활성화 추가 (CH 24까지 모두 정상 연결)
+    { id: "ch09", theta:  90, z:  600, state: "ok", thickness: 9.91, amp: 23, tof: 3.34, age: "1 분 전", trend: [9.93, 9.93, 9.92, 9.92, 9.91, 9.91, 9.91] },
+    { id: "ch10", theta: 270, z:  600, state: "ok", thickness: 9.90, amp: 24, tof: 3.34, age: "1 분 전", trend: [9.92, 9.91, 9.91, 9.91, 9.90, 9.90, 9.90] },
+    { id: "ch11", theta:  90, z: 1800, state: "ok", thickness: 9.87, amp: 25, tof: 3.33, age: "1 분 전", trend: [9.89, 9.88, 9.88, 9.88, 9.87, 9.87, 9.87] },
+    { id: "ch12", theta: 270, z: 1800, state: "ok", thickness: 9.84, amp: 56, tof: 3.32, age: "1 분 전", trend: [9.88, 9.87, 9.86, 9.85, 9.85, 9.84, 9.84] },
+    { id: "ch13", theta:   0, z: 3300, state: "ok", thickness: 9.82, amp: 26, tof: 3.31, age: "1 분 전", trend: [9.84, 9.83, 9.83, 9.83, 9.82, 9.82, 9.82] },
+    { id: "ch14", theta: 180, z: 3300, state: "ok", thickness: 9.81, amp: 27, tof: 3.31, age: "1 분 전", trend: [9.84, 9.83, 9.82, 9.82, 9.81, 9.81, 9.81] },
+    { id: "ch15", theta:  45, z: 3300, state: "ok", thickness: 9.83, amp: 28, tof: 3.32, age: "1 분 전", trend: [9.85, 9.84, 9.84, 9.83, 9.83, 9.83, 9.83] },
+    { id: "ch16", theta: 225, z: 3300, state: "ok", thickness: 9.80, amp: 24, tof: 3.31, age: "1 분 전", trend: [9.82, 9.82, 9.81, 9.81, 9.81, 9.80, 9.80] },
+    { id: "ch17", theta:   0, z: 4560, state: "ok", thickness: 9.79, amp: 26, tof: 3.30, age: "1 분 전", trend: [9.82, 9.81, 9.81, 9.80, 9.80, 9.79, 9.79] },
+    { id: "ch18", theta:  90, z: 4560, state: "ok", thickness: 9.76, amp: 48, tof: 3.29, age: "1 분 전", trend: [9.81, 9.80, 9.79, 9.78, 9.77, 9.77, 9.76] },
+    { id: "ch19", theta: 135, z: 4560, state: "ok", thickness: 9.82, amp: 29, tof: 3.32, age: "1 분 전", trend: [9.84, 9.84, 9.83, 9.83, 9.82, 9.82, 9.82] },
+    { id: "ch20", theta: 225, z: 4560, state: "ok", thickness: 9.84, amp: 25, tof: 3.32, age: "1 분 전", trend: [9.86, 9.85, 9.85, 9.85, 9.84, 9.84, 9.84] },
+    { id: "ch21", theta:   0, z: 5760, state: "ok", thickness: 9.87, amp: 23, tof: 3.33, age: "1 분 전", trend: [9.89, 9.88, 9.88, 9.88, 9.87, 9.87, 9.87] },
+    { id: "ch22", theta:  45, z: 5760, state: "ok", thickness: 9.85, amp: 27, tof: 3.32, age: "1 분 전", trend: [9.87, 9.86, 9.86, 9.86, 9.85, 9.85, 9.85] },
+    { id: "ch23", theta: 180, z: 5760, state: "ok", thickness: 9.83, amp: 24, tof: 3.32, age: "1 분 전", trend: [9.85, 9.85, 9.84, 9.84, 9.83, 9.83, 9.83] },
+    { id: "ch24", theta: 270, z: 5760, state: "ok", thickness: 9.86, amp: 26, tof: 3.33, age: "1 분 전", trend: [9.88, 9.87, 9.87, 9.87, 9.86, 9.86, 9.86] },
   ],
   defects: [
     { id: 1, type: "Critical", theta:  45, z: 2200, size: "Ø 12mm" },
@@ -610,19 +627,19 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   // 32 cells (4 rows × 8 cols). First 8 map to real sensors.
   // v8.8: 64채널 다중 검사체 분산 부착 — ch01-24 PIPE-A-204 · ch25-48 TANK-B-101 · ch49-64 VESSEL-C-301
   const getTargetName = (i) => i <= 24 ? "PIPE-A-204" : i <= 48 ? "TANK-B-101" : "VESSEL-C-301";
-  // v9.0 (NDT 1.7): 결함 검출 채널 (mockup) — Critical=red+breathing / Major=orange / Minor=gray
-  const DEFECT_CHANNELS = { 4: "critical", 7: "major", 56: "minor" };
+  // v9.14: 결함 검출 채널 4건 — 모두 PIPE-A-204(ch01-24) 영역
+  const DEFECT_CHANNELS = { 4: "critical", 7: "major", 12: "minor", 18: "minor" };
   const cells = [];
   for (let i = 1; i <= 64; i++) {
     const id = "ch" + String(i).padStart(2, "0");
     cells.push({ id, sensor: sensorMap[id], targetName: getTargetName(i), defectLevel: DEFECT_CHANNELS[i] || null });
   }
 
-  // v9.0 (NDT 1.7): 검사 대상 데이터 (결함 정보 포함)
+  // v9.14: 검사 대상 — PIPE-A-204에 결함 4건, 나머지 정상 (CH 25~64 비활성화)
   const TARGETS = [
-    { name: "PIPE-A-204",   meta: "탄소강 · 외경 300mm · 두께 10mm",     range: "ch01–24 · 24ch", defectCount: 2, topLevel: "critical" },
+    { name: "PIPE-A-204",   meta: "탄소강 · 외경 300mm · 두께 10mm",     range: "ch01–24 · 24ch", defectCount: 4, topLevel: "critical" },
     { name: "TANK-B-101",   meta: "SS 304 · 구형 · ∅ 1500mm · 두께 6mm",   range: "ch25–48 · 24ch", defectCount: 0, topLevel: null },
-    { name: "VESSEL-C-301", meta: "압력 용기 · 800 × 400mm · 두께 12mm",  range: "ch49–64 · 16ch", defectCount: 1, topLevel: "minor" },
+    { name: "VESSEL-C-301", meta: "압력 용기 · 800 × 400mm · 두께 12mm",  range: "ch49–64 · 16ch", defectCount: 0, topLevel: null },
   ];
   // 결함 등급별 색 매핑
   const DEFECT_COLOR = { critical: "var(--system-error)", major: "var(--system-caution)", minor: "var(--content-low)" };
