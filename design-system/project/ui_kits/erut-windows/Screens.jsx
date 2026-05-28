@@ -532,7 +532,6 @@ window.MainScreen = function MainScreen({ onAddDevice, onOpenDevice, onChangePro
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button className="erut-btn erut-btn--default erut-btn--sm">프로젝트 저장</button>
-            <button className="erut-btn erut-btn--subtle erut-btn--sm">닫기</button>
           </div>
         </div>
         {/* Tab */}
@@ -1218,7 +1217,7 @@ function MCBoardList({ onAdd, onEdit }) {
               <span className={ledClass} style={{ width: 12, height: 12 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
               <div>
                 <div style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: b.state === "offline" ? "var(--content-medium)" : "var(--content-high)", marginBottom: 4 }}>
-                  {b.id} <span style={{ font: "400 12px/1 var(--font-kr)", color: "var(--content-low)" }}>· {b.alias}</span>
+                  {b.id}
                 </div>
                 <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: b.state === "offline" ? "var(--content-low)" : "var(--content-medium)" }}>
                   IP {b.ip} : {b.port} · {b.channels} ch · {b.freq} MHz · Firmware {b.firmware} ·{" "}
@@ -2503,8 +2502,8 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
       {/* ───── 좌측: 알림 + 2분할 (A-scan + 64ch) ───── */}
       <div style={{ gridRow: 2, gridColumn: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 10 }}>
 
-        {/* 결함 알림 (Critical) */}
-        {showAlert && state === "measuring" && criticalDefect && (
+        {/* v8.9: 결함 알림 (Critical) — 측정 상태와 무관하게 결함 검출 시 표시 유지 */}
+        {showAlert && criticalDefect && (
           <div style={{ background: "var(--surface-base)", border: "1px solid var(--system-error)", borderLeft: "4px solid var(--system-error)", padding: "12px 16px", display: "flex", alignItems: "center", gap: 14 }}>
             <div style={{ color: "var(--system-error)", flexShrink: 0 }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
