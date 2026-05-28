@@ -895,10 +895,12 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   const isCurWarn = cur.state === "warn";
 
   // 32 cells (4 rows × 8 cols). First 8 map to real sensors.
+  // v8.5: 다중 검사체 분산 부착 시나리오 — ch01-12 P-A · ch13-24 T-B · ch25-32 V-C
+  const getTargetAbbr = (i) => i <= 12 ? "P-A" : i <= 24 ? "T-B" : "V-C";
   const cells = [];
   for (let i = 1; i <= 32; i++) {
     const id = "ch" + String(i).padStart(2, "0");
-    cells.push({ id, sensor: sensorMap[id] });
+    cells.push({ id, sensor: sensorMap[id], targetAbbr: getTargetAbbr(i) });
   }
 
   const okCount       = window.MOCK.sensors.filter(s => s.state === "ok").length;
@@ -956,15 +958,45 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
           </div>
         </div>
 
-        {/* ▼ 센서 채널 헤더 + "+ 센서 추가" 버튼 ▼ */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div>
-            <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>
-              센서 채널 <span style={{ fontWeight: 400, color: "var(--content-low)", fontSize: 14 }}>(현재 64ch · 보드 사양에 따라 가변)</span>
-            </h2>
-            <p style={{ font: "400 13px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4, marginBottom: 0 }}>한 클릭 → Gate 설정 · 더블 클릭 → 우측 패널 A-scan 확대</p>
+        {/* ▼ v8.5 신규: 검사 대상 목록 (MC보드 채널이 분산된 검사체) ▼ */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+              <h3 style={{ font: "700 15px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>검사 대상</h3>
+              <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>이 MC보드가 현재 검사 중인 대상 3개 · 채널 모두 할당</span>
+            </div>
+            <button className="erut-btn erut-btn--default erut-btn--sm">+ 검사 대상 추가</button>
           </div>
-          <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => setShowAddSensor(true)}>+ 센서 추가</button>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+            {[
+              { abbr: "P-A", name: "PIPE-A-204",   meta: "탄소강 · 외경 300mm · 두께 10mm",     range: "ch01–12 · 12ch" },
+              { abbr: "T-B", name: "TANK-B-101",   meta: "SS 304 · 구형 · ∅ 1500mm · 두께 6mm",   range: "ch13–24 · 12ch" },
+              { abbr: "V-C", name: "VESSEL-C-301", meta: "압력 용기 · 800 × 400mm · 두께 12mm",  range: "ch25–32 · 8ch" },
+            ].map(t => (
+              <div key={t.abbr} className="target-card">
+                <span className="target-card__abbr">{t.abbr}</span>
+                <div className="target-card__name">{t.name}</div>
+                <div className="target-card__meta">{t.meta}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
+                  <span className="target-card__range">{t.range}</span>
+                  <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-success)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ width: 6, height: 6, background: "var(--system-success)", borderRadius: "50%" }}/>측정 중
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ▼ 센서 채널 헤더 + "+ 센서 추가" 버튼 ▼ */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div>
+            <h3 style={{ font: "700 15px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>
+              센서 채널 32ch <span style={{ fontWeight: 400, color: "var(--content-low)", fontSize: 12 }}>· 셀 좌하단 약자 = 검사 대상</span>
+            </h3>
+            <p style={{ font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 2, marginBottom: 0 }}>한 클릭 → Gate 설정 · 더블 클릭 → 우측 패널 A-scan 확대</p>
+          </div>
+          <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => setShowAddSensor(true)}>+ 센서 추가</button>
         </div>
 
         {/* ▼ 셀 그리드 (스타일·데이터 그대로 유지) ▼ */}
@@ -983,7 +1015,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
               <div
                 key={c.id}
                 className={clsParts.join(" ")}
-                style={{ aspectRatio: "20 / 14", opacity: active ? 1 : 0.55 }}
+                style={{ aspectRatio: "20 / 14", opacity: active ? 1 : 0.55, position: "relative" }}
                 onClick={() => active && setSelected(c.id)}
                 onDoubleClick={() => active && onStartMeasure && onStartMeasure(c.id)}
               >
@@ -999,6 +1031,8 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
                       fill="none" stroke={warn ? "var(--system-caution)" : "var(--brand-primary)"} strokeWidth="1.2"/>
                   </svg>
                 )}
+                {/* v8.5: 셀 좌하단 검사체 약자 (다중 검사체 시나리오) */}
+                <span className="sensor-cell__tag" style={{ position: "absolute", left: 5, bottom: 3 }}>{c.targetAbbr}</span>
               </div>
             );
           })}
