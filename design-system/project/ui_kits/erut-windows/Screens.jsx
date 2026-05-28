@@ -2281,8 +2281,7 @@ window.ChannelPlacementWizard = function ChannelPlacementWizard({ targetName, on
         {/* 헤더 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
           <div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
-              <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".04em", color: "var(--on-primary)", background: "var(--brand-primary)", padding: "3px 7px" }}>v8.5 신규</span>
+            <div style={{ marginBottom: 4 }}>
               <span style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>채널 배치 마법사 — {targetName}</span>
             </div>
             <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>각 채널의 부착 위치(θ, Z)를 사전 등록 — NDT 표준 Probe Setup 패턴</div>
