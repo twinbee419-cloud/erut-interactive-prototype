@@ -2492,7 +2492,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
   };
 
   return (
-    <div className="erut-page-enter" style={{ padding: "20px 24px", height: "100%", display: "grid", gridTemplateColumns: "1fr 340px", gridTemplateRows: "40px 1fr", alignContent: "start", columnGap: 14, rowGap: 20 }}>
+    <div className="erut-page-enter" style={{ padding: "20px 24px", height: "100%", display: "grid", gridTemplateColumns: "1fr 340px", gridTemplateRows: "40px auto 440px", alignContent: "start", columnGap: 14, rowGap: 20 }}>
       {/* v8.5 Breadcrumb */}
       <window.Breadcrumb
         onBack={onBack}
@@ -2504,28 +2504,27 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
         style={{ gridRow: 1, gridColumn: "1 / -1" }}
       />
 
-      {/* ───── 좌측: 알림 + 2분할 (A-scan + 64ch) ───── */}
-      <div style={{ gridRow: 2, gridColumn: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-
-        {/* v8.9: 결함 알림 (Critical) — 측정 상태와 무관하게 결함 검출 시 표시 유지 */}
-        {showAlert && criticalDefect && (
-          <div style={{ background: "var(--surface-base)", border: "1px solid var(--system-error)", borderLeft: "4px solid var(--system-error)", padding: "12px 16px", display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{ color: "var(--system-error)", flexShrink: 0 }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M12 2 L22 20 L2 20 Z"/>
-                <line x1="12" y1="9" x2="12" y2="14"/>
-                <circle cx="12" cy="17" r="0.5" fill="currentColor"/>
-              </svg>
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>Critical 결함 검출 · 진폭 {criticalDefect.amp} %</div>
-              <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 2 }}>채널 {criticalDefect.channel} · ToF {criticalDefect.tof} μs · 두께 {criticalDefect.thickness} mm · 임계값 80 % 초과 · 자동 마킹 완료</div>
-            </div>
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowAlert(false)}>확인 후 계속</button>
-            <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={() => setState("paused")}>일시정지 후 재측정</button>
+      {/* v8.8: Critical 알림 — grid row 2, 양 컬럼 span (좌·우 분리되어 정렬됨) */}
+      {showAlert && criticalDefect && (
+        <div style={{ gridRow: 2, gridColumn: "1 / -1", background: "var(--surface-base)", border: "1px solid var(--system-error)", borderLeft: "4px solid var(--system-error)", padding: "12px 16px", display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ color: "var(--system-error)", flexShrink: 0 }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M12 2 L22 20 L2 20 Z"/>
+              <line x1="12" y1="9" x2="12" y2="14"/>
+              <circle cx="12" cy="17" r="0.5" fill="currentColor"/>
+            </svg>
           </div>
-        )}
+          <div style={{ flex: 1 }}>
+            <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>Critical 결함 검출 · 진폭 {criticalDefect.amp} %</div>
+            <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 2 }}>채널 {criticalDefect.channel} · ToF {criticalDefect.tof} μs · 두께 {criticalDefect.thickness} mm · 임계값 80 % 초과 · 자동 마킹 완료</div>
+          </div>
+          <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowAlert(false)}>확인 후 계속</button>
+          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={() => setState("paused")}>일시정지 후 재측정</button>
+        </div>
+      )}
 
+      {/* ───── 좌측: A-scan/64ch (row 3, 440px 고정) ───── */}
+      <div style={{ gridRow: 3, gridColumn: 1, minWidth: 0 }}>
         {/* v8.5: 2분할 (A-scan + 64ch) — 진폭 트렌드 삭제 · A-scan 정적 · 440px 고정 */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 8, height: 440 }}>
           {/* 좌: A-scan (정적, 선택 채널) */}
@@ -2618,8 +2617,8 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
         </div>
       </div>
 
-      {/* ───── v8.7 우측: 선택 채널 컨텍스트로 통일 (검사 대상 · 부착 상태 · 측정 제어) — v8.8: 높이 440px / 하단 정렬 ───── */}
-      <div className="erut-panel" style={{ gridRow: 2, gridColumn: 2, minWidth: 0, height: 440, alignSelf: "end" }}>
+      {/* ───── v8.7 우측: 선택 채널 컨텍스트로 통일 (검사 대상 · 부착 상태 · 측정 제어) — v8.8: row 3, 440px ───── */}
+      <div className="erut-panel" style={{ gridRow: 3, gridColumn: 2, minWidth: 0 }}>
         <div className="erut-panel__header">검사 대상 · 부착 상태 · 측정 제어</div>
         <div className="erut-panel__body" style={{ overflowY: "auto", padding: 14 }}>
 
