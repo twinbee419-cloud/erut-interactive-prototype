@@ -1247,8 +1247,6 @@ function MCBoardList({ onAdd, onEdit }) {
         })}
       </div>
 
-      </div>
-
       {/* 영점 색검증 요약 (선택 보드) — v8.8: 2컬럼 우측으로 이동 */}
       <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "16px 18px", alignSelf: "start" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
