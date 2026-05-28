@@ -290,8 +290,8 @@ window.ChannelGrid = function ChannelGrid({
               key={c.id || c.num}
               className={clsParts.join(" ")}
               style={cellStyle}
-              onClick={() => active && onCellClick && onCellClick(c.id || c.num)}
-              onDoubleClick={() => active && onCellDoubleClick && onCellDoubleClick(c.id || c.num)}
+              onClick={() => active && onCellClick && onCellClick(isRealtime ? c.num : (c.id || c.num))}
+              onDoubleClick={() => active && onCellDoubleClick && onCellDoubleClick(isRealtime ? c.num : (c.id || c.num))}
             >
               {isRealtime ? (
                 <>
