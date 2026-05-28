@@ -2647,7 +2647,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
   };
 
   return (
-    <div className="erut-page-enter" style={{ padding: "20px 24px", height: "100%", display: "grid", gridTemplateColumns: "1fr 340px", gridTemplateRows: "40px auto 540px", alignContent: "start", columnGap: 14, rowGap: 20 }}>
+    <div className="erut-page-enter" style={{ padding: "20px 24px", height: "100%", display: "grid", gridTemplateColumns: "340px 1fr", gridTemplateRows: "40px auto 540px", alignContent: "start", columnGap: 14, rowGap: 20 }}>
       {/* v8.5 Breadcrumb */}
       <window.Breadcrumb
         onBack={onBack}
@@ -2678,8 +2678,8 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
         </div>
       )}
 
-      {/* ───── 좌측: A-scan/64ch (row 3, 440px 고정) ───── */}
-      <div style={{ gridRow: 3, gridColumn: 1, minWidth: 0 }}>
+      {/* v9.6: A-scan/64ch — 우측 큰 영역으로 이동 (column 2) */}
+      <div style={{ gridRow: 3, gridColumn: 2, minWidth: 0 }}>
         {/* v8.5: 2분할 (A-scan + 64ch) — 진폭 트렌드 삭제 · A-scan 정적 / v8.8: 540px (우측 패널과 동일) */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 8, height: 540 }}>
           {/* 좌: A-scan (정적, 선택 채널) */}
@@ -2736,8 +2736,8 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
         </div>
       </div>
 
-      {/* ───── v8.7 우측: 선택 채널 컨텍스트로 통일 (검사 대상 · 부착 상태 · 측정 제어) — v8.8: row 3, 440px ───── */}
-      <div className="erut-panel" style={{ gridRow: 3, gridColumn: 2, minWidth: 0 }}>
+      {/* v9.6: 검사 대상·부착 상태·측정 제어 — 좌측 작은 영역으로 이동 (column 1, 340px) */}
+      <div className="erut-panel" style={{ gridRow: 3, gridColumn: 1, minWidth: 0 }}>
         <div className="erut-panel__header">검사 대상 · 부착 상태 · 측정 제어</div>
         <div className="erut-panel__body" style={{ overflow: "visible", padding: 14 }}>
 
