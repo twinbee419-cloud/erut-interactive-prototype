@@ -584,6 +584,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   const [focusActive, setFocusActive] = $s(!!focusChannel);
   const [showAddSensor, setShowAddSensor] = $s(false);
   const [showCalibration, setShowCalibration] = $s(false);
+  const [showDiagnostics, setShowDiagnostics] = $s(false);
 
   React.useEffect(() => {
     if (focusChannel) {
@@ -651,7 +652,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
               </span>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="erut-btn erut-btn--default erut-btn--sm">진단 / 로그</button>
+              <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowDiagnostics(true)}>진단 / 로그</button>
             </div>
           </div>
           {/* 메타 정보 7-col stripe */}
@@ -875,9 +876,123 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
 
       {/* v8.10: 등록 후 교정 마법사 자동 트리거 */}
       {showCalibration && <window.CalibrationWizard onClose={() => setShowCalibration(false)}/>}
+
+      {/* v8.8: 진단 / 로그 모달 */}
+      {showDiagnostics && <window.DiagnosticsModal onClose={() => setShowDiagnostics(false)}/>}
     </div>
   );
 };
+
+// =================== v8.8: 진단 / 로그 모달 (좌측 탭 메뉴 + 우측 콘텐츠) ===================
+window.DiagnosticsModal = function DiagnosticsModal({ onClose }) {
+  const [tab, setTab] = $s("hw"); // hw / conn / meas / calib / err
+  const tabs = [
+    { id: "hw",    label: "하드웨어 진단" },
+    { id: "conn",  label: "연결 로그" },
+    { id: "meas",  label: "측정 로그" },
+    { id: "calib", label: "교정 이력" },
+    { id: "err",   label: "에러 로그", badge: 2 },
+  ];
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: 1100, maxHeight: "90vh", background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
+        {/* 헤더 */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderBottom: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
+          <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>진단 / 로그 — MCuF-001</div>
+          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose} aria-label="닫기">✕</button>
+        </div>
+        {/* 본문 (좌: 탭 메뉴 / 우: 콘텐츠) */}
+        <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", minHeight: 480 }}>
+          {/* 좌측 탭 메뉴 */}
+          <div style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", padding: "8px 0" }}>
+            {tabs.map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)} style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%",
+                padding: "10px 16px", textAlign: "left",
+                font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em",
+                color: tab === t.id ? "var(--content-emphasis)" : "var(--content-medium)",
+                background: tab === t.id ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "transparent",
+                border: "none", borderLeft: tab === t.id ? "3px solid var(--brand-primary)" : "3px solid transparent",
+                cursor: "pointer"
+              }}>
+                <span>{t.label}</span>
+                {t.badge && <span style={{ font: "700 10px/1 var(--font-kr)", padding: "2px 6px", background: "var(--system-error)", color: "var(--on-primary)" }}>{t.badge}</span>}
+              </button>
+            ))}
+          </div>
+          {/* 우측 콘텐츠 (탭별) */}
+          <div style={{ padding: "18px 24px", overflowY: "auto" }}>
+            {tab === "hw" && <DiagHardware/>}
+            {tab === "conn" && <DiagLogPlaceholder title="연결 로그" desc="MC보드 연결/해제·timeout·IP 변경 이력 (시계열 테이블)"/>}
+            {tab === "meas" && <DiagLogPlaceholder title="측정 로그" desc="세션 시작/종료·일시정지/재개·데이터 전송 오류 (시계열 테이블)"/>}
+            {tab === "calib" && <DiagLogPlaceholder title="교정 이력" desc="채널별 영점·음속·감도 교정 이력 + 다음 권장 교정 시점"/>}
+            {tab === "err" && <DiagLogPlaceholder title="에러 로그" desc="오류 코드 · timestamp · 채널/원인 · 해결 여부 (검색·필터 가능)"/>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 하드웨어 진단 탭 콘텐츠
+function DiagHardware() {
+  const cards = [
+    { label: "CPU 사용률",   value: "42",  unit: "%",      status: "정상",          tone: "success" },
+    { label: "메모리 사용량", value: "512", unit: "/ 2048 MB", status: "정상 (25%)", tone: "success" },
+    { label: "네트워크 지연", value: "4",   unit: "ms",     status: "정상 (Wi-Fi/LAN)", tone: "success" },
+    { label: "패킷 손실",     value: "0.3", unit: "%",      status: "경계 (1% 이상 경고)", tone: "caution" },
+  ];
+  const toneColor = (t) => t === "success" ? "var(--system-success)" : t === "caution" ? "var(--system-caution)" : "var(--system-error)";
+  const info = [
+    ["시리얼 (SN)", "MCF-2024-001"],
+    ["펌웨어", "v2.1.4 (2026-04-18)"],
+    ["하드웨어 리비전", "REV-C"],
+    ["제조일", "2024-03-12"],
+    ["샘플링 속도", "32,000 /s"],
+    ["최대 채널 수", "64 ch"],
+    ["IP 주소", "192.168.1.100 : 8080"],
+    ["MAC 주소", "B8:27:EB:1F:4C:A2"],
+  ];
+  return (
+    <>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
+        <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>하드웨어 진단</h3>
+        <button className="erut-btn erut-btn--default erut-btn--sm">진단 다시 실행</button>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 18 }}>
+        {cards.map(c => (
+          <div key={c.label} style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", borderLeft: "3px solid " + toneColor(c.tone), padding: "10px 12px" }}>
+            <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 6, textTransform: "uppercase" }}>{c.label}</div>
+            <div style={{ font: "700 18px/1 var(--font-kr)", color: "var(--content-high)" }}>{c.value} <span style={{ fontSize: 11, color: "var(--content-low)", fontWeight: 400 }}>{c.unit}</span></div>
+            <div style={{ font: "400 10px/1.3 var(--font-kr)", color: toneColor(c.tone), marginTop: 4 }}>{c.status}</div>
+          </div>
+        ))}
+      </div>
+      <h4 style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: "0 0 10px" }}>시스템 정보</h4>
+      <div style={{ border: "1px solid var(--border-low)", padding: "12px 14px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px 24px", font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em" }}>
+        {info.map(([k, v]) => (
+          <div key={k}><span style={{ color: "var(--content-low)" }}>{k}</span> <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{v}</strong></div>
+        ))}
+      </div>
+      <div style={{ marginTop: 14, padding: "10px 14px", background: "linear-gradient(rgba(34,133,239,0.05),rgba(34,133,239,0.05)), var(--surface-base)", borderLeft: "3px solid var(--border-emphasis)", font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
+        <strong style={{ color: "var(--content-emphasis)", fontWeight: 700 }}>최신 펌웨어:</strong> v2.1.4 (현재 설치본). 업데이트 가능 시 자동 알림.
+      </div>
+    </>
+  );
+}
+
+// 다른 탭 placeholder
+function DiagLogPlaceholder({ title, desc }) {
+  return (
+    <>
+      <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: "0 0 8px" }}>{title}</h3>
+      <p style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", margin: "0 0 16px" }}>{desc}</p>
+      <div style={{ padding: "32px 16px", background: "var(--surface-subtle-2)", border: "1px dashed var(--border-medium)", textAlign: "center", font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+        (테이블 mockup 영역 — 추후 데이터 연결 시 시계열 로그 표시)
+      </div>
+    </>
+  );
+}
 
 // =================== Screen 7 · [11] REALTIME SCAN ===================
 // =================== AnimatedAscan — 실시간 A-scan 파형 (재사용 컴포넌트) ===================
