@@ -757,64 +757,22 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
           </div>
         </div>
 
-        {/* ▼ 센서 채널 헤더 + "+ 센서 추가" 버튼 ▼ */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div>
-            <h3 style={{ font: "700 15px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>
-              센서 채널 64ch
-            </h3>
-            <p style={{ font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 2, marginBottom: 0 }}>더블 클릭 → 우측 패널 A-scan 확대</p>
-          </div>
+        {/* v9.5 (NDT 1.8): 셀 그리드 통합 컴포넌트로 교체 + 헤더 + 범례 */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 8 }}>
+          <p style={{ font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", margin: 0 }}>더블 클릭 → 우측 패널 A-scan 확대</p>
           <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => setShowAddSensor(true)}>+ 센서 추가</button>
         </div>
-
-        {/* ▼ v8.8: 64ch 셀 그리드 — 스크롤 가능 ▼ */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 6, maxHeight: 320, overflowY: "auto", paddingRight: 4 }}>
-          {cells.map((c) => {
-            const s = c.sensor;
-            const active = s != null;
-            const warn = s && s.state === "warn";
-            const isSel = c.id === selected && active;
-            const isFocus = isSel && focusActive;
-            // v9.2 (NDT 1.7 옵션 D): 모든 결함 셀 default breathing + 선택 카드의 결함은 strong
-            const hasDefect = c.defectLevel != null;
-            const isDefectInSelected = hasDefect && selectedTargetCard && c.targetName === selectedTargetCard;
-            const clsParts = ["erut-ch-cell"];
-            if (isSel) clsParts.push("is-active");
-            if (warn)  clsParts.push("is-warning");
-            if (isFocus) clsParts.push("is-focused");
-            if (hasDefect) {
-              clsParts.push("is-defect-" + c.defectLevel);
-              if (isDefectInSelected) clsParts.push("is-strong");
-            }
-            return (
-              <div
-                key={c.id}
-                className={clsParts.join(" ")}
-                style={{ aspectRatio: "20 / 7", opacity: active ? 1 : 0.55, position: "relative", padding: "4px 8px", gap: 0, justifyContent: "center" }}
-                onClick={() => active && setSelected(c.id)}
-                onDoubleClick={() => active && onStartMeasure && onStartMeasure(c.id)}
-              >
-                {/* v8.7: 위 = 채널명 (두께 스타일) + LED */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span className="erut-ch-cell__val">{c.id.toUpperCase().replace("CH", "CH ")}</span>
-                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: active ? (warn ? "var(--system-caution)" : "var(--system-success)") : "var(--surface-disabled)", flexShrink: 0 }}/>
-                </div>
-                {/* v8.7: 아래 = target full-name (채널명 스타일) */}
-                <span className="erut-ch-cell__id" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{active ? c.targetName : "—"}</span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* ▼ 범례 (셀 그리드 아래 — main 매칭) ▼ */}
-        <div style={{ display: "flex", gap: 18, marginTop: 16, font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 10, height: 10, background: "var(--system-success)" }}/>정상 ({okCount})</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 10, height: 10, background: "var(--system-caution)" }}/>경고 ({warnCount})</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 10, height: 10, background: "var(--system-error)" }}/>오류 ({errCount})</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 10, height: 10, border: "1px solid var(--border-emphasis)", background: "rgba(34,133,239,0.10)" }}/>선택됨 (1)</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 10, height: 10, background: "var(--surface-disabled)" }}/>비활성 ({inactiveCount})</div>
-        </div>
+        <window.ChannelGrid
+          cells={cells}
+          totalCh={64}
+          selectedCh={selected}
+          selectedTargetCard={selectedTargetCard}
+          variant="device-detail"
+          forceStrongAll={false}
+          focusActive={focusActive}
+          onCellClick={(id) => setSelected(id)}
+          onCellDoubleClick={(id) => onStartMeasure && onStartMeasure(id)}
+        />
 
         {/* deep link 안내 박스 (셀 그리드 동작 보존) */}
         {focusChannel && (
@@ -2663,16 +2621,24 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
   const defects = window.MOCK.realtimeDefects;
   const criticalDefect = defects.find(d => d.type === "Critical");
 
-  // 64ch grid: 8×8. CH 4 critical / CH 7 major / CH 38 major / 나머지 정상
+  // v9.5 (NDT 1.8): 64ch cells — ChannelGrid 통합 컴포넌트 사용. 결함 + 부착 상태 동시 표현
+  const unattachedSet = new Set([22, 49]); // 미부착 2채널
+  const weakSet = new Set([7, 12, 31, 38, 50, 55]); // 약함 6채널 (mock)
   const cells64 = [];
   for (let i = 1; i <= 64; i++) {
     const def = defects.find(d => d.channel === i);
-    cells64.push({ num: i, type: def ? def.type : "ok" });
+    const state = unattachedSet.has(i) ? "err" : weakSet.has(i) ? "warn" : "ok";
+    cells64.push({
+      num: i,
+      id: "ch" + String(i).padStart(2, "0"),
+      sensor: { id: "ch" + String(i).padStart(2, "0"), state },
+      defectLevel: def ? def.type.toLowerCase() : null, // "Critical" → "critical"
+      targetName: i <= 24 ? "PIPE-A-204" : i <= 48 ? "TANK-B-101" : "VESSEL-C-301",
+    });
   }
 
-  // v8.5: 채널 부착 상태 (모의 데이터)
+  // v8.5: 채널 부착 상태 detail (우측 패널 위젯용 — 카운터는 ChannelGrid가 자동 집계)
   const channelAttachStatus = {
-    normal: 56, weak: 6, unattached: 2,
     detail: [
       { ch: 22, target: "PIPE-A-204",   signal: 18, status: "미부착" },
       { ch: 49, target: "VESSEL-C-301", signal: 22, status: "미부착" },
@@ -2748,22 +2714,9 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             </div>
           </div>
 
-          {/* 우: 64ch 채널 상태 그리드 (v8.5: 자동 전환 토글 통합 / v8.7: 부착 상태 카운터 추가) */}
-          <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "12px", position: "relative", display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>64ch 채널 상태</span>
-              <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>셀 클릭 → A-scan 전환</span>
-            </div>
-            {/* v8.7 신규: 센서 부착 상태 카운터 (전체 모니터링) */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, padding: "6px 8px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)", font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em" }}>
-              <span style={{ color: "var(--content-low)", textTransform: "uppercase", letterSpacing: "0.06em" }}>센서 부착 상태</span>
-              <span style={{ width: 1, height: 10, background: "var(--border-medium)" }}/>
-              <span style={{ color: "var(--system-success)" }}>정상 <strong>{channelAttachStatus.normal}</strong></span>
-              <span style={{ color: "var(--system-caution)" }}>약함 <strong>{channelAttachStatus.weak}</strong></span>
-              <span style={{ color: "var(--system-error)" }}>미부착 <strong>{channelAttachStatus.unattached}</strong></span>
-            </div>
-            {/* v8.5: 자동 전환 토글 / v8.8: 텍스트 좌·스위치 우 + 우측 정렬 */}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+          {/* v9.5 (NDT 1.8): 우 64ch 그리드 — ChannelGrid 통합 컴포넌트로 교체 */}
+          <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "12px", position: "relative", display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <label className="erut-toggle" style={{ flexDirection: "row-reverse" }} onClick={() => setAutoSwitch(!autoSwitch)}>
                 <span className={"erut-toggle__track" + (autoSwitch ? " is-on" : "")}>
                   <span className="erut-toggle__thumb"/>
@@ -2771,37 +2724,14 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
                 <span className="erut-toggle__label erut-toggle__label--sm">결함 검출 시 자동 전환</span>
               </label>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 3 }}>
-              {cells64.map((c) => {
-                const bg = c.type === "Critical" ? "var(--system-error)" : c.type === "Major" ? "var(--system-caution)" : "var(--system-success)";
-                const sel = c.num === selectedCh;
-                return (
-                  <div
-                    key={c.num}
-                    onClick={() => setSelectedCh(c.num)}
-                    style={{
-                      aspectRatio: "1",
-                      background: bg,
-                      border: sel ? "2px solid var(--content-emphasis)" : "1px solid var(--border-low)",
-                      font: "700 9px/1 var(--font-kr)",
-                      color: c.type === "Major" ? "var(--content-high)" : "var(--on-primary)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {c.num <= 8 ? String(c.num).padStart(2, "0") : ""}
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ display: "flex", gap: 10, marginTop: 8, font: "700 9px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 3 }}><span style={{ width: 8, height: 8, background: "var(--system-success)" }}/>정상</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 3 }}><span style={{ width: 8, height: 8, background: "var(--system-caution)" }}/>Major</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 3 }}><span style={{ width: 8, height: 8, background: "var(--system-error)" }}/>Critical</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 3, marginLeft: "auto" }}><span style={{ width: 8, height: 8, border: "2px solid var(--content-emphasis)" }}/>선택</span>
-            </div>
+            <window.ChannelGrid
+              cells={cells64}
+              totalCh={64}
+              selectedCh={selectedCh}
+              variant="realtime"
+              forceStrongAll={true}
+              onCellClick={(n) => setSelectedCh(n)}
+            />
           </div>
         </div>
       </div>

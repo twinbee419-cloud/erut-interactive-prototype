@@ -185,3 +185,141 @@ window.Tooltip = function Tooltip({ x, y, title, rows, sparkValues, hint, warn }
     </div>
   );
 };
+
+// ----------- CHANNEL GRID ------------
+// v9.5 (NDT 1.8): [2]·[11] 셀 그리드 통일 컴포넌트.
+// cells: [{ id, num, sensor?, targetName?, defectLevel }]
+// variant: "device-detail" (긴 가로형, 채널명+검사대상명) | "realtime" (정사각형, 번호만)
+// forceStrongAll: [11] 측정 중 — 모든 결함을 strong (true). [2]는 false (선택 카드만 strong)
+// selectedTargetCard: [2] 카드 선택 컨텍스트 (forceStrongAll=false일 때만 유효)
+window.ChannelGrid = function ChannelGrid({
+  cells,
+  totalCh,
+  selectedCh,
+  selectedTargetCard,
+  variant = "device-detail",
+  forceStrongAll = false,
+  focusActive = false,
+  onCellClick,
+  onCellDoubleClick,
+  title,
+  showAttachCounters = true,
+  showDefectLegend = true,
+}) {
+  const isRealtime = variant === "realtime";
+  const n = totalCh != null ? totalCh : cells.length;
+
+  // 부착 상태 카운터 집계 (sensor.state 기준)
+  const counts = cells.reduce((acc, c) => {
+    const s = c.sensor;
+    if (!s) acc.inactive += 1;
+    else if (s.state === "warn") acc.weak += 1;
+    else if (s.state === "err")  acc.unattached += 1;
+    else acc.normal += 1;
+    return acc;
+  }, { normal: 0, weak: 0, unattached: 0, inactive: 0 });
+
+  // 결함 등급 카운터
+  const defectCounts = cells.reduce((acc, c) => {
+    if (c.defectLevel === "critical") acc.critical += 1;
+    else if (c.defectLevel === "major") acc.major += 1;
+    else if (c.defectLevel === "minor") acc.minor += 1;
+    return acc;
+  }, { critical: 0, major: 0, minor: 0 });
+
+  const headerTitle = title || (n + "CH 채널 상태");
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {/* 헤더: 제목 + 부착 카운터 */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>{headerTitle}</span>
+        {showAttachCounters && (
+          <div style={{ display: "flex", gap: 10, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-success)" }}/>정상 {counts.normal}</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-caution)" }}/>약함 {counts.weak}</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-error)" }}/>미부착 {counts.unattached}</span>
+          </div>
+        )}
+      </div>
+
+      {/* 셀 그리드 */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: isRealtime ? 3 : 6, maxHeight: isRealtime ? undefined : 320, overflowY: isRealtime ? undefined : "auto", paddingRight: isRealtime ? 0 : 4 }}>
+        {cells.map((c) => {
+          const s = c.sensor;
+          const active = s != null;
+          const warn = s && s.state === "warn";
+          const err  = s && s.state === "err";
+          const isSel = (c.id === selectedCh || c.num === selectedCh) && active;
+          const isFocus = isSel && focusActive;
+          const hasDefect = c.defectLevel != null;
+          // [11]은 모든 결함 strong / [2]는 선택 카드의 결함만 strong
+          const isStrong = hasDefect && (forceStrongAll || (selectedTargetCard && c.targetName === selectedTargetCard));
+
+          const clsParts = ["erut-ch-cell"];
+          if (isSel) clsParts.push("is-active");
+          if (isFocus) clsParts.push("is-focused");
+          if (hasDefect) {
+            clsParts.push("is-defect-" + c.defectLevel);
+            if (isStrong) clsParts.push("is-strong");
+          }
+
+          const cellStyle = isRealtime
+            ? { aspectRatio: "1 / 1", opacity: active ? 1 : 0.55, position: "relative", padding: "2px", gap: 0, justifyContent: "center", alignItems: "center" }
+            : { aspectRatio: "20 / 7", opacity: active ? 1 : 0.55, position: "relative", padding: "4px 8px", gap: 0, justifyContent: "center" };
+
+          // 부착 LED dot 색
+          const dotColor = !active ? "var(--surface-disabled)"
+                          : err   ? "var(--system-error)"
+                          : warn  ? "var(--system-caution)"
+                                  : "var(--system-success)";
+
+          return (
+            <div
+              key={c.id || c.num}
+              className={clsParts.join(" ")}
+              style={cellStyle}
+              onClick={() => active && onCellClick && onCellClick(c.id || c.num)}
+              onDoubleClick={() => active && onCellDoubleClick && onCellDoubleClick(c.id || c.num)}
+            >
+              {isRealtime ? (
+                <>
+                  {/* 부착 LED dot — 우상단 */}
+                  <span style={{ position: "absolute", top: 2, right: 2, width: 5, height: 5, borderRadius: "50%", background: dotColor }}/>
+                  {/* 채널 번호 (정사각형 셀) */}
+                  <span style={{ font: "700 9px/1 var(--font-kr)", color: "var(--content-high)" }}>{c.num != null ? String(c.num).padStart(2, "0") : ""}</span>
+                </>
+              ) : (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span className="erut-ch-cell__val">{(c.id || ("ch" + String(c.num).padStart(2, "0"))).toUpperCase().replace("CH", "CH ")}</span>
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor, flexShrink: 0 }}/>
+                  </div>
+                  <span className="erut-ch-cell__id" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{active ? (c.targetName || "—") : "—"}</span>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 하단 범례: 결함 등급 (border+fill, breathing 없음) + 선택됨 */}
+      {showDefectLegend && (
+        <div style={{ display: "flex", gap: 14, marginTop: 4, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+            <span style={{ width: 12, height: 12, background: "rgba(255,0,94,0.42)", border: "1px solid var(--system-error)" }}/>Critical {defectCounts.critical}
+          </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+            <span style={{ width: 12, height: 12, background: "rgba(255,146,0,0.44)", border: "1px solid var(--system-caution)" }}/>Major {defectCounts.major}
+          </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+            <span style={{ width: 12, height: 12, background: "rgba(107,124,155,0.36)", border: "1px solid var(--content-low)" }}/>Minor {defectCounts.minor}
+          </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, marginLeft: "auto" }}>
+            <span style={{ width: 12, height: 12, background: "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-subtle-2)", border: "1px solid var(--border-emphasis)" }}/>선택됨
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
