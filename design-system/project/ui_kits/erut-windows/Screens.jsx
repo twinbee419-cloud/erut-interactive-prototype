@@ -2535,10 +2535,6 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
               <span style={{ font: "700 20px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>CH {String(selectedCh).padStart(2, "0")}</span>
               <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".04em", color: "var(--content-low)", textTransform: "uppercase" }}>A-SCAN</span>
             </div>
-            <div style={{ position: "absolute", top: 12, right: 14, font: "700 11px/1 var(--font-kr)", color: "var(--content-low)", display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{ width: 8, height: 8, background: "var(--content-low)", borderRadius: "50%" }}/>
-              정적 · 최신 프레임
-            </div>
             {/* Gate A */}
             <div style={{ position: "absolute", top: 48, bottom: 36, left: "18%", width: "22%", background: "var(--system-error)", opacity: 0.12, borderLeft: "2px solid var(--system-error)", borderRight: "2px solid var(--system-error)" }}/>
             <div style={{ position: "absolute", top: 56, left: "19%", font: "700 11px/1 var(--font-kr)", color: "var(--system-error)" }}>Gate A · 94%</div>
