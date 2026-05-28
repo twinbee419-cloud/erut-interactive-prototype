@@ -585,6 +585,8 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   const [showAddSensor, setShowAddSensor] = $s(false);
   const [showCalibration, setShowCalibration] = $s(false);
   const [showDiagnostics, setShowDiagnostics] = $s(false);
+  // v9.0 (NDT 1.7): 검사 대상 카드 선택 (결함 채널 강조용). null=no selection
+  const [selectedTarget, setSelectedTarget] = $s(null);
 
   React.useEffect(() => {
     if (focusChannel) {
@@ -601,11 +603,24 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   // 32 cells (4 rows × 8 cols). First 8 map to real sensors.
   // v8.8: 64채널 다중 검사체 분산 부착 — ch01-24 PIPE-A-204 · ch25-48 TANK-B-101 · ch49-64 VESSEL-C-301
   const getTargetName = (i) => i <= 24 ? "PIPE-A-204" : i <= 48 ? "TANK-B-101" : "VESSEL-C-301";
+  // v9.0 (NDT 1.7): 결함 검출 채널 (mockup) — Critical=red+breathing / Major=orange / Minor=gray
+  const DEFECT_CHANNELS = { 4: "critical", 7: "major", 56: "minor" };
   const cells = [];
   for (let i = 1; i <= 64; i++) {
     const id = "ch" + String(i).padStart(2, "0");
-    cells.push({ id, sensor: sensorMap[id], targetName: getTargetName(i) });
+    cells.push({ id, sensor: sensorMap[id], targetName: getTargetName(i), defectLevel: DEFECT_CHANNELS[i] || null });
   }
+
+  // v9.0 (NDT 1.7): 검사 대상 데이터 (결함 정보 포함)
+  const TARGETS = [
+    { name: "PIPE-A-204",   meta: "탄소강 · 외경 300mm · 두께 10mm",     range: "ch01–24 · 24ch", defectCount: 2, topLevel: "critical" },
+    { name: "TANK-B-101",   meta: "SS 304 · 구형 · ∅ 1500mm · 두께 6mm",   range: "ch25–48 · 24ch", defectCount: 0, topLevel: null },
+    { name: "VESSEL-C-301", meta: "압력 용기 · 800 × 400mm · 두께 12mm",  range: "ch49–64 · 16ch", defectCount: 1, topLevel: "minor" },
+  ];
+  // 결함 등급별 색 매핑
+  const DEFECT_COLOR = { critical: "var(--system-error)", major: "var(--system-caution)", minor: "var(--content-low)" };
+  // 카드 클릭 핸들러 (같은 카드 재클릭 = 현상 유지)
+  const onTargetCardClick = (name) => { if (selectedTarget !== name) setSelectedTarget(name); };
 
   const okCount       = window.MOCK.sensors.filter(s => s.state === "ok").length;
   const warnCount     = window.MOCK.sensors.filter(s => s.state === "warn").length;
@@ -677,22 +692,52 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
               <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onAddTarget}>+ 검사 대상 추가</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-              {[
-                { name: "PIPE-A-204",   meta: "탄소강 · 외경 300mm · 두께 10mm",     range: "ch01–24 · 24ch" },
-                { name: "TANK-B-101",   meta: "SS 304 · 구형 · ∅ 1500mm · 두께 6mm",   range: "ch25–48 · 24ch" },
-                { name: "VESSEL-C-301", meta: "압력 용기 · 800 × 400mm · 두께 12mm",  range: "ch49–64 · 16ch" },
-              ].map(t => (
-                <div key={t.name} className="target-card">
-                  <div className="target-card__name">{t.name}</div>
-                  <div className="target-card__meta">{t.meta}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
-                    <span className="target-card__range">{t.range}</span>
-                    <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-success)", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                      <span style={{ width: 6, height: 6, background: "var(--system-success)", borderRadius: "50%" }}/>측정 중
-                    </span>
+              {/* v9.0 (NDT 1.7): 결함 표시 + 카드 클릭 인터랙션 */}
+              {TARGETS.map(t => {
+                const isSelected = selectedTarget === t.name;
+                const isDimmed = selectedTarget && !isSelected;
+                const hasDefect = t.defectCount > 0;
+                const defectColor = hasDefect ? DEFECT_COLOR[t.topLevel] : null;
+                return (
+                  <div
+                    key={t.name}
+                    className="target-card target-card-v9"
+                    title={hasDefect ? "클릭하여 결함 영역에 부착된 센서를 확인할 수 있습니다." : undefined}
+                    onClick={() => onTargetCardClick(t.name)}
+                    style={{
+                      position: "relative",
+                      cursor: "pointer",
+                      opacity: isDimmed ? 0.6 : 1,
+                      transition: "opacity 120ms ease",
+                      borderColor: isSelected ? "var(--border-emphasis)" : (defectColor || undefined),
+                      background: isSelected ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-subtle-2)" : undefined,
+                    }}
+                  >
+                    {hasDefect && (
+                      <span style={{
+                        position: "absolute", top: -8, right: 10,
+                        font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em",
+                        padding: "4px 8px", color: "var(--on-primary)",
+                        background: defectColor,
+                      }}>결함 {t.defectCount}건 검출</span>
+                    )}
+                    <div className="target-card__name">{t.name}</div>
+                    <div className="target-card__meta">{t.meta}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
+                      <span className="target-card__range">{t.range}</span>
+                      <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-success)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ width: 6, height: 6, background: "var(--system-success)", borderRadius: "50%" }}/>측정 중
+                      </span>
+                    </div>
+                    {/* hover 시 우하단 "편집 →" 링크 */}
+                    <span className="target-card__edit-link" style={{
+                      position: "absolute", bottom: 6, right: 10,
+                      font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em",
+                      color: "var(--content-emphasis)", textDecoration: "underline",
+                    }} onClick={(e) => { e.stopPropagation(); /* TODO: [6] 검사 대상 편집 진입 */ }}>편집 →</span>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -716,6 +761,14 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
             const warn = s && s.state === "warn";
             const isSel = c.id === selected && active;
             const isFocus = isSel && focusActive;
+            // v9.0 (NDT 1.7): 선택된 검사 대상의 결함 채널 강조
+            const showDefect = selectedTarget && c.targetName === selectedTarget && c.defectLevel;
+            const defectFillColor = showDefect ? (
+              c.defectLevel === "critical" ? "rgba(255,0,94,0.20)" :
+              c.defectLevel === "major"    ? "rgba(255,146,0,0.20)" :
+                                              "rgba(107,124,155,0.15)"
+            ) : null;
+            const defectBorderColor = showDefect ? DEFECT_COLOR[c.defectLevel] : null;
             const clsParts = ["erut-ch-cell"];
             if (isSel) clsParts.push("is-active");
             if (warn)  clsParts.push("is-warning");
@@ -724,7 +777,15 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
               <div
                 key={c.id}
                 className={clsParts.join(" ")}
-                style={{ aspectRatio: "20 / 7", opacity: active ? 1 : 0.55, position: "relative", padding: "4px 8px", gap: 0, justifyContent: "center" }}
+                style={{
+                  aspectRatio: "20 / 7", opacity: active ? 1 : 0.55, position: "relative", padding: "4px 8px", gap: 0, justifyContent: "center",
+                  ...(showDefect ? {
+                    background: `linear-gradient(${defectFillColor},${defectFillColor}), var(--surface-base)`,
+                    borderColor: defectBorderColor,
+                    animation: c.defectLevel === "critical" ? "erut-sensor-breathe 1.6s ease-in-out infinite" : undefined,
+                    transformOrigin: "center",
+                  } : {}),
+                }}
                 onClick={() => active && setSelected(c.id)}
                 onDoubleClick={() => active && onStartMeasure && onStartMeasure(c.id)}
               >

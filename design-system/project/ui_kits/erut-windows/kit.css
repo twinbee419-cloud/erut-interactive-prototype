@@ -478,6 +478,10 @@
   100% { box-shadow: 0 0 0 0 rgba(34,133,239,0); }
 }
 
+/* ---------- v9.0 NDT 1.7: target-card hover edit link ---------- */
+.target-card-v9 .target-card__edit-link { display: none; }
+.target-card-v9:hover .target-card__edit-link { display: inline; }
+
 /* ---------- Roll indicator (측정 중) ---------- */
 @keyframes erut-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .erut-roll{
