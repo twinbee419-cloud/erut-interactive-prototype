@@ -897,7 +897,7 @@ window.DiagnosticsModal = function DiagnosticsModal({ onClose }) {
         {/* v8.8: 헤더 — titlebar 컬러 통일 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderBottom: "1px solid var(--border-medium)", background: "var(--content-medium)" }}>
           <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>진단 / 로그 — MCuF-001</div>
-          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose} aria-label="닫기" style={{ color: "var(--content-inverse)" }}>✕</button>
+          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose} aria-label="닫기" style={{ color: "var(--content-inverse)", background: "transparent", borderColor: "transparent" }}>✕</button>
         </div>
         {/* 본문 (좌: 탭 메뉴 / 우: 콘텐츠) */}
         <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", minHeight: 480 }}>
@@ -1112,7 +1112,7 @@ window.CalibrationWizard = function CalibrationWizard({ onClose }) {
             <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>탐촉자 교정 마법사 — CH 09 / 4</div>
             <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "rgba(255,255,255,0.7)", marginTop: 4 }}>PXT-2024-009 · 5 MHz · 신규 등록 후 필수 교정</div>
           </div>
-          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose} aria-label="닫기" style={{ color: "var(--content-inverse)" }}>✕</button>
+          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose} aria-label="닫기" style={{ color: "var(--content-inverse)", background: "transparent", borderColor: "transparent" }}>✕</button>
         </div>
 
         {/* Stepper */}
@@ -2180,7 +2180,7 @@ window.ChannelPlacementWizard = function ChannelPlacementWizard({ targetName, on
             </div>
             <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "rgba(255,255,255,0.7)" }}>각 채널의 부착 위치(θ, Z)를 사전 등록 — NDT 표준 Probe Setup 패턴</div>
           </div>
-          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose} style={{ color: "var(--content-inverse)" }}>✕ 닫기</button>
+          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose} style={{ color: "var(--content-inverse)", background: "transparent", borderColor: "transparent" }}>✕ 닫기</button>
         </div>
 
         {/* Stepper */}
