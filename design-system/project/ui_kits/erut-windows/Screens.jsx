@@ -990,7 +990,7 @@ window.CalibrationWizard = function CalibrationWizard({ onClose }) {
             <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>탐촉자 교정 마법사 — CH 09 / 4</div>
             <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4 }}>PXT-2024-009 · 5 MHz · 신규 등록 후 필수 교정</div>
           </div>
-          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose}>나중에 (측정 차단)</button>
+          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose} aria-label="닫기">✕</button>
         </div>
 
         {/* Stepper */}
@@ -1107,7 +1107,7 @@ window.CalibrationWizard = function CalibrationWizard({ onClose }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 24px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
           <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>CH 09 / 4 채널 · {stepInfo[step].title.split(" ")[0]} 측정 완료 후 {step < 3 ? ["", "음속", "감도"][step] : "다음 채널"} 단계로 진행</div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button className="erut-btn erut-btn--subtle erut-btn--m" disabled={step === 1} onClick={() => setStep(s => Math.max(1, s - 1))}>이전</button>
+            <button className={"erut-btn erut-btn--m " + (step === 1 ? "erut-btn--disabled" : "erut-btn--subtle")} disabled={step === 1} onClick={() => setStep(s => Math.max(1, s - 1))}>이전</button>
             <button className="erut-btn erut-btn--default erut-btn--m" onClick={onClose}>건너뛰기 (CH 차단)</button>
             {step < 3 ? (
               <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => setStep(s => s + 1)}>다음 — {["", "음속", "감도"][step]}</button>
