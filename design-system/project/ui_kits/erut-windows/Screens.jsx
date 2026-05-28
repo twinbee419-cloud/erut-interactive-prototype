@@ -2520,10 +2520,22 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
     cells64.push({ num: i, type: def ? def.type : "ok" });
   }
 
+  // v8.5: 채널 부착 상태 (모의 데이터)
+  const channelAttachStatus = {
+    normal: 56, weak: 6, unattached: 2,
+    detail: [
+      { ch: 22, target: "P-A", signal: 18, status: "미부착" },
+      { ch: 49, target: "V-C", signal: 22, status: "미부착" },
+      { ch: 31, target: "T-B", signal: 42, status: "약함" },
+    ],
+  };
+
   return (
-    <div className="erut-page-enter" style={{ padding: "14px 24px", height: "100%", display: "grid", gridTemplateColumns: "1fr 340px", gap: 14 }}>
-      {/* ───── 좌측: 알림 + 3분할 + 진행 바 (메인 매칭 — 헤더 바 없음) ───── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, minHeight: 0 }}>
+    <div className="erut-page-enter" style={{ padding: "20px 24px", height: "100%", display: "grid", gridTemplateColumns: "1fr 340px", gridTemplateRows: "40px 1fr", alignContent: "start", columnGap: 14, rowGap: 20 }}>
+      {/* Breadcrumb은 Phase 6에서 추가 예정 */}
+
+      {/* ───── 좌측: 알림 + 2분할 (A-scan + 64ch) ───── */}
+      <div style={{ gridRow: 2, gridColumn: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 10 }}>
 
         {/* 결함 알림 (Critical) */}
         {showAlert && state === "measuring" && criticalDefect && (
@@ -2544,27 +2556,34 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
           </div>
         )}
 
-        {/* 3분할: A-scan 메인 + 64ch grid + 진폭 트렌드 */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gridTemplateRows: "1fr 220px", gap: 8, flex: 1, minHeight: 0 }}>
-          {/* 좌상: A-scan 메인 (선택 채널) */}
-          <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", position: "relative", gridRow: 1, gridColumn: 1 }}>
-            <div style={{ position: "absolute", top: 10, left: 14, font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>A-SCAN · CH {String(selectedCh).padStart(2, "0")} (선택)</div>
-            <div style={{ position: "absolute", top: 10, right: 14, font: "700 11px/1 var(--font-kr)", color: "var(--system-success)", display: "flex", alignItems: "center", gap: 4 }}>
-              <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__dot" style={{ left: 2, top: 2, width: 4, height: 4 }}/></span>
-              LIVE · 1000 Hz
+        {/* v8.5: 2분할 (A-scan + 64ch) — 진폭 트렌드 삭제 · A-scan 정적 · 440px 고정 */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 8, height: 440 }}>
+          {/* 좌: A-scan (정적, 선택 채널) */}
+          <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", position: "relative" }}>
+            {/* v8.5: 채널명 강조 (20px content-high) */}
+            <div style={{ position: "absolute", top: 8, left: 14, display: "flex", alignItems: "baseline", gap: 10 }}>
+              <span style={{ font: "700 20px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>CH {String(selectedCh).padStart(2, "0")}</span>
+              <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".04em", color: "var(--content-low)", textTransform: "uppercase" }}>P-A · A-SCAN</span>
+            </div>
+            <div style={{ position: "absolute", top: 12, right: 14, font: "700 11px/1 var(--font-kr)", color: "var(--content-low)", display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ width: 8, height: 8, background: "var(--content-low)", borderRadius: "50%" }}/>
+              정적 · 최신 프레임
             </div>
             {/* Gate A */}
-            <div style={{ position: "absolute", top: 38, bottom: 36, left: "18%", width: "22%", background: "var(--system-error)", opacity: 0.12, borderLeft: "2px solid var(--system-error)", borderRight: "2px solid var(--system-error)" }}/>
-            <div style={{ position: "absolute", top: 46, left: "19%", font: "700 11px/1 var(--font-kr)", color: "var(--system-error)" }}>Gate A · 94%</div>
+            <div style={{ position: "absolute", top: 48, bottom: 36, left: "18%", width: "22%", background: "var(--system-error)", opacity: 0.12, borderLeft: "2px solid var(--system-error)", borderRight: "2px solid var(--system-error)" }}/>
+            <div style={{ position: "absolute", top: 56, left: "19%", font: "700 11px/1 var(--font-kr)", color: "var(--system-error)" }}>Gate A · 94%</div>
             {/* Gate B */}
-            <div style={{ position: "absolute", top: 38, bottom: 36, left: "55%", width: "25%", background: "var(--brand-primary)", opacity: 0.12, borderLeft: "2px solid var(--brand-primary)", borderRight: "2px solid var(--brand-primary)" }}/>
-            <div style={{ position: "absolute", top: 46, left: "56%", font: "700 11px/1 var(--font-kr)", color: "var(--brand-primary)" }}>Gate B · 68%</div>
+            <div style={{ position: "absolute", top: 48, bottom: 36, left: "55%", width: "25%", background: "var(--brand-primary)", opacity: 0.12, borderLeft: "2px solid var(--brand-primary)", borderRight: "2px solid var(--brand-primary)" }}/>
+            <div style={{ position: "absolute", top: 56, left: "56%", font: "700 11px/1 var(--font-kr)", color: "var(--brand-primary)" }}>Gate B · 68%</div>
             {/* Threshold */}
-            <div style={{ position: "absolute", left: 0, right: 0, top: "28%", borderTop: "1px dashed var(--system-error)" }}/>
-            {/* 파형 (animated · measureState 일시정지 시 frozen) */}
-            <div style={{ position: "absolute", top: 30, left: 0, right: 0, bottom: 36 }}>
-              <window.AnimatedAscan measureState={state} fault={true} color="var(--brand-primary)" viewBox="0 0 800 300" strokeWidth={2}/>
-            </div>
+            <div style={{ position: "absolute", left: 0, right: 0, top: "30%", borderTop: "1px dashed var(--system-error)" }}/>
+            {/* 정적 파형 SVG (애니메이션 제거) */}
+            <svg viewBox="0 0 800 300" preserveAspectRatio="none" width="100%" height="calc(100% - 76px)" style={{ position: "absolute", top: 40, left: 0, right: 0 }}>
+              <line x1="0" y1="250" x2="800" y2="250" stroke="var(--border-low)" strokeWidth="1"/>
+              <line x1="0" y1="170" x2="800" y2="170" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="2,4"/>
+              <line x1="0" y1="85"  x2="800" y2="85"  stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="2,4"/>
+              <path d="M0 250 L140 250 L160 215 L172 30 L184 270 L196 250 L420 250 L440 220 L452 85 L464 265 L476 250 L800 250" stroke="var(--brand-primary)" strokeWidth="2" fill="none"/>
+            </svg>
             {/* 측정값 stripe (하단) */}
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, display: "flex", gap: 14, padding: "8px 14px", background: "var(--surface-subtle-2)", borderTop: "1px solid var(--border-low)", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
               <span>Gate A 피크 <strong style={{ fontWeight: 700, color: "var(--system-error)" }}>94% FSH</strong></span>
@@ -2575,11 +2594,17 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             </div>
           </div>
 
-          {/* 우상: 64ch 채널 상태 그리드 */}
-          <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "28px 12px 12px", position: "relative", gridRow: 1, gridColumn: 2 }}>
-            <div style={{ position: "absolute", top: 10, left: 14, font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>64ch 채널 상태</div>
-            <div style={{ position: "absolute", top: 10, right: 14, font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>셀 클릭 → 좌측 A-scan 전환</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 3, marginTop: 6 }}>
+          {/* 우: 64ch 채널 상태 그리드 (v8.5: 자동 전환 토글 통합) */}
+          <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "12px", position: "relative", display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>64ch 채널 상태</span>
+              <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>셀 클릭 → A-scan 전환</span>
+            </div>
+            {/* v8.5: 자동 전환 토글 (우측 패널 셀렉트박스에서 이동) */}
+            <div style={{ marginBottom: 8 }}>
+              <window.Toggle checked={autoSwitch} onChange={setAutoSwitch} size="sm" label="결함 검출 시 자동 전환"/>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 3 }}>
               {cells64.map((c) => {
                 const bg = c.type === "Critical" ? "var(--system-error)" : c.type === "Major" ? "var(--system-caution)" : "var(--system-success)";
                 const sel = c.num === selectedCh;
@@ -2611,78 +2636,83 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
               <span style={{ display: "flex", alignItems: "center", gap: 3, marginLeft: "auto" }}><span style={{ width: 8, height: 8, border: "2px solid var(--content-emphasis)" }}/>선택</span>
             </div>
           </div>
-
-          {/* 하: 실시간 진폭 트렌드 */}
-          <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", position: "relative", gridRow: 2, gridColumn: "1 / span 2" }}>
-            <div style={{ position: "absolute", top: 10, left: 14, font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>CH {String(selectedCh).padStart(2, "0")} · 실시간 진폭 트렌드</div>
-            <div style={{ position: "absolute", top: 10, right: 14, font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>최근 60초 · 진폭 vs 시간</div>
-            <div style={{ position: "absolute", left: 14, right: 14, top: "28%", borderTop: "1px dashed var(--system-error)" }}/>
-            <div style={{ position: "absolute", right: 18, top: "calc(28% - 14px)", font: "700 10px/1 var(--font-kr)", color: "var(--system-error)", background: "var(--surface-base)", padding: "2px 4px" }}>Critical 80%</div>
-            <div style={{ position: "absolute", left: 14, right: 14, top: "48%", borderTop: "1px dashed var(--system-caution)" }}/>
-            <div style={{ position: "absolute", right: 18, top: "calc(48% - 14px)", font: "700 10px/1 var(--font-kr)", color: "var(--system-caution)", background: "var(--surface-base)", padding: "2px 4px" }}>Major 60%</div>
-            <svg viewBox="0 0 1000 200" preserveAspectRatio="none" width="100%" height="calc(100% - 28px)" style={{ position: "absolute", top: 28 }}>
-              <line x1="0" y1="160" x2="1000" y2="160" stroke="var(--border-low)" strokeWidth="1"/>
-              <line x1="0" y1="50"  x2="1000" y2="50"  stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="2,4"/>
-              <path d="M0 130 L60 125 L120 122 L180 118 L240 115 L300 110 L360 105 L420 95 L480 80 L540 75 L600 65 L660 55 L720 45 L780 35 L840 25 L900 22 L960 18 L1000 20" stroke="var(--brand-primary)" strokeWidth="2" fill="none"/>
-              <circle cx="960" cy="18" r="5" fill="var(--system-error)" stroke="var(--surface-base)" strokeWidth="2"/>
-              <text x="940" y="12" fontSize="9" fill="var(--system-error)" fontWeight="700" fontFamily="NanumSquare">94%</text>
-            </svg>
-          </div>
         </div>
-
       </div>
 
-      {/* ───── 우측: 사이드패널 (로봇 · 결함 · 제어) ───── */}
-      <div className="erut-panel">
-        <div className="erut-panel__header">로봇 · 결함 · 제어</div>
+      {/* ───── v8.5 우측: 사이드패널 (검사 대상 · 부착 상태 · 결함) ───── */}
+      <div className="erut-panel" style={{ gridRow: 2, gridColumn: 2, minWidth: 0 }}>
+        <div className="erut-panel__header">검사 대상 · 부착 상태 · 결함</div>
         <div className="erut-panel__body" style={{ overflowY: "auto", padding: 14 }}>
-          {/* 로봇 위치 */}
-          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 6 }}>로봇 위치</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
-            {[
-              { label: "X", color: "var(--system-error)",   value: 237, unit: "mm" },
-              { label: "θ", color: "var(--system-caution)", value: 174, unit: "°"  },
-              { label: "Z", color: "var(--system-info)",    value: 310, unit: "mm" },
-            ].map((c) => (
-              <div key={c.label} style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: 8, textAlign: "center" }}>
-                <div style={{ font: "700 10px/1 var(--font-kr)", color: c.color }}>{c.label}</div>
-                <div style={{ font: "700 16px/1 'Consolas', monospace", color: "var(--content-high)", marginTop: 3 }}>{c.value}</div>
-                <div style={{ font: "400 9px/1 var(--font-kr)", color: "var(--content-low)" }}>{c.unit}</div>
-              </div>
-            ))}
+
+          {/* v8.5 신규: 검사 대상 정보 (현재 선택 채널 기준) */}
+          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 6 }}>검사 대상 · 현재 CH {String(selectedCh).padStart(2, "0")}</div>
+          <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+              <span style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>PIPE-A-204</span>
+              <span style={{ font: "700 10px/1 var(--font-kr)", letterSpacing: ".03em", color: "var(--content-low)", textTransform: "uppercase" }}>P-A</span>
+            </div>
+            <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 8 }}>배관 · 탄소강 · ASME B31.3</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 10px", font: "400 10px/1.3 var(--font-kr)" }}>
+              {[
+                ["외경", "300 mm"], ["길이", "6,000 mm"],
+                ["두께", "10 mm"],  ["음속", "5,920 m/s"],
+                ["유체", "고온 스팀"], ["온도", "240 °C"],
+                ["압력", "1.5 MPa"], ["PRF", "2,000 Hz"],
+              ].map(([k, v]) => (
+                <div key={k}><span style={{ color: "var(--content-low)" }}>{k}</span> <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{v}</strong></div>
+              ))}
+            </div>
           </div>
 
-          {/* 결함 검출 */}
+          {/* v8.5 신규: 채널 부착 상태 위젯 */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "14px 0 6px" }}>
+            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>채널 부착 상태</div>
+            <div style={{ font: "400 9px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>신호 강도 임계값 기준</div>
+          </div>
+          <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
+            <div style={{ display: "flex", gap: 10, marginBottom: 8, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-success)" }}>
+                <span style={{ width: 8, height: 8, background: "var(--system-success)", borderRadius: "50%" }}/>정상 <strong>{channelAttachStatus.normal}</strong>
+              </span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-caution)" }}>
+                <span style={{ width: 8, height: 8, background: "var(--system-caution)", borderRadius: "50%" }}/>약함 <strong>{channelAttachStatus.weak}</strong>
+              </span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-error)" }}>
+                <span style={{ width: 8, height: 8, background: "var(--system-error)", borderRadius: "50%" }}/>미부착 <strong>{channelAttachStatus.unattached}</strong>
+              </span>
+            </div>
+            <div style={{ borderTop: "1px solid var(--border-low)", paddingTop: 8 }}>
+              {channelAttachStatus.detail.map(d => (
+                <div key={d.ch} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", font: "400 11px/1.3 var(--font-kr)", letterSpacing: ".02em" }}>
+                  <span style={{ color: "var(--content-medium)" }}><strong style={{ fontWeight: 700 }}>CH {String(d.ch).padStart(2, "0")}</strong> · {d.target} · 신호 {d.signal}%</span>
+                  <span style={{ color: d.status === "미부착" ? "var(--system-error)" : "var(--system-caution)", fontWeight: 700 }}>{d.status}</span>
+                </div>
+              ))}
+              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4 }}>+ 5 채널 더 · 커플런트 보충·재부착 필요</div>
+            </div>
+          </div>
+
+          {/* 결함 검출 (with target abbreviation) */}
           <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", margin: "14px 0 6px" }}>결함 검출 ({defects.length})</div>
           {defects.map((d) => {
             const c  = d.type === "Critical" ? "var(--system-error)" : "var(--system-caution)";
             const bg = d.type === "Critical" ? "rgba(255,0,94,0.05)" : "rgba(255,146,0,0.05)";
+            const abbr = d.channel <= 12 ? "P-A" : d.channel <= 24 ? "T-B" : d.channel <= 32 ? "V-C" : "P-A"; // 64채널 매핑 (단순화)
             return (
               <div key={d.id} style={{ background: "linear-gradient(" + bg + "," + bg + "), var(--surface-subtle-2)", border: "1px solid var(--border-medium)", borderLeft: "3px solid " + c, padding: "8px 10px", marginBottom: 4 }}>
-                <div style={{ font: "700 12px/1.2 var(--font-kr)", color: "var(--content-high)" }}>{d.type} · CH {String(d.channel).padStart(2, "0")}</div>
+                <div style={{ font: "700 12px/1.2 var(--font-kr)", color: "var(--content-high)" }}>{d.type} · CH {String(d.channel).padStart(2, "0")} <span style={{ fontWeight: 400, color: "var(--content-low)", fontSize: 10 }}>{abbr}</span></div>
                 <div style={{ font: "400 11px/1.4 var(--font-kr)", color: "var(--content-low)", marginTop: 2 }}>Amp {d.amp} % · ToF {d.tof} μs · 두께 {d.thickness} mm</div>
               </div>
             );
           })}
 
-          {/* A-scan 표시 채널 */}
-          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", margin: "14px 0 6px" }}>A-scan 표시 채널</div>
-          <select className="erut-field" value={selectedCh} onChange={(e) => setSelectedCh(parseInt(e.target.value, 10))} style={{ width: "100%" }}>
-            <option value={4}>CH 04 (Critical · 자동)</option>
-            <option value={7}>CH 07 (Major)</option>
-            <option value={1}>CH 01</option>
-          </select>
-          <div style={{ marginTop: 10 }}>
-            <window.Toggle checked={autoSwitch} onChange={setAutoSwitch} size="sm" label="결함 검출 시 자동 전환"/>
-          </div>
-
-          {/* 측정 제어 */}
+          {/* 측정 제어 (v8.5: 일시정지 토글 + 측정 중지 2버튼. 긴급정지 폐기) */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "14px 0 6px" }}>
             <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>측정 제어</div>
             <div style={{ font: "400 9px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>단축키 활성</div>
           </div>
 
-          {/* 일시정지 / 측정 재개 / 측정 시작 (state 토글) */}
+          {/* 일시정지 / 측정 재개 / 측정 시작 토글 */}
           {state === "measuring" && (
             <button className="erut-btn erut-btn--default erut-btn--m" style={{ width: "100%", marginBottom: 6, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px" }} onClick={() => setState("paused")}>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -2712,21 +2742,12 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
           )}
 
           {/* 측정 중지 */}
-          <button className="erut-btn erut-btn--subtle erut-btn--m" style={{ width: "100%", marginBottom: 6, color: "var(--system-error)", borderColor: "var(--system-error)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px" }} onClick={() => setState("stopped")}>
+          <button className="erut-btn erut-btn--subtle erut-btn--m" style={{ width: "100%", color: "var(--system-error)", borderColor: "var(--system-error)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px" }} onClick={() => setState("stopped")}>
             <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="3" width="10" height="10"/></svg>
               측정 중지
             </span>
             <span style={{ font: "700 9px/1 var(--font-kr)", padding: "2px 5px", border: "1px solid var(--system-error)", color: "var(--system-error)" }}>F7</span>
-          </button>
-
-          {/* 긴급 정지 */}
-          <button className="erut-btn erut-btn--emphasis" style={{ width: "100%", background: "var(--system-error)", borderColor: "var(--system-error)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px", height: 40 }} onClick={() => setState("stopped")}>
-            <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1 L15 8 L8 15 L1 8 Z"/></svg>
-              긴급 정지
-            </span>
-            <span style={{ font: "700 9px/1 var(--font-kr)", padding: "2px 5px", border: "1px solid var(--on-primary)", color: "var(--on-primary)" }}>ESC</span>
           </button>
         </div>
       </div>
