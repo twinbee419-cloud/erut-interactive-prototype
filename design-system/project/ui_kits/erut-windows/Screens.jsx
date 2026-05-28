@@ -875,7 +875,7 @@ window.AddSensorModal = function AddSensorModal({ onClose, onAdd }) {
   );
 };
 
-window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, onStartMeasure, onOpenGate }) {
+window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, onStartMeasure, onOpenGate, onAddTarget }) {
   const target = window.MOCK.targets.find(t => t.id === targetId) || window.MOCK.targets[0];
   const sensorMap = Object.fromEntries(window.MOCK.sensors.map(s => [s.id, s]));
   const [selected, setSelected] = $s(focusChannel || "ch01");
@@ -965,7 +965,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
               <h3 style={{ font: "700 15px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>검사 대상</h3>
               <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>이 MC보드가 현재 검사 중인 대상 3개 · 채널 모두 할당</span>
             </div>
-            <button className="erut-btn erut-btn--default erut-btn--sm">+ 검사 대상 추가</button>
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onAddTarget}>+ 검사 대상 추가</button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
             {[
@@ -1893,6 +1893,26 @@ window.calcPRF = function(thicknessMm, material) {
 };
 
 // 기본 폼값 생성 (선택된 target 기반)
+// v8.5: 신규 등록용 빈 폼 (DeviceDetail "+ 검사 대상 추가" 진입 시)
+function buildEmptyTargetForm() {
+  return {
+    name: "",
+    code: "",
+    shape: "",
+    od: "",
+    th: "",
+    idim: "",
+    length: "",
+    allow: "",
+    material: "",
+    fluid: "",
+    std: "",
+    temp: "",
+    press: "",
+    note: "",
+  };
+}
+
 function buildTargetForm(target) {
   if (!target) target = {};
   // MOCK.targets desc를 파싱하기 어려우니 PIPE-A-204 기본값으로 시뮬레이션
@@ -1923,17 +1943,20 @@ function buildTargetForm(target) {
   };
 }
 
-window.TargetManage = function TargetManage({ targetId, onBack }) {
+window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   const targets = window.MOCK.targets;
-  const [selectedId, setSelectedId] = $s(targetId || (targets[0] && targets[0].id));
+  // v8.5: initialMode === "new" → 신규 등록 폼 진입 (selectedId null + 빈 폼)
+  const isNewMode = initialMode === "new";
+  const [selectedId, setSelectedId] = $s(isNewMode ? null : (targetId || (targets[0] && targets[0].id)));
   const [search, setSearch]         = $s("");
-  const initialTarget = targets.find(t => t.id === selectedId) || targets[0];
-  const [form, setForm]             = $s(buildTargetForm(initialTarget));
+  const initialTarget = isNewMode ? null : (targets.find(t => t.id === selectedId) || targets[0]);
+  const [form, setForm]             = $s(isNewMode ? buildEmptyTargetForm() : buildTargetForm(initialTarget));
   const [autoPRF, setAutoPRF]       = $s(true);
   const [prfManual, setPrfManual]   = $s(2000);
 
-  // 선택된 target 변경 시 form 리셋
+  // 선택된 target 변경 시 form 리셋 (selectedId null = 신규 모드)
   React.useEffect(() => {
+    if (!selectedId) { setForm(buildEmptyTargetForm()); return; }
     const t = targets.find(x => x.id === selectedId);
     setForm(buildTargetForm(t));
   }, [selectedId]);
