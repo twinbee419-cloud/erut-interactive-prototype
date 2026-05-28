@@ -2492,7 +2492,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
   };
 
   return (
-    <div className="erut-page-enter" style={{ padding: "20px 24px", height: "100%", display: "grid", gridTemplateColumns: "1fr 340px", gridTemplateRows: "40px auto 440px", alignContent: "start", columnGap: 14, rowGap: 20 }}>
+    <div className="erut-page-enter" style={{ padding: "20px 24px", height: "100%", display: "grid", gridTemplateColumns: "1fr 340px", gridTemplateRows: "40px auto 540px", alignContent: "start", columnGap: 14, rowGap: 20 }}>
       {/* v8.5 Breadcrumb */}
       <window.Breadcrumb
         onBack={onBack}
@@ -2525,8 +2525,8 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
 
       {/* ───── 좌측: A-scan/64ch (row 3, 440px 고정) ───── */}
       <div style={{ gridRow: 3, gridColumn: 1, minWidth: 0 }}>
-        {/* v8.5: 2분할 (A-scan + 64ch) — 진폭 트렌드 삭제 · A-scan 정적 · 440px 고정 */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 8, height: 440 }}>
+        {/* v8.5: 2분할 (A-scan + 64ch) — 진폭 트렌드 삭제 · A-scan 정적 / v8.8: 540px (우측 패널과 동일) */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 8, height: 540 }}>
           {/* 좌: A-scan (정적, 선택 채널) */}
           <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", position: "relative" }}>
             {/* v8.5: 채널명 강조 (20px content-high) */}
@@ -2620,7 +2620,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
       {/* ───── v8.7 우측: 선택 채널 컨텍스트로 통일 (검사 대상 · 부착 상태 · 측정 제어) — v8.8: row 3, 440px ───── */}
       <div className="erut-panel" style={{ gridRow: 3, gridColumn: 2, minWidth: 0 }}>
         <div className="erut-panel__header">검사 대상 · 부착 상태 · 측정 제어</div>
-        <div className="erut-panel__body" style={{ overflowY: "auto", padding: 14 }}>
+        <div className="erut-panel__body" style={{ overflow: "visible", padding: 14 }}>
 
           {/* 검사 대상 정보 (현재 선택 채널의 검사체) */}
           <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 6 }}>검사 대상</div>
