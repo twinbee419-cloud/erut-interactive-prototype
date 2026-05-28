@@ -1953,6 +1953,8 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   const [form, setForm]             = $s(isNewMode ? buildEmptyTargetForm() : buildTargetForm(initialTarget));
   const [autoPRF, setAutoPRF]       = $s(true);
   const [prfManual, setPrfManual]   = $s(2000);
+  // v8.5: 채널 배치 마법사 모달
+  const [showChannelWizard, setShowChannelWizard] = $s(false);
 
   // 선택된 target 변경 시 form 리셋 (selectedId null = 신규 모드)
   React.useEffect(() => {
@@ -2094,8 +2096,20 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             <input className="erut-field" value={form.code} onChange={(e) => setField("code", e.target.value)} style={{ width: "100%" }}/>
           </div>
           <div>
-            {formLabel("도면 thumbnail")}
-            <button className="erut-btn erut-btn--default erut-btn--sm" style={{ width: "100%" }}>파일 첨부 ↑</button>
+            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>도면 thumbnail <span style={{ fontWeight: 400, color: "var(--content-low)" }}>+ 채널 배치</span></div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button className="erut-btn erut-btn--default erut-btn--sm" style={{ flex: 1 }}>파일 첨부 ↑</button>
+              {/* v8.5 신규: 채널 배치 마법사 진입 버튼 */}
+              <button
+                className="erut-btn erut-btn--emphasis erut-btn--sm"
+                style={{ flex: 1.4, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4 }}
+                title="채널 배치 마법사 열기 (v8.5 신규)"
+                onClick={() => setShowChannelWizard(true)}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                채널 배치 ↗
+              </button>
+            </div>
           </div>
 
           {sectionHeader("형상")}
@@ -2228,6 +2242,169 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* v8.5: 채널 배치 마법사 모달 */}
+      {showChannelWizard && (
+        <window.ChannelPlacementWizard
+          targetName={form.name || "(신규)"}
+          onClose={() => setShowChannelWizard(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+// =================== v8.5: 채널 배치 마법사 모달 (3-step Stepper) ===================
+window.ChannelPlacementWizard = function ChannelPlacementWizard({ targetName, onClose }) {
+  const [step, setStep] = $s(2); // 1: 검사 대상 확인 · 2: 채널 매핑 · 3: 검증+저장
+  const [theta, setTheta] = $s("45");
+  const [zPos, setZPos]   = $s("600");
+
+  // 배치된 채널 위치 (간단 시각화용)
+  const placedChannels = [
+    { ch: 1, x: 40, y: 180 }, { ch: 2, x: 80, y: 180 }, { ch: 3, x: 120, y: 180 },
+    { ch: 4, x: 160, y: 180, selected: true },
+    { ch: 5, x: 200, y: 180 }, { ch: 6, x: 240, y: 180 }, { ch: 7, x: 280, y: 180 }, { ch: 8, x: 320, y: 180 },
+    { ch: 9, x: 40, y: 120 }, { ch: 10, x: 80, y: 120 }, { ch: 11, x: 120, y: 120 }, { ch: 12, x: 160, y: 120 },
+    { ch: 13, x: 200, y: 120 }, { ch: 14, x: 240, y: 120 }, { ch: 15, x: 280, y: 120 }, { ch: 16, x: 320, y: 120 },
+    { ch: 17, x: 40, y: 60 },  { ch: 18, x: 80, y: 60 },
+  ];
+  const unplacedChannels = [
+    { x: 120, y: 60 }, { x: 160, y: 60 }, { x: 200, y: 60 }, { x: 240, y: 60 }, { x: 280, y: 60 }, { x: 320, y: 60 },
+  ];
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: 1100, maxHeight: "90vh", background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
+        {/* 헤더 */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
+              <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".04em", color: "var(--on-primary)", background: "var(--brand-primary)", padding: "3px 7px" }}>v8.5 신규</span>
+              <span style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>채널 배치 마법사 — {targetName}</span>
+            </div>
+            <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>각 채널의 부착 위치(θ, Z)를 사전 등록 — NDT 표준 Probe Setup 패턴</div>
+          </div>
+          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose}>✕ 닫기</button>
+        </div>
+
+        {/* Stepper */}
+        <div className="erut-crumb erut-crumb--step" style={{ margin: "12px 24px 0", borderBottom: "1px solid var(--border-medium)" }}>
+          <div className="erut-crumb__steps">
+            <span className={"erut-crumb__step " + (step > 1 ? "is-done" : step === 1 ? "is-active" : "")}>
+              <span className="num">{step > 1 ? <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3,8 7,12 13,4"/></svg> : "1"}</span>
+              검사 대상 확인 (PIPE-A-204)
+            </span>
+            <span className="erut-crumb__step-sep"/>
+            <span className={"erut-crumb__step " + (step > 2 ? "is-done" : step === 2 ? "is-active" : "")}>
+              <span className="num">{step > 2 ? <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3,8 7,12 13,4"/></svg> : "2"}</span>
+              채널 매핑 (18 / 24)
+            </span>
+            <span className="erut-crumb__step-sep"/>
+            <span className={"erut-crumb__step " + (step === 3 ? "is-active" : "")}>
+              <span className="num">3</span>
+              검증 + 저장
+            </span>
+          </div>
+        </div>
+
+        {/* 본문 (Step 2: 채널 매핑 — 메인 mockup) */}
+        <div style={{ flex: 1, padding: "16px 24px", overflowY: "auto" }}>
+          <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 0 }}>
+            {/* 좌: 2D 전개도 */}
+            <div style={{ padding: "14px 18px", borderRight: "1px solid var(--border-low)", position: "relative" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+                <span style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>PIPE-A-204 · 2D 전개도</span>
+                <span style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>θ 0–360° × Z 0–1500mm</span>
+              </div>
+              <svg viewBox="0 0 600 240" style={{ width: "100%", height: 220, background: "var(--surface-subtle-1)", border: "1px solid var(--border-low)" }}>
+                <line x1="0" y1="60" x2="600" y2="60" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="3,3"/>
+                <line x1="0" y1="120" x2="600" y2="120" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="3,3"/>
+                <line x1="0" y1="180" x2="600" y2="180" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="3,3"/>
+                <line x1="150" y1="0" x2="150" y2="240" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="3,3"/>
+                <line x1="300" y1="0" x2="300" y2="240" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="3,3"/>
+                <line x1="450" y1="0" x2="450" y2="240" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="3,3"/>
+                <text x="6" y="14" fontSize="9" fill="var(--content-low)" fontFamily="NanumSquare" fontWeight="700">Z (mm)</text>
+                <text x="566" y="234" fontSize="9" fill="var(--content-low)" fontFamily="NanumSquare" fontWeight="700">θ (°)</text>
+                {/* 배치된 채널 */}
+                <g fill="var(--brand-primary)" stroke="var(--surface-base)" strokeWidth="1">
+                  {placedChannels.map(c => (
+                    <g key={c.ch}>
+                      <circle cx={c.x} cy={c.y} r="6" stroke={c.selected ? "var(--system-error)" : undefined} strokeWidth={c.selected ? "2" : undefined}/>
+                      <text x={c.x} y={c.y + 15} fontSize="7" fill={c.selected ? "var(--system-error)" : "var(--content-medium)"} fontFamily="NanumSquare" fontWeight="700" textAnchor="middle">{String(c.ch).padStart(2, "0")}{c.selected && "★"}</text>
+                    </g>
+                  ))}
+                </g>
+                {/* 미배치 채널 (점선) */}
+                <g fill="none" stroke="var(--content-low)" strokeWidth="1" strokeDasharray="2,2">
+                  {unplacedChannels.map((c, i) => <circle key={i} cx={c.x} cy={c.y} r="5"/>)}
+                </g>
+              </svg>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8, font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em" }}>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--brand-primary)" }}><span style={{ width: 8, height: 8, background: "var(--brand-primary)", borderRadius: "50%" }}/>배치됨 18</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--content-low)" }}><span style={{ width: 8, height: 8, border: "1px solid var(--content-low)", borderRadius: "50%" }}/>미배치 6</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-error)" }}>★ 선택</span>
+                </div>
+                <span style={{ fontWeight: 700, color: "var(--content-emphasis)" }}>진행 18 / 24 ch</span>
+              </div>
+            </div>
+
+            {/* 우: 좌표 입력 패널 */}
+            <div style={{ padding: "14px 18px" }}>
+              <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 10 }}>선택 채널 좌표</div>
+              <div style={{ background: "linear-gradient(rgba(34,133,239,0.08),rgba(34,133,239,0.08)), var(--surface-subtle-2)", border: "1px solid var(--border-emphasis)", padding: "8px 12px", marginBottom: 12 }}>
+                <div style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>CH 04 (P-A · PIPE-A-204)</div>
+                <div style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 2 }}>탐촉자 SN: PXT-2024-104 · 5 MHz</div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+                <div>
+                  <div style={{ font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>θ (둘레, 도)</div>
+                  <input className="erut-field" value={theta} onChange={(e) => setTheta(e.target.value)} style={{ width: "100%", height: 30, fontSize: 12 }}/>
+                </div>
+                <div>
+                  <div style={{ font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>Z (길이, mm)</div>
+                  <input className="erut-field" value={zPos} onChange={(e) => setZPos(e.target.value)} style={{ width: "100%", height: 30, fontSize: 12 }}/>
+                </div>
+              </div>
+              <div style={{ background: "var(--surface-subtle-1)", border: "1px solid var(--border-low)", padding: "8px 10px", marginBottom: 12, font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
+                <strong style={{ fontWeight: 700 }}>기준점</strong>: θ=0° 용접선 교차점 · Z=0 바닥 플랜지
+                <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ marginLeft: 6, fontSize: 9, padding: "0 5px", height: 18 }}>변경 ↗</button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ width: "100%" }}>좌표 저장 + 다음 채널 →</button>
+                <button className="erut-btn erut-btn--default erut-btn--sm" style={{ width: "100%" }}>일괄 배치 (가로/세로 N mm 간격)</button>
+                <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ width: "100%" }}>CSV 가져오기 (기존 설치 재사용)</button>
+              </div>
+            </div>
+          </div>
+
+          {/* 입력 방법 안내 */}
+          <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+            {[
+              { num: "①", title: "숫자 직접 입력", desc: "현장 줄자 측정한 (θ, Z) 좌표를 입력. 정확도 ±2mm." },
+              { num: "②", title: "전개도 클릭 배치", desc: "채널 선택 후 좌측 전개도 클릭으로 빠른 배치. 정확도 ±5mm." },
+              { num: "③", title: "일괄 / CSV", desc: "패턴 일괄 배치 또는 CSV import로 채널 일거에 등록." },
+            ].map(m => (
+              <div key={m.num} style={{ padding: "10px 14px", background: "var(--surface-base)", border: "1px solid var(--border-medium)", borderLeft: "3px solid var(--brand-primary)" }}>
+                <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", marginBottom: 4 }}>방법 {m.num} {m.title}</div>
+                <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{m.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 하단 액션 */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 24px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
+          <button className="erut-btn erut-btn--subtle erut-btn--sm" disabled={step === 1} onClick={() => setStep(s => Math.max(1, s - 1))}>← 이전 단계</button>
+          <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>검사체별 1회 설정 → 모든 검사 세션에서 자동 적용</div>
+          {step < 3 ? (
+            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => setStep(s => Math.min(3, s + 1))}>다음 단계 →</button>
+          ) : (
+            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onClose}>저장 + 닫기</button>
+          )}
         </div>
       </div>
     </div>
