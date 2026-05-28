@@ -262,6 +262,7 @@ function App() {
             onStartMeasure={(channel) => { setSelectedChannel(channel); goto("realtime"); }}
             onOpenGate={(channel) => { setSelectedChannel(channel); goto("gate"); }}
             onAddTarget={() => { setManageInitialMode("new"); goto("manage"); }}
+            onEditTarget={(name) => { setSelectedTarget(name); setManageInitialMode("edit"); goto("manage"); }}
           />
         )}
         {screen === "gate" && (

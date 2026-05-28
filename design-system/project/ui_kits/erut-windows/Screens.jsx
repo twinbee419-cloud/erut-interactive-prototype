@@ -577,7 +577,7 @@ window.MainScreen = function MainScreen({ onAddDevice, onOpenDevice, onChangePro
 };
 
 // =================== Screen · [2] DEVICE DETAIL ===================
-window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, onStartMeasure, onOpenGate, onAddTarget }) {
+window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, onStartMeasure, onOpenGate, onAddTarget, onEditTarget }) {
   const target = window.MOCK.targets.find(t => t.id === targetId) || window.MOCK.targets[0];
   const sensorMap = Object.fromEntries(window.MOCK.sensors.map(s => [s.id, s]));
   const [selected, setSelected] = $s(focusChannel || "ch01");
@@ -585,8 +585,8 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   const [showAddSensor, setShowAddSensor] = $s(false);
   const [showCalibration, setShowCalibration] = $s(false);
   const [showDiagnostics, setShowDiagnostics] = $s(false);
-  // v9.0 (NDT 1.7): 검사 대상 카드 선택 (결함 채널 강조용). null=no selection
-  const [selectedTarget, setSelectedTarget] = $s(null);
+  // v9.0 (NDT 1.7): 검사 대상 카드 선택 (결함 채널 강조용). null=no selection. 외부 targetId와 분리
+  const [selectedTargetCard, setSelectedTargetCard] = $s(null);
 
   React.useEffect(() => {
     if (focusChannel) {
@@ -620,7 +620,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   // 결함 등급별 색 매핑
   const DEFECT_COLOR = { critical: "var(--system-error)", major: "var(--system-caution)", minor: "var(--content-low)" };
   // 카드 클릭 핸들러 (같은 카드 재클릭 = 현상 유지)
-  const onTargetCardClick = (name) => { if (selectedTarget !== name) setSelectedTarget(name); };
+  const onTargetCardClick = (name) => { if (selectedTargetCard !== name) setSelectedTargetCard(name); };
 
   const okCount       = window.MOCK.sensors.filter(s => s.state === "ok").length;
   const warnCount     = window.MOCK.sensors.filter(s => s.state === "warn").length;
@@ -694,8 +694,8 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
               {/* v9.0 (NDT 1.7): 결함 표시 + 카드 클릭 인터랙션 */}
               {TARGETS.map(t => {
-                const isSelected = selectedTarget === t.name;
-                const isDimmed = selectedTarget && !isSelected;
+                const isSelected = selectedTargetCard === t.name;
+                const isDimmed = selectedTargetCard && !isSelected;
                 const hasDefect = t.defectCount > 0;
                 const defectColor = hasDefect ? DEFECT_COLOR[t.topLevel] : null;
                 return (
@@ -734,7 +734,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
                       position: "absolute", bottom: 6, right: 10,
                       font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em",
                       color: "var(--content-emphasis)", textDecoration: "underline",
-                    }} onClick={(e) => { e.stopPropagation(); /* TODO: [6] 검사 대상 편집 진입 */ }}>편집 →</span>
+                    }} onClick={(e) => { e.stopPropagation(); onEditTarget && onEditTarget(t.name); }}>편집 →</span>
                   </div>
                 );
               })}
@@ -762,7 +762,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
             const isSel = c.id === selected && active;
             const isFocus = isSel && focusActive;
             // v9.0 (NDT 1.7): 선택된 검사 대상의 결함 채널 강조
-            const showDefect = selectedTarget && c.targetName === selectedTarget && c.defectLevel;
+            const showDefect = selectedTargetCard && c.targetName === selectedTargetCard && c.defectLevel;
             const defectFillColor = showDefect ? (
               c.defectLevel === "critical" ? "rgba(255,0,94,0.20)" :
               c.defectLevel === "major"    ? "rgba(255,146,0,0.20)" :
