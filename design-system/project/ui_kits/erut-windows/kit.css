@@ -482,40 +482,49 @@
 .target-card-v9 .target-card__edit-link { display: none; }
 .target-card-v9:hover .target-card__edit-link { display: inline; }
 
-/* ---------- v9.3 NDT 1.7: default 강도 50% → 30% (×0.6). strong은 100% 유지 ---------- */
+/* ---------- v9.4 NDT 1.7: fill + border 모두 breathing ---------- */
 .erut-ch-cell.is-defect-critical{
-  --defect-low:  rgba(255,0,94,0.05);
-  --defect-high: rgba(255,0,94,0.13);
-  border-color: var(--system-error);
+  --defect-fill-low:    rgba(255,0,94,0.05);
+  --defect-fill-high:   rgba(255,0,94,0.13);
+  --defect-border-low:  rgba(255,0,94,0.30);
+  --defect-border-high: rgba(255,0,94,0.55);
   animation: erut-defect-breathe 1.6s ease-in-out infinite;
 }
 .erut-ch-cell.is-defect-critical.is-strong{
-  --defect-low:  rgba(255,0,94,0.18);
-  --defect-high: rgba(255,0,94,0.42);
+  --defect-fill-low:    rgba(255,0,94,0.18);
+  --defect-fill-high:   rgba(255,0,94,0.42);
+  --defect-border-low:  rgba(255,0,94,0.70);
+  --defect-border-high: rgba(255,0,94,1.00);
 }
 .erut-ch-cell.is-defect-major{
-  --defect-low:  rgba(255,146,0,0.06);
-  --defect-high: rgba(255,146,0,0.13);
-  border-color: var(--system-caution);
+  --defect-fill-low:    rgba(255,146,0,0.06);
+  --defect-fill-high:   rgba(255,146,0,0.13);
+  --defect-border-low:  rgba(255,146,0,0.30);
+  --defect-border-high: rgba(255,146,0,0.55);
   animation: erut-defect-breathe 1.6s ease-in-out infinite;
 }
 .erut-ch-cell.is-defect-major.is-strong{
-  --defect-low:  rgba(255,146,0,0.20);
-  --defect-high: rgba(255,146,0,0.44);
+  --defect-fill-low:    rgba(255,146,0,0.20);
+  --defect-fill-high:   rgba(255,146,0,0.44);
+  --defect-border-low:  rgba(255,146,0,0.70);
+  --defect-border-high: rgba(255,146,0,1.00);
 }
 .erut-ch-cell.is-defect-minor{
-  --defect-low:  rgba(107,124,155,0.06);
-  --defect-high: rgba(107,124,155,0.13);
-  border-color: var(--content-low);
+  --defect-fill-low:    rgba(107,124,155,0.06);
+  --defect-fill-high:   rgba(107,124,155,0.13);
+  --defect-border-low:  rgba(107,124,155,0.35);
+  --defect-border-high: rgba(107,124,155,0.60);
   animation: erut-defect-breathe 1.6s ease-in-out infinite;
 }
 .erut-ch-cell.is-defect-minor.is-strong{
-  --defect-low:  rgba(107,124,155,0.18);
-  --defect-high: rgba(107,124,155,0.36);
+  --defect-fill-low:    rgba(107,124,155,0.18);
+  --defect-fill-high:   rgba(107,124,155,0.36);
+  --defect-border-low:  rgba(107,124,155,0.75);
+  --defect-border-high: rgba(107,124,155,1.00);
 }
 @keyframes erut-defect-breathe {
-  0%, 100% { background-color: var(--defect-low); }
-  50%      { background-color: var(--defect-high); }
+  0%, 100% { background-color: var(--defect-fill-low);  border-color: var(--defect-border-low); }
+  50%      { background-color: var(--defect-fill-high); border-color: var(--defect-border-high); }
 }
 
 /* ---------- Roll indicator (측정 중) ---------- */
