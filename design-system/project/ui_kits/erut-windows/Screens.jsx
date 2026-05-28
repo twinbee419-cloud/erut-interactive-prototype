@@ -837,38 +837,38 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
         </div>
       </div>
 
-      {/* v8.8: "+ 센서 추가" 모달 — 임시 mockup (AddSensorModal 컴포넌트 누락 버그 수정) */}
+      {/* v8.11: "+ 센서 추가" 모달 — 메인 기획과 동일 (채널 번호 select · 교정 토글 · 3 버튼 푸터) */}
       {showAddSensor && (
         <window.Modal title="센서 채널 추가 — MCF-2024-001" onClose={() => setShowAddSensor(false)}
           footer={(
-            <>
-              <button className="erut-btn erut-btn--default erut-btn--m" onClick={() => setShowAddSensor(false)}>취소</button>
-              <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => { setShowAddSensor(false); setShowCalibration(true); }}>등록 + 교정 마법사 시작</button>
-            </>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+              <a style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", textDecoration: "underline", cursor: "pointer" }}>
+                여러 채널 일괄 등록 / 관리 → [4-3] 탐촉자 설정
+              </a>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={() => setShowAddSensor(false)}>취소</button>
+                <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowAddSensor(false)}>추가만</button>
+                <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => { setShowAddSensor(false); setShowCalibration(true); }}>추가 + 교정</button>
+              </div>
+            </div>
           )}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 480 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div>
-                <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>채널 번호 <span style={{ color: "var(--system-error)" }}>*</span></div>
-                <input className="erut-field" placeholder="예: ch33" style={{ width: "100%" }}/>
+                <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>채널 번호 <span style={{ color: "var(--system-error)" }}>*</span></div>
+                <select className="erut-field" style={{ width: "100%" }}>
+                  <option>65 (다음 빈 슬롯 자동 할당)</option>
+                  <option>16 (현재 미등록)</option>
+                  <option>직접 입력...</option>
+                </select>
               </div>
               <div>
-                <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>탐촉자 SN <span style={{ color: "var(--system-error)" }}>*</span></div>
-                <input className="erut-field" placeholder="예: PXT-2024-033" style={{ width: "100%" }}/>
-              </div>
-              <div>
-                <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>주파수</div>
-                <select className="erut-field" style={{ width: "100%" }}><option>5 MHz</option><option>2.25 MHz</option><option>10 MHz</option></select>
-              </div>
-              <div>
-                <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>직경</div>
-                <select className="erut-field" style={{ width: "100%" }}><option>10 mm</option><option>6 mm</option><option>12 mm</option></select>
+                <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>Serial 번호 (SN) <span style={{ color: "var(--system-error)" }}>*</span></div>
+                <input className="erut-field" placeholder="예: PXT-2024-065" style={{ width: "100%" }}/>
               </div>
             </div>
-            <div style={{ background: "linear-gradient(rgba(255,146,0,0.05),rgba(255,146,0,0.05)), var(--surface-subtle-2)", border: "1px solid var(--system-caution)", padding: "8px 12px", font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
-              <strong style={{ color: "var(--system-caution)", fontWeight: 700 }}>교정 필수</strong>: 신규 채널은 등록 직후 영점·음속·감도 3단계 교정이 자동 트리거됩니다 (KS B 0817 · ASNT 표준).
-            </div>
+            <window.Toggle checked={true} size="sm" label="추가 직후 교정 마법사 자동 실행 (영점·음속·감도)"/>
           </div>
         </window.Modal>
       )}
