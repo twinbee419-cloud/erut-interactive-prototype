@@ -85,14 +85,13 @@ function App() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  // v9.20 (NDT 1.5): 세션 자동 저장 — Mock timer. 30초마다 reset
+  // v9.21 (NDT 1.5): 전역 Mock timer — 모든 화면에 "마지막 저장 N초 전" 표시
   // 실제 백엔드 사양: dev_handoff/Session_Autosave_Spec_v1.0.md
   const [lastSaveSec, setLastSaveSec] = useState(0);
   useEffect(() => {
-    if (screen !== "realtime" || measureState !== "measuring") return;
     const t = setInterval(() => setLastSaveSec(s => (s + 1) >= 30 ? 0 : s + 1), 1000);
     return () => clearInterval(t);
-  }, [screen, measureState]);
+  }, []);
   const fmtSave = (s) => s < 60 ? `마지막 저장 ${s}초 전` : `마지막 저장 ${Math.floor(s/60)}분 전`;
 
   // v9.20: 앱 시작 시 미완료 세션 복구 다이얼로그 — mock (첫 진입 시 1회)
@@ -180,8 +179,9 @@ function App() {
   };
   const remaining = Math.max(0, 600 - elapsed); // 10분 기준 세션
 
-  // toolbar 우측 측정 상태 hint (realtime 화면 전용)
-  let toolbarHint = null;
+  // v9.21 (NDT 1.5): 모든 페이지의 toolbar 우측 hint를 "마지막 저장 N초 전"으로 통일
+  // realtime 화면에서는 측정 상태 dot + elapsed 추가 표시 / 다른 화면에서는 저장 시점만
+  let toolbarHint;
   if (screen === "realtime") {
     const c = measureState === "measuring" ? "var(--system-error)"
             : measureState === "paused"    ? "var(--system-caution)"
@@ -195,9 +195,13 @@ function App() {
         {measureState === "measuring" && <span>측정 중 · {fmtTime(elapsed)} 경과 · 잔여 {fmtTime(remaining)}</span>}
         {measureState === "paused"    && <span>일시정지 · {fmtTime(elapsed)} 경과 (멈춤)</span>}
         {measureState === "stopped"   && <span>정지</span>}
-        {/* v9.20 (NDT 1.5): 단축키 hint 삭제 → 마지막 저장 시점 표시 */}
         <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)", paddingLeft: 8, borderLeft: "1px solid var(--border-medium)" }}>{fmtSave(lastSaveSec)}</span>
       </span>
+    );
+  } else {
+    // 측정 외 화면 — 마지막 저장 시점만 표시
+    toolbarHint = (
+      <span className="erut-tb-hint" style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>{fmtSave(lastSaveSec)}</span>
     );
   }
 
