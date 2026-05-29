@@ -44,10 +44,11 @@ const TITLE_BY_SCREEN = {
   realtime:  "ERUT - Ultrasonic Monitoring System  ·  MCuF-001 · 실시간 스캔 · 3개 대상 · 세션 #047",
   manage:    "ERUT - Ultrasonic Monitoring System  ·  검사 대상 관리",
   settings:  "ERUT - Ultrasonic Monitoring System  ·  장비 연결 설정",
+  report:    "ERUT - Ultrasonic Monitoring System  ·  보고서 생성 · SES-2026-047",
 };
 
 // Screens where the device is "connected" (status bar green LEDs)
-const CONNECTED_SCREENS = new Set(["main", "device", "gate", "realtime", "manage", "settings"]);
+const CONNECTED_SCREENS = new Set(["main", "device", "gate", "realtime", "manage", "settings", "report"]);
 
 function App() {
   const [screen, setScreen]                   = useState("project");
@@ -109,7 +110,7 @@ function App() {
     { label: "다른 이름으로 저장", shortcut: "Ctrl+Shift+S" },
     { divider: true },
     { label: "최근 프로젝트" },
-    { label: "보고서 출력", shortcut: "Ctrl+P" },
+    { label: "보고서 출력", shortcut: "Ctrl+P", onClick: () => goto("report") },
     { divider: true },
     { label: "종료", shortcut: "Alt+F4" },
   ];
@@ -313,6 +314,13 @@ function App() {
             elapsed={elapsed}
             setElapsed={setElapsed}
             onBack={() => goto("device")}
+          />
+        )}
+        {/* v9.24: [18] 보고서 자동 생성 */}
+        {screen === "report" && (
+          <window.ReportGenerator
+            sessionId="SES-2026-047"
+            onBack={() => goto("main")}
           />
         )}
 

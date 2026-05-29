@@ -3010,3 +3010,163 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
     </div>
   );
 };
+
+// =================== Screen · [18] REPORT GENERATOR (v9.24 신규) ===================
+// 메인 HTML SLIDE 17 [18] 보고서 자동 생성 페이지 구현
+// 진입: 메뉴바 [파일] > 보고서 출력 (Ctrl+P) — index.html
+window.ReportGenerator = function ReportGenerator({ sessionId = "SES-2026-047", onBack }) {
+  const [judgment, setJudgment] = $s("조건부 합격");
+  const [note, setNote] = $s("Critical 결함 1건 보수 후 동일 좌표 재측정 필요. 보수 후 30일 이내 재검사 권장.");
+
+  const autoItems = [
+    "검사일 · 시간", "검사 대상 정보", "검사자 + ASNT 자격", "장비 정보 + 펌웨어",
+    "측정 + Gate 파라미터", "DAC 곡선 + 교정 정보", "결함 목록 (좌표 · 크기)", "첨부 사진",
+  ];
+
+  const defects = [
+    { id: 1, type: "Critical", color: "var(--system-error)",   pos: "52° / 95 mm",  size: "∅ 3.2 mm", amp: "94 %", bg: "rgba(255,0,94,0.04)" },
+    { id: 2, type: "Major",    color: "var(--system-caution)", pos: "228° / 140 mm", size: "∅ 1.9 mm", amp: "76 %", bg: "rgba(255,146,0,0.04)" },
+    { id: 3, type: "Minor",    color: "var(--system-info)",    pos: "144° / 185 mm", size: "∅ 0.8 mm", amp: "63 %", bg: "transparent" },
+  ];
+
+  const judgmentColor = judgment === "합격" ? "var(--system-success)"
+                      : judgment === "조건부 합격" ? "var(--system-caution)"
+                                                  : "var(--system-error)";
+  const judgmentBg = judgment === "합격" ? "rgba(24,227,57,0.04)"
+                   : judgment === "조건부 합격" ? "rgba(255,146,0,0.04)"
+                                                : "rgba(255,0,94,0.04)";
+
+  const sectionH = { font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".08em", color: "var(--brand-primary)", textTransform: "uppercase", margin: "0 0 8px" };
+  const tdK = { padding: "5px 8px", width: 110, color: "var(--content-low)", fontWeight: 700 };
+  const tdV = { padding: "5px 8px" };
+
+  return (
+    <div className="erut-page-enter" style={{ padding: "20px 40px", display: "grid", gridTemplateColumns: "1fr 380px", gridTemplateRows: "40px 1fr", alignContent: "start", columnGap: 24, rowGap: 16, height: "100%" }}>
+      <window.Breadcrumb
+        onBack={onBack}
+        items={[
+          { label: "메인" },
+          { label: "데이터 관리" },
+          { label: `보고서 생성 (${sessionId})`, current: true },
+        ]}
+        style={{ gridRow: 1, gridColumn: "1 / -1" }}
+      />
+
+      {/* 좌측: A4 미리보기 */}
+      <div style={{ gridRow: 2, gridColumn: 1, minWidth: 0, overflowY: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <h2 style={{ font: "700 18px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>보고서 미리보기</h2>
+          <div style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>템플릿: KS B 0817 호환 (한국어) · Page 1 / 3</div>
+        </div>
+        <div style={{ background: "white", border: "1px solid var(--border-medium)", padding: 32, minHeight: 520, boxShadow: "0 4px 16px rgba(10,28,60,0.08)" }}>
+          <div style={{ textAlign: "center", paddingBottom: 16, borderBottom: "2px solid var(--content-medium)", marginBottom: 20 }}>
+            <h1 style={{ font: "700 22px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>초음파 비파괴 검사 보고서</h1>
+            <p style={{ font: "400 13px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", margin: "4px 0 0" }}>Ultrasonic NDT Inspection Report · {sessionId} · 2026-05-21</p>
+          </div>
+
+          <h3 style={sectionH}>1. 검사 기본 정보</h3>
+          <table style={{ width: "100%", font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", borderCollapse: "collapse", marginBottom: 16 }}>
+            <tbody>
+              {[
+                ["검사일", "2026-05-21 14:23 ~ 14:31 (08 분 17 초)"],
+                ["검사 대상", "PIPE-A-204 · 탄소강 304L · 외경 300 mm · 공칭 두께 10 mm"],
+                ["검사자", "김검사 · ASNT Level II · UT-2 자격 · 자격번호 KSNT-UT-2-3409"],
+                ["장비", "MCF-2024-001 · 64 ch · v2.4.1"],
+              ].map(([k, v]) => (
+                <tr key={k} style={{ borderBottom: "1px dotted var(--border-low)" }}>
+                  <td style={tdK}>{k}</td><td style={tdV}>{v}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <h3 style={sectionH}>2. 측정 파라미터</h3>
+          <table style={{ width: "100%", font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", borderCollapse: "collapse", marginBottom: 16 }}>
+            <tbody>
+              {[
+                ["주파수", "5 MHz · Pulser 200 V · Gain 28 dB · PRF 2,000 Hz"],
+                ["Gate", "A : 2.5 ~ 10.5 μs / 80 % · B : 14 ~ 24 μs / 60 %"],
+                ["교정 표준", "KS B 0817 · DAC 곡선 적용 · IIW V1 참조 블록"],
+              ].map(([k, v]) => (
+                <tr key={k} style={{ borderBottom: "1px dotted var(--border-low)" }}>
+                  <td style={tdK}>{k}</td><td style={tdV}>{v}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <h3 style={sectionH}>3. 결함 검출 결과 (총 {defects.length} 건)</h3>
+          <table style={{ width: "100%", font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", borderCollapse: "collapse", border: "1px solid var(--border-medium)", marginBottom: 16 }}>
+            <thead style={{ background: "var(--surface-subtle-1)", fontWeight: 700 }}>
+              <tr>
+                {["#", "분류", "위치 (θ, Z)", "크기", "진폭"].map((h, i) => (
+                  <th key={h} style={{ padding: "6px 8px", textAlign: "left", borderBottom: "1px solid var(--border-medium)", borderRight: i < 4 ? "1px solid var(--border-low)" : "none" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {defects.map(d => (
+                <tr key={d.id} style={{ background: d.bg }}>
+                  <td style={{ padding: "5px 8px", borderRight: "1px solid var(--border-low)" }}>{d.id}</td>
+                  <td style={{ padding: "5px 8px", color: d.color, fontWeight: 700, borderRight: "1px solid var(--border-low)" }}>{d.type}</td>
+                  <td style={{ padding: "5px 8px", borderRight: "1px solid var(--border-low)" }}>{d.pos}</td>
+                  <td style={{ padding: "5px 8px", borderRight: "1px solid var(--border-low)" }}>{d.size}</td>
+                  <td style={{ padding: "5px 8px" }}>{d.amp}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <h3 style={sectionH}>4. 종합 판정</h3>
+          <div style={{ background: judgmentBg, border: `1px solid ${judgmentColor}`, padding: "12px 16px" }}>
+            <div style={{ font: "700 14px/1.4 var(--font-kr)", letterSpacing: ".02em", color: judgmentColor, marginBottom: 4 }}>{judgment} — Critical 결함 1 건 보수 후 재검사 필요</div>
+            <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{note}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* 우측: 입력 + 액션 */}
+      <div style={{ gridRow: 2, gridColumn: 2, minWidth: 0 }}>
+        <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "14px 16px", marginBottom: 14 }}>
+          <h3 style={{ font: "700 13px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: "0 0 10px" }}>자동 채워진 항목</h3>
+          <div style={{ font: "400 12px/1.7 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
+            {autoItems.map(item => (
+              <div key={item} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 3 }}>
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--system-success)" strokeWidth="2"><polyline points="3,8 7,12 13,4"/></svg>
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ background: "linear-gradient(rgba(34,133,239,0.05),rgba(34,133,239,0.05)), var(--surface-base)", border: "1px solid var(--border-emphasis)", padding: "14px 16px", marginBottom: 14 }}>
+          <h3 style={{ font: "700 13px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", margin: "0 0 10px" }}>사용자 추가 입력</h3>
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>종합 판정</div>
+            <select className="erut-field" style={{ width: "100%", color: judgmentColor, fontWeight: 700 }} value={judgment} onChange={(e) => setJudgment(e.target.value)}>
+              <option value="합격">합격</option>
+              <option value="조건부 합격">조건부 합격</option>
+              <option value="불합격">불합격</option>
+            </select>
+          </div>
+          <div>
+            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>비고 / 후속 조치</div>
+            <textarea className="erut-field" style={{ width: "100%", height: 70, resize: "vertical" }} value={note} onChange={(e) => setNote(e.target.value)}/>
+          </div>
+        </div>
+
+        <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "14px 16px", marginBottom: 14 }}>
+          <h3 style={{ font: "700 13px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: "0 0 8px" }}>디지털 서명</h3>
+          <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
+            검사자: <strong style={{ color: "var(--content-high)" }}>김검사 (ASNT Level II)</strong><br/>
+            서명 권한: <span style={{ color: "var(--system-success)", fontWeight: 700 }}>충족 (Level II 이상)</span>
+          </div>
+        </div>
+
+        <button className="erut-btn erut-btn--subtle erut-btn--l" style={{ width: "100%", marginBottom: 8 }}>임시 저장</button>
+        <button className="erut-btn erut-btn--default erut-btn--l" style={{ width: "100%", marginBottom: 8 }}>미리보기 · 줌</button>
+        <button className="erut-btn erut-btn--emphasis erut-btn--l" style={{ width: "100%" }}>PDF 출력 & 서명</button>
+      </div>
+    </div>
+  );
+};
