@@ -835,12 +835,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
           onCellDoubleClick={(id) => onStartMeasure && onStartMeasure(id)}
         />
 
-        {/* deep link 안내 박스 (셀 그리드 동작 보존) */}
-        {focusChannel && (
-          <div style={{ marginTop: 12, padding: "8px 12px", background: "linear-gradient(rgba(34,133,239,0.06),rgba(34,133,239,0.06)), var(--surface-base)", borderLeft: "3px solid var(--brand-primary)", font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
-            <strong style={{ color: "var(--brand-primary)" }}>[1-1] 대시보드 → {focusChannel} deep link 진입</strong>. 해당 채널이 자동 강조되었습니다. 우측 패널에서 신호를 검토하고 임계값 조정 시 <strong>[3] Gate 설정</strong>으로 이동하세요.
-          </div>
-        )}
+        {/* v9.16: [1-1] 대시보드 deep link 안내 배너 삭제 — v7.0에서 [1-1] 폐기로 메시지 obsolete */}
       </div>
 
       {/* ───── 우측 사이드패널 (main 매칭) ───── */}
