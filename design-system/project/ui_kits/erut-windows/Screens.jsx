@@ -144,6 +144,48 @@ window.MOCK = {
     { id: "ch22", theta:  45, z: 5760, state: "ok", thickness: 9.85, amp: 27, tof: 3.32, age: "1 분 전", trend: [9.87, 9.86, 9.86, 9.86, 9.85, 9.85, 9.85] },
     { id: "ch23", theta: 180, z: 5760, state: "ok", thickness: 9.83, amp: 24, tof: 3.32, age: "1 분 전", trend: [9.85, 9.85, 9.84, 9.84, 9.83, 9.83, 9.83] },
     { id: "ch24", theta: 270, z: 5760, state: "ok", thickness: 9.86, amp: 26, tof: 3.33, age: "1 분 전", trend: [9.88, 9.87, 9.87, 9.87, 9.86, 9.86, 9.86] },
+    // v9.15: TANK-B-101 (ch25-48) — 20 ok + 4 warn (ch28·31·38·45)
+    { id: "ch25", theta:   0, z:  300, state: "ok",   thickness: 5.94, amp: 22, tof: 2.01, age: "1 분 전", trend: [5.96, 5.95, 5.95, 5.95, 5.94, 5.94, 5.94] },
+    { id: "ch26", theta:  60, z:  300, state: "ok",   thickness: 5.92, amp: 24, tof: 2.00, age: "1 분 전", trend: [5.94, 5.94, 5.93, 5.93, 5.92, 5.92, 5.92] },
+    { id: "ch27", theta: 120, z:  300, state: "ok",   thickness: 5.93, amp: 23, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.93, 5.93, 5.93, 5.93] },
+    { id: "ch28", theta: 180, z:  300, state: "warn", thickness: 5.88, amp: 38, tof: 1.99, age: "1 분 전", trend: [5.92, 5.91, 5.90, 5.89, 5.89, 5.88, 5.88] },
+    { id: "ch29", theta: 240, z:  300, state: "ok",   thickness: 5.93, amp: 22, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
+    { id: "ch30", theta: 300, z:  300, state: "ok",   thickness: 5.94, amp: 24, tof: 2.01, age: "1 분 전", trend: [5.96, 5.95, 5.95, 5.95, 5.94, 5.94, 5.94] },
+    { id: "ch31", theta:   0, z:  750, state: "warn", thickness: 5.85, amp: 42, tof: 1.98, age: "1 분 전", trend: [5.89, 5.88, 5.87, 5.86, 5.86, 5.85, 5.85] },
+    { id: "ch32", theta:  60, z:  750, state: "ok",   thickness: 5.91, amp: 23, tof: 2.00, age: "1 분 전", trend: [5.93, 5.92, 5.92, 5.92, 5.91, 5.91, 5.91] },
+    { id: "ch33", theta: 120, z:  750, state: "ok",   thickness: 5.93, amp: 21, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
+    { id: "ch34", theta: 180, z:  750, state: "ok",   thickness: 5.90, amp: 24, tof: 2.00, age: "1 분 전", trend: [5.92, 5.91, 5.91, 5.91, 5.90, 5.90, 5.90] },
+    { id: "ch35", theta: 240, z:  750, state: "ok",   thickness: 5.92, amp: 22, tof: 2.00, age: "1 분 전", trend: [5.94, 5.93, 5.93, 5.93, 5.92, 5.92, 5.92] },
+    { id: "ch36", theta: 300, z:  750, state: "ok",   thickness: 5.93, amp: 23, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
+    { id: "ch37", theta:   0, z: 1200, state: "ok",   thickness: 5.94, amp: 24, tof: 2.01, age: "1 분 전", trend: [5.96, 5.95, 5.95, 5.95, 5.94, 5.94, 5.94] },
+    { id: "ch38", theta:  60, z: 1200, state: "warn", thickness: 5.82, amp: 45, tof: 1.97, age: "1 분 전", trend: [5.86, 5.85, 5.84, 5.83, 5.83, 5.82, 5.82] },
+    { id: "ch39", theta: 120, z: 1200, state: "ok",   thickness: 5.91, amp: 22, tof: 2.00, age: "1 분 전", trend: [5.93, 5.92, 5.92, 5.92, 5.91, 5.91, 5.91] },
+    { id: "ch40", theta: 180, z: 1200, state: "ok",   thickness: 5.92, amp: 23, tof: 2.00, age: "1 분 전", trend: [5.94, 5.93, 5.93, 5.93, 5.92, 5.92, 5.92] },
+    { id: "ch41", theta: 240, z: 1200, state: "ok",   thickness: 5.93, amp: 21, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
+    { id: "ch42", theta: 300, z: 1200, state: "ok",   thickness: 5.93, amp: 22, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
+    { id: "ch43", theta:   0, z: 1500, state: "ok",   thickness: 5.94, amp: 24, tof: 2.01, age: "1 분 전", trend: [5.96, 5.95, 5.95, 5.95, 5.94, 5.94, 5.94] },
+    { id: "ch44", theta:  60, z: 1500, state: "ok",   thickness: 5.92, amp: 23, tof: 2.00, age: "1 분 전", trend: [5.94, 5.93, 5.93, 5.93, 5.92, 5.92, 5.92] },
+    { id: "ch45", theta: 120, z: 1500, state: "warn", thickness: 5.84, amp: 40, tof: 1.97, age: "1 분 전", trend: [5.88, 5.87, 5.86, 5.85, 5.85, 5.84, 5.84] },
+    { id: "ch46", theta: 180, z: 1500, state: "ok",   thickness: 5.91, amp: 22, tof: 2.00, age: "1 분 전", trend: [5.93, 5.92, 5.92, 5.92, 5.91, 5.91, 5.91] },
+    { id: "ch47", theta: 240, z: 1500, state: "ok",   thickness: 5.93, amp: 24, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
+    { id: "ch48", theta: 300, z: 1500, state: "ok",   thickness: 5.92, amp: 23, tof: 2.00, age: "1 분 전", trend: [5.94, 5.93, 5.93, 5.93, 5.92, 5.92, 5.92] },
+    // v9.15: VESSEL-C-301 (ch49-64) — 12 ok + 2 warn (ch50·55) + 2 err (ch49·62)
+    { id: "ch49", theta:   0, z:  100, state: "err",  thickness: 0,    amp: 0,  tof: 0,    age: "—",      trend: [11.95, 11.94, 11.93, 0, 0, 0, 0] },
+    { id: "ch50", theta:  90, z:  100, state: "warn", thickness: 11.78,amp: 48, tof: 3.98, age: "1 분 전", trend: [11.85, 11.84, 11.82, 11.81, 11.80, 11.79, 11.78] },
+    { id: "ch51", theta: 180, z:  100, state: "ok",   thickness: 11.92,amp: 26, tof: 4.02, age: "1 분 전", trend: [11.94, 11.93, 11.93, 11.92, 11.92, 11.92, 11.92] },
+    { id: "ch52", theta: 270, z:  100, state: "ok",   thickness: 11.91,amp: 24, tof: 4.02, age: "1 분 전", trend: [11.93, 11.92, 11.92, 11.92, 11.91, 11.91, 11.91] },
+    { id: "ch53", theta:  45, z:  200, state: "ok",   thickness: 11.93,amp: 25, tof: 4.03, age: "1 분 전", trend: [11.95, 11.94, 11.94, 11.93, 11.93, 11.93, 11.93] },
+    { id: "ch54", theta: 135, z:  200, state: "ok",   thickness: 11.90,amp: 27, tof: 4.01, age: "1 분 전", trend: [11.92, 11.91, 11.91, 11.91, 11.90, 11.90, 11.90] },
+    { id: "ch55", theta: 225, z:  200, state: "warn", thickness: 11.75,amp: 50, tof: 3.97, age: "1 분 전", trend: [11.82, 11.80, 11.79, 11.78, 11.77, 11.76, 11.75] },
+    { id: "ch56", theta: 315, z:  200, state: "ok",   thickness: 11.92,amp: 24, tof: 4.02, age: "1 분 전", trend: [11.94, 11.93, 11.93, 11.93, 11.92, 11.92, 11.92] },
+    { id: "ch57", theta:   0, z:  300, state: "ok",   thickness: 11.93,amp: 26, tof: 4.03, age: "1 분 전", trend: [11.95, 11.94, 11.94, 11.93, 11.93, 11.93, 11.93] },
+    { id: "ch58", theta:  90, z:  300, state: "ok",   thickness: 11.91,amp: 23, tof: 4.02, age: "1 분 전", trend: [11.93, 11.92, 11.92, 11.92, 11.91, 11.91, 11.91] },
+    { id: "ch59", theta: 180, z:  300, state: "ok",   thickness: 11.90,amp: 25, tof: 4.01, age: "1 분 전", trend: [11.92, 11.91, 11.91, 11.91, 11.90, 11.90, 11.90] },
+    { id: "ch60", theta: 270, z:  300, state: "ok",   thickness: 11.92,amp: 24, tof: 4.02, age: "1 분 전", trend: [11.94, 11.93, 11.93, 11.93, 11.92, 11.92, 11.92] },
+    { id: "ch61", theta:  45, z:  400, state: "ok",   thickness: 11.93,amp: 27, tof: 4.03, age: "1 분 전", trend: [11.95, 11.94, 11.94, 11.93, 11.93, 11.93, 11.93] },
+    { id: "ch62", theta: 135, z:  400, state: "err",  thickness: 0,    amp: 0,  tof: 0,    age: "—",      trend: [11.92, 11.91, 11.90, 0, 0, 0, 0] },
+    { id: "ch63", theta: 225, z:  400, state: "ok",   thickness: 11.91,amp: 23, tof: 4.02, age: "1 분 전", trend: [11.93, 11.92, 11.92, 11.92, 11.91, 11.91, 11.91] },
+    { id: "ch64", theta: 315, z:  400, state: "ok",   thickness: 11.92,amp: 25, tof: 4.02, age: "1 분 전", trend: [11.94, 11.93, 11.93, 11.93, 11.92, 11.92, 11.92] },
   ],
   defects: [
     { id: 1, type: "Critical", theta:  45, z: 2200, size: "Ø 12mm" },
@@ -2640,17 +2682,17 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
   const defects = window.MOCK.realtimeDefects;
   const criticalDefect = defects.find(d => d.type === "Critical");
 
-  // v9.5 (NDT 1.8): 64ch cells — ChannelGrid 통합 컴포넌트 사용. 결함 + 부착 상태 동시 표현
-  const unattachedSet = new Set([22, 49]); // 미부착 2채널
-  const weakSet = new Set([7, 12, 31, 38, 50, 55]); // 약함 6채널 (mock)
+  // v9.15: 64ch cells — MOCK.sensors 기반 (두 화면 데이터 단일 진실 공급원)
+  const sensorMap64 = Object.fromEntries(window.MOCK.sensors.map(s => [s.id, s]));
   const cells64 = [];
   for (let i = 1; i <= 64; i++) {
     const def = defects.find(d => d.channel === i);
-    const state = unattachedSet.has(i) ? "err" : weakSet.has(i) ? "warn" : "ok";
+    const id = "ch" + String(i).padStart(2, "0");
+    const sensor = sensorMap64[id];
     cells64.push({
       num: i,
-      id: "ch" + String(i).padStart(2, "0"),
-      sensor: { id: "ch" + String(i).padStart(2, "0"), state },
+      id,
+      sensor: sensor || { id, state: "ok" }, // sensors에 없으면 default ok
       defectLevel: def ? def.type.toLowerCase() : null, // "Critical" → "critical"
       targetName: i <= 24 ? "PIPE-A-204" : i <= 48 ? "TANK-B-101" : "VESSEL-C-301",
     });
