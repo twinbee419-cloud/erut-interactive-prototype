@@ -45,10 +45,11 @@ const TITLE_BY_SCREEN = {
   manage:    "ERUT - Ultrasonic Monitoring System  ·  검사 대상 관리",
   settings:  "ERUT - Ultrasonic Monitoring System  ·  장비 연결 설정",
   report:    "ERUT - Ultrasonic Monitoring System  ·  보고서 생성 · SES-2026-047",
+  history:   "ERUT - Ultrasonic Monitoring System  ·  검사 이력 관리",
 };
 
 // Screens where the device is "connected" (status bar green LEDs)
-const CONNECTED_SCREENS = new Set(["main", "device", "gate", "realtime", "manage", "settings", "report"]);
+const CONNECTED_SCREENS = new Set(["main", "device", "gate", "realtime", "manage", "settings", "report", "history"]);
 
 function App() {
   const [screen, setScreen]                   = useState("project");
@@ -110,6 +111,8 @@ function App() {
     { label: "다른 이름으로 저장", shortcut: "Ctrl+Shift+S" },
     { divider: true },
     { label: "최근 프로젝트" },
+    // v9.25: 검사 이력 메뉴 추가 (Ctrl+D)
+    { label: "검사 이력", shortcut: "Ctrl+D", onClick: () => goto("history") },
     { label: "보고서 출력", shortcut: "Ctrl+P", onClick: () => goto("report") },
     { divider: true },
     { label: "종료", shortcut: "Alt+F4" },
@@ -156,8 +159,12 @@ function App() {
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       if (e.key === "Escape") { closeMenus(); setShowNewProject(false); return; }
       if (e.key === "F6") { e.preventDefault(); goto("realtime"); setMeasureState("measuring"); }
+      // v9.25: Ctrl+D → 검사 이력 / Ctrl+P → 보고서
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") { e.preventDefault(); goto("history"); }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") { e.preventDefault(); goto("report"); }
       if (screen === "realtime") {
-        if (e.key === "F7") { e.preventDefault(); setMeasureState("stopped"); }
+        // v9.25: F7 측정 중지 시 [7] 검사 이력으로 자동 진입
+        if (e.key === "F7") { e.preventDefault(); setMeasureState("stopped"); goto("history"); }
         if (e.code === "Space") { e.preventDefault(); setMeasureState(s => s === "measuring" ? "paused" : "measuring"); }
       }
     };
@@ -269,6 +276,7 @@ function App() {
             onAddDevice={() => { setSettingsInitialSubView("mc-add"); goto("settings"); }}
             onOpenDevice={() => { setSelectedChannel(null); goto("device"); }}
             onChangeProject={() => goto("project")}
+            onOpenHistory={() => goto("history")}
           />
         )}
         {/* v8.5: [1-1] dashboard 라우트 폐기 — MC보드 자산 중심 모델 */}
@@ -314,13 +322,21 @@ function App() {
             elapsed={elapsed}
             setElapsed={setElapsed}
             onBack={() => goto("device")}
+            onStop={() => goto("history")}
           />
         )}
         {/* v9.24: [18] 보고서 자동 생성 */}
         {screen === "report" && (
           <window.ReportGenerator
             sessionId="SES-2026-047"
+            onBack={() => goto("history")}
+          />
+        )}
+        {/* v9.25: [7] 검사 이력 관리 */}
+        {screen === "history" && (
+          <window.InspectionHistory
             onBack={() => goto("main")}
+            onSelectReport={(sid) => goto("report")}
           />
         )}
 

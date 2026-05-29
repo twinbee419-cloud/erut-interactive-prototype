@@ -487,7 +487,7 @@ function MiniPill({ children, tone = "neutral", ledColor }) {
   );
 }
 
-window.MainScreen = function MainScreen({ onAddDevice, onOpenDevice, onChangeProject }) {
+window.MainScreen = function MainScreen({ onAddDevice, onOpenDevice, onChangeProject, onOpenHistory }) {
   const proj = window.MOCK.project;
   const devices = window.MOCK.devices;
 
@@ -581,7 +581,10 @@ window.MainScreen = function MainScreen({ onAddDevice, onOpenDevice, onChangePro
               담당자 {proj.owner} · 마지막 저장 {proj.savedAt}{proj.autoSave ? " · 자동 저장 활성" : ""}
             </div>
           </div>
-          {/* v9.23: '프로젝트 저장' 버튼 삭제 — 30초 자동 저장으로 대체 (수동 저장 제거 정책 연장) */}
+          {/* v9.25: '검사 이력' 버튼 신규 (텍스트만, 아이콘 없음) */}
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onOpenHistory}>검사 이력</button>
+          </div>
         </div>
         {/* Tab */}
         <div style={{ display: "flex", gap: 0, marginTop: 8 }}>
@@ -2721,7 +2724,7 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
   );
 };
 
-window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed, setElapsed, onBack }) {
+window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed, setElapsed, onBack, onStop }) {
   // state(measureState) · elapsed는 App에서 lift up — toolbar 우측에 표시.
   // 일시정지/측정 중지/긴급 정지/측정 재개 버튼은 setState로 동일하게 상태 전환.
   // 메인 [11]의 "전체 진행률 · 81/150 라인" 진행 바는 고정형 컨텍스트(라인 스캔 없음)에 부적합하여 제외.
@@ -2951,7 +2954,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
           )}
 
           {/* 측정 중지 */}
-          <button className="erut-btn erut-btn--subtle erut-btn--m" style={{ width: "100%", color: "var(--system-error)", borderColor: "var(--system-error)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px" }} onClick={() => setState("stopped")}>
+          <button className="erut-btn erut-btn--subtle erut-btn--m" style={{ width: "100%", color: "var(--system-error)", borderColor: "var(--system-error)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px" }} onClick={() => { setState("stopped"); onStop && onStop(); }}>
             <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="3" width="10" height="10"/></svg>
               측정 중지
@@ -3166,6 +3169,128 @@ window.ReportGenerator = function ReportGenerator({ sessionId = "SES-2026-047", 
         <button className="erut-btn erut-btn--subtle erut-btn--l" style={{ width: "100%", marginBottom: 8 }}>임시 저장</button>
         <button className="erut-btn erut-btn--default erut-btn--l" style={{ width: "100%", marginBottom: 8 }}>미리보기 · 줌</button>
         <button className="erut-btn erut-btn--emphasis erut-btn--l" style={{ width: "100%" }}>PDF 출력 & 서명</button>
+      </div>
+    </div>
+  );
+};
+
+// =================== Screen · [7] INSPECTION HISTORY (v9.25 신규) ===================
+// 메인 HTML SLIDE 16 [7] 검사 이력 관리 페이지 구현
+// 진입: 메뉴바 [파일] > 검사 이력 (Ctrl+D) / [1] 메인 헤더 버튼 / [11] 측정 중지(F7) 자동 진입
+window.InspectionHistory = function InspectionHistory({ onBack, onSelectReport }) {
+  const [search, setSearch] = $s("");
+  const [period, setPeriod] = $s("최근 30일");
+  const [statusFilter, setStatusFilter] = $s("모든 상태");
+  const [selectedId, setSelectedId] = $s("SES-2026-047");
+  const [checked, setChecked] = $s(new Set(["SES-2026-047"]));
+
+  const sessions = [
+    { id: "SES-2026-047", target: "PIPE-A-204",   inspector: "김검사 · Lv.II",  date: "2026-05-21 14:23", defects: 3, defectColor: "var(--system-error)",   size: "340 MB", status: "조건부", statusColor: "var(--system-caution)" },
+    { id: "SES-2026-046", target: "TANK-B-101",   inspector: "이검사 · Lv.III", date: "2026-05-20 09:12", defects: 0, defectColor: "var(--system-success)", size: "128 MB", status: "합격",   statusColor: "var(--system-success)" },
+    { id: "SES-2026-045", target: "VESSEL-C-301", inspector: "김검사 · Lv.II",  date: "2026-05-19 16:48", defects: 1, defectColor: "var(--system-caution)", size: "96 MB",  status: "검토",   statusColor: "var(--system-caution)" },
+    { id: "SES-2026-044", target: "WELD-F-22",    inspector: "박검사 · Lv.II",  date: "2026-05-19 11:02", defects: 5, defectColor: "var(--system-error)",   size: "412 MB", status: "불합격", statusColor: "var(--system-error)" },
+    { id: "SES-2026-043", target: "PIPE-A-204",   inspector: "김검사 · Lv.II",  date: "2026-05-18 14:21", defects: 2, defectColor: "var(--system-caution)", size: "298 MB", status: "검토",   statusColor: "var(--system-caution)" },
+    { id: "SES-2026-042", target: "FLANGE-D-08",  inspector: "이검사 · Lv.III", date: "2026-05-18 10:33", defects: 0, defectColor: "var(--system-success)", size: "82 MB",  status: "합격",   statusColor: "var(--system-success)" },
+  ];
+
+  const filtered = sessions.filter(s => !search || s.id.includes(search) || s.target.includes(search) || s.inspector.includes(search));
+  const totalSize = sessions.reduce((acc, s) => acc + parseInt(s.size), 0);
+
+  const toggleCheck = (id) => setChecked(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+
+  const cols = "50px 140px 1fr 1fr 1fr 80px 100px 130px 100px";
+  const cellHead = { padding: "12px 10px", font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" };
+  const cellRow  = { padding: "14px 10px", font: "400 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" };
+
+  return (
+    <div className="erut-page-enter" style={{ padding: "20px 40px", display: "grid", gridTemplateRows: "40px auto 1fr auto", rowGap: 16, height: "100%" }}>
+      <window.Breadcrumb
+        onBack={onBack}
+        items={[{ label: "메인" }, { label: "검사 이력 관리", current: true }]}
+      />
+
+      {/* 필터 바 */}
+      <div style={{ display: "flex", gap: 10, alignItems: "center", padding: 12, background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)" }}>
+        <input className="erut-field" placeholder="세션 ID · 검사 대상 · 검사자 검색" value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1 }}/>
+        <select className="erut-field" value={period} onChange={(e) => setPeriod(e.target.value)} style={{ width: 160 }}>
+          <option>최근 30일</option>
+          <option>최근 7일</option>
+          <option>오늘</option>
+          <option>최근 3개월</option>
+          <option>전체</option>
+        </select>
+        <select className="erut-field" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ width: 140 }}>
+          <option>모든 상태</option>
+          <option>합격</option>
+          <option>조건부</option>
+          <option>검토</option>
+          <option>불합격</option>
+        </select>
+        <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => { setSearch(""); setPeriod("최근 30일"); setStatusFilter("모든 상태"); }}>필터 초기화</button>
+      </div>
+
+      {/* 테이블 */}
+      <div style={{ border: "1px solid var(--border-medium)", background: "var(--surface-base)", overflowY: "auto" }}>
+        <div style={{ display: "grid", gridTemplateColumns: cols, background: "var(--surface-subtle-1)", borderBottom: "1px solid var(--border-medium)", position: "sticky", top: 0 }}>
+          <div style={cellHead}/>
+          <div style={cellHead}>세션 ID</div>
+          <div style={cellHead}>검사 대상</div>
+          <div style={cellHead}>검사자</div>
+          <div style={cellHead}>시작 시각</div>
+          <div style={cellHead}>결함</div>
+          <div style={cellHead}>크기</div>
+          <div style={cellHead}>상태</div>
+          <div style={cellHead}/>
+        </div>
+        {filtered.map(s => {
+          const isSel = s.id === selectedId;
+          const isChk = checked.has(s.id);
+          return (
+            <div
+              key={s.id}
+              onClick={() => setSelectedId(s.id)}
+              style={{
+                display: "grid", gridTemplateColumns: cols, alignItems: "center",
+                borderBottom: "1px solid var(--border-low)",
+                background: isSel ? "linear-gradient(rgba(34,133,239,0.06),rgba(34,133,239,0.06)), var(--surface-base)" : "var(--surface-base)",
+                borderLeft: isSel ? "3px solid var(--brand-primary)" : "3px solid transparent",
+                cursor: "pointer",
+              }}
+            >
+              <div style={cellRow} onClick={(e) => { e.stopPropagation(); toggleCheck(s.id); }}>
+                <span className={"erut-cb__box" + (isChk ? " is-on" : "")} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                  {isChk && <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="#FFFFFF" strokeWidth="2"><polyline points="3,8 7,12 13,4"/></svg>}
+                </span>
+              </div>
+              <div style={{ ...cellRow, fontFamily: "'Consolas', monospace", color: isSel ? "var(--brand-primary)" : "var(--content-high)", fontWeight: isSel ? 700 : 400 }}>{s.id}</div>
+              <div style={cellRow}>{s.target}</div>
+              <div style={cellRow}>{s.inspector}</div>
+              <div style={cellRow}>{s.date}</div>
+              <div style={cellRow}><span style={{ color: s.defectColor, fontWeight: 700 }}>{s.defects}</span></div>
+              <div style={cellRow}>{s.size}</div>
+              <div style={cellRow}><span style={{ color: s.statusColor, fontWeight: 700 }}>{s.status}</span></div>
+              <div style={cellRow}>
+                {isSel && <button className="erut-btn erut-btn--default erut-btn--sm" style={{ padding: "4px 8px" }} onClick={(e) => { e.stopPropagation(); }}>선택됨</button>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 하단 액션 */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ font: "400 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+          총 {sessions.length}개 세션 · {checked.size}개 선택됨 · {totalSize} MB
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button className="erut-btn erut-btn--default erut-btn--m">CSV 내보내기</button>
+          <button className="erut-btn erut-btn--default erut-btn--m">바이너리 (.cscan)</button>
+          <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => onSelectReport && onSelectReport(selectedId)}>보고서 생성 →</button>
+        </div>
       </div>
     </div>
   );
