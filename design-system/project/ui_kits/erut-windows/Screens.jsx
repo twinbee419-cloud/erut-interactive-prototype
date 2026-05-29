@@ -581,9 +581,7 @@ window.MainScreen = function MainScreen({ onAddDevice, onOpenDevice, onChangePro
               담당자 {proj.owner} · 마지막 저장 {proj.savedAt}{proj.autoSave ? " · 자동 저장 활성" : ""}
             </div>
           </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button className="erut-btn erut-btn--default erut-btn--sm">프로젝트 저장</button>
-          </div>
+          {/* v9.23: '프로젝트 저장' 버튼 삭제 — 30초 자동 저장으로 대체 (수동 저장 제거 정책 연장) */}
         </div>
         {/* Tab */}
         <div style={{ display: "flex", gap: 0, marginTop: 8 }}>
