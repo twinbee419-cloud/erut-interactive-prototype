@@ -669,8 +669,8 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   // 32 cells (4 rows × 8 cols). First 8 map to real sensors.
   // v8.8: 64채널 다중 검사체 분산 부착 — ch01-24 PIPE-A-204 · ch25-48 TANK-B-101 · ch49-64 VESSEL-C-301
   const getTargetName = (i) => i <= 24 ? "PIPE-A-204" : i <= 48 ? "TANK-B-101" : "VESSEL-C-301";
-  // v9.14: 결함 검출 채널 4건 — 모두 PIPE-A-204(ch01-24) 영역
-  const DEFECT_CHANNELS = { 4: "critical", 7: "major", 12: "minor", 18: "minor" };
+  // v9.17: 결함 검출 채널 — PIPE 4건 + VESSEL 2건 (mockup 다양성)
+  const DEFECT_CHANNELS = { 4: "critical", 7: "major", 12: "minor", 18: "minor", 51: "major", 56: "minor" };
   const cells = [];
   for (let i = 1; i <= 64; i++) {
     const id = "ch" + String(i).padStart(2, "0");
@@ -681,7 +681,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   const TARGETS = [
     { name: "PIPE-A-204",   meta: "탄소강 · 외경 300mm · 두께 10mm",     range: "ch01–24 · 24ch", defectCount: 4, topLevel: "critical" },
     { name: "TANK-B-101",   meta: "SS 304 · 구형 · ∅ 1500mm · 두께 6mm",   range: "ch25–48 · 24ch", defectCount: 0, topLevel: null },
-    { name: "VESSEL-C-301", meta: "압력 용기 · 800 × 400mm · 두께 12mm",  range: "ch49–64 · 16ch", defectCount: 0, topLevel: null },
+    { name: "VESSEL-C-301", meta: "압력 용기 · 800 × 400mm · 두께 12mm",  range: "ch49–64 · 16ch", defectCount: 2, topLevel: "major" },
   ];
   // 결함 등급별 색 매핑
   const DEFECT_COLOR = { critical: "var(--system-error)", major: "var(--system-caution)", minor: "var(--content-low)" };
