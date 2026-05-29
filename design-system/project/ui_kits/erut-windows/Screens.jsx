@@ -1005,7 +1005,7 @@ window.DiagnosticsModal = function DiagnosticsModal({ onClose }) {
             {tab === "err" && <DiagLogPlaceholder title="에러 로그" desc="오류 코드 · timestamp · 채널/원인 · 해결 여부 (검색·필터 가능)"/>}
             {tab === "conn" && <DiagLogPlaceholder title="연결 로그" desc="MC보드 연결/해제·timeout·IP 변경 이력 (시계열 테이블)"/>}
             {tab === "meas" && <DiagLogPlaceholder title="측정 로그" desc="세션 시작/종료·일시정지/재개·데이터 전송 오류 (시계열 테이블)"/>}
-            {tab === "calib" && <DiagLogPlaceholder title="교정 이력" desc="채널별 영점·음속·감도 교정 이력 + 다음 권장 교정 시점"/>}
+            {tab === "calib" && <DiagCalibHistory/>}
           </div>
         </div>
         {/* v8.8: footer — 닫기 단일 버튼 (다른 모달과 일관성) */}
@@ -1070,6 +1070,50 @@ function DiagHardware() {
 }
 
 // 다른 탭 placeholder
+// v9.18 (NDT 1.4): 교정 이력 탭 강화 — 채널별 마지막 교정 + 경과일
+function DiagCalibHistory() {
+  // mock 데이터 — 실제는 sensor.lastCalibration 기준
+  const rows = [
+    { ch: "CH 04", date: "2025-11-20", days: 191, status: "경과" },
+    { ch: "CH 07", date: "2026-02-10", days: 108, status: "정상" },
+    { ch: "CH 09", date: "2025-11-15", days: 196, status: "경과" },
+    { ch: "CH 12", date: "2025-11-25", days: 186, status: "경과" },
+    { ch: "CH 18", date: "2026-03-05", days: 85,  status: "정상" },
+    { ch: "CH 22", date: "2026-04-12", days: 47,  status: "정상" },
+  ];
+  return (
+    <>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+        <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>교정 이력</h3>
+        <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>6개월(180일) 경과 시 측정 신뢰성 의심 — 재교정 권장</span>
+      </div>
+      <table style={{ width: "100%", borderCollapse: "collapse", font: "400 12px/1.4 var(--font-kr)" }}>
+        <thead>
+          <tr style={{ borderBottom: "1px solid var(--border-medium)", textAlign: "left", color: "var(--content-low)", fontWeight: 700 }}>
+            <th style={{ padding: "8px 6px" }}>채널</th>
+            <th style={{ padding: "8px 6px" }}>마지막 교정일</th>
+            <th style={{ padding: "8px 6px" }}>경과일</th>
+            <th style={{ padding: "8px 6px" }}>상태</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(r => (
+            <tr key={r.ch} style={{ borderBottom: "1px solid var(--border-low)" }}>
+              <td style={{ padding: "8px 6px", fontWeight: 700, color: "var(--content-high)" }}>{r.ch}</td>
+              <td style={{ padding: "8px 6px", color: "var(--content-medium)" }}>{r.date}</td>
+              <td style={{ padding: "8px 6px", color: r.days > 180 ? "var(--system-caution)" : "var(--content-medium)", fontWeight: r.days > 180 ? 700 : 400 }}>{r.days}일</td>
+              <td style={{ padding: "8px 6px", color: r.days > 180 ? "var(--system-caution)" : "var(--system-success)", fontWeight: 700 }}>{r.status}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div style={{ marginTop: 12, padding: "8px 12px", background: "var(--surface-subtle-2)", borderLeft: "3px solid var(--content-low)", font: "400 11px/1.4 var(--font-kr)", color: "var(--content-medium)" }}>
+        측정 시작(F6) 시 6개월 경과 채널이 있으면 자동 안내 다이얼로그가 표시됩니다. 정기 추적·만료 알림은 ERUT 웹 서비스(상시 모니터링)에서 제공됩니다.
+      </div>
+    </>
+  );
+}
+
 function DiagLogPlaceholder({ title, desc }) {
   return (
     <>
@@ -1170,13 +1214,18 @@ window.AnimatedAscan = function AnimatedAscan({
 //   - probe: 탐촉자 설정 ([4-3-1] 교정 마법사 트리거)
 
 // ───── Calibration Wizard Modal ([4-3-1]) ─────
-window.CalibrationWizard = function CalibrationWizard({ onClose }) {
+// v9.18 (NDT 1.4): mode "new" (신규 등록 — 기존) / "recalibration" (재교정 — 다채널 일괄)
+window.CalibrationWizard = function CalibrationWizard({ onClose, mode = "new", channelList = [], onComplete }) {
   const [step, setStep] = $s(1); // 1: 영점, 2: 음속, 3: 감도
+  const [chIdx, setChIdx] = $s(0); // 재교정 모드 — 현재 진행 중인 채널 인덱스
   const [refBlock, setRefBlock] = $s("IIW V1 (25 mm)");
   const [refThickness, setRefThickness] = $s(25.0);
   const [refMaterial, setRefMaterial] = $s("탄소강 (S355)");
   const [repeats, setRepeats] = $s(5);
   const [batch, setBatch] = $s(true);
+  const isRecal = mode === "recalibration";
+  const totalCh = isRecal ? channelList.length : 1;
+  const currentCh = isRecal ? channelList[chIdx] : "CH 09";
 
   const stepInfo = {
     1: { title: "영점 (Zero / Wedge Delay)",  desc: "참조 블록(IIW V1·V2 또는 STB-A1·A2)에 탐촉자를 접촉하고 [측정 시작] 클릭. 후면 에코의 ToF를 기준으로 wedge delay 자동 계산." },
@@ -1190,8 +1239,12 @@ window.CalibrationWizard = function CalibrationWizard({ onClose }) {
         {/* v8.8: 헤더 — titlebar 컬러 통일 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid var(--border-medium)", background: "var(--content-medium)" }}>
           <div>
-            <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>탐촉자 교정 마법사 — CH 09 / 4</div>
-            <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "rgba(255,255,255,0.7)", marginTop: 4 }}>PXT-2024-009 · 5 MHz · 신규 등록 후 필수 교정</div>
+            <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>
+              {isRecal ? `정기 재교정 — ${totalCh}채널 (${chIdx + 1}/${totalCh} 진행 중)` : "탐촉자 교정 마법사 — CH 09 / 4"}
+            </div>
+            <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "rgba(255,255,255,0.7)", marginTop: 4 }}>
+              {isRecal ? `현재 ${currentCh.toUpperCase()} · 6개월 이상 경과 채널 일괄 재교정` : "PXT-2024-009 · 5 MHz · 신규 등록 후 필수 교정"}
+            </div>
           </div>
           <button onClick={onClose} aria-label="닫기" style={{ background: "transparent", border: "none", color: "var(--content-inverse)", cursor: "pointer", padding: 4, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><window.EIcon.Close size={14}/></button>
         </div>
@@ -1308,14 +1361,18 @@ window.CalibrationWizard = function CalibrationWizard({ onClose }) {
 
         {/* 푸터 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 24px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
-          <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>CH 09 / 4 채널 · {stepInfo[step].title.split(" ")[0]} 측정 완료 후 {step < 3 ? ["", "음속", "감도"][step] : "다음 채널"} 단계로 진행</div>
+          <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+            {isRecal ? `${currentCh.toUpperCase()} (${chIdx + 1}/${totalCh}) · ${stepInfo[step].title.split(" ")[0]} 진행 중` : `CH 09 / 4 채널 · ${stepInfo[step].title.split(" ")[0]} 측정 완료 후 ${step < 3 ? ["", "음속", "감도"][step] : "다음 채널"} 단계로 진행`}
+          </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button className={"erut-btn erut-btn--m " + (step === 1 ? "erut-btn--disabled" : "erut-btn--subtle")} disabled={step === 1} onClick={() => setStep(s => Math.max(1, s - 1))}>이전</button>
-            <button className="erut-btn erut-btn--default erut-btn--m" onClick={onClose}>건너뛰기 (CH 차단)</button>
+            <button className="erut-btn erut-btn--default erut-btn--m" onClick={onClose}>{isRecal ? "취소" : "건너뛰기 (CH 차단)"}</button>
             {step < 3 ? (
               <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => setStep(s => s + 1)}>다음 — {["", "음속", "감도"][step]}</button>
+            ) : isRecal && chIdx < totalCh - 1 ? (
+              <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => { setChIdx(i => i + 1); setStep(1); }}>다음 채널 — {channelList[chIdx + 1].toUpperCase()}</button>
             ) : (
-              <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={onClose}>교정 완료</button>
+              <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => { if (isRecal && onComplete) onComplete(); onClose(); }}>{isRecal ? "전체 재교정 완료 → 측정 시작" : "교정 완료"}</button>
             )}
           </div>
         </div>
@@ -2673,6 +2730,24 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
   const [selectedCh, setSelectedCh] = $s(4); // 64ch grid 선택 (main: CH 04)
   const [autoSwitch, setAutoSwitch] = $s(true);
   const [showAlert, setShowAlert] = $s(true);
+  // v9.18 (NDT 1.4): 세션 시작 시 교정 확인 다이얼로그
+  const [showCalibCheck, setShowCalibCheck] = $s(false);
+  const [showRecalibration, setShowRecalibration] = $s(false);
+  // v9.18 (NDT 1.9): 결함 검증 재측정 — 추후 삭제 가능성
+  const [showVerification, setShowVerification] = $s(false);
+  // mock — 6개월(180일) 이상 경과 채널 (실제 백엔드 연동 시 sensor.lastCalibration 기준)
+  const expiredChannels = ["ch04", "ch09", "ch12"];
+
+  // 측정 시작(F6) 트리거 — 교정 만료 채널 있으면 1.4 다이얼로그 우선
+  const handleStartMeasure = () => {
+    if (expiredChannels.length > 0) {
+      setShowCalibCheck(true);
+    } else {
+      setState("measuring");
+      setElapsed(0);
+      setShowAlert(true);
+    }
+  };
 
   const defects = window.MOCK.realtimeDefects;
   const criticalDefect = defects.find(d => d.type === "Critical");
@@ -2729,8 +2804,10 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>Critical 결함 검출 · 진폭 {criticalDefect.amp} %</div>
             <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 2 }}>채널 {criticalDefect.channel} · ToF {criticalDefect.tof} μs · 두께 {criticalDefect.thickness} mm · 임계값 80 % 초과 · 자동 마킹 완료</div>
           </div>
+          {/* v9.18 (NDT 1.9): 검증 재측정 버튼 — 추후 삭제 가능성 */}
+          <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => setShowVerification(true)}>검증 재측정</button>
           <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowAlert(false)}>확인 후 계속</button>
-          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={() => setState("paused")}>일시정지 후 재측정</button>
+          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={() => setState("paused")}>일시정지</button>
         </div>
       )}
 
@@ -2866,7 +2943,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             </button>
           )}
           {state === "stopped" && (
-            <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%", marginBottom: 6, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px" }} onClick={() => { setState("measuring"); setElapsed(0); setShowAlert(true); }}>
+            <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%", marginBottom: 6, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px" }} onClick={handleStartMeasure}>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><polygon points="4,2 14,8 4,14"/></svg>
                 측정 시작
@@ -2885,6 +2962,53 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
           </button>
         </div>
       </div>
+
+      {/* v9.18 (NDT 1.4): 세션 시작 시 교정 확인 다이얼로그 */}
+      {showCalibCheck && (
+        <window.Modal
+          title="측정 시작 전 교정 상태 확인"
+          onClose={() => setShowCalibCheck(false)}
+          footer={(
+            <>
+              <window.Button variant="subtle" size="sm" onClick={() => setShowCalibCheck(false)}>취소</window.Button>
+              <window.Button variant="default" size="sm" onClick={() => { setShowCalibCheck(false); setState("measuring"); setElapsed(0); setShowAlert(true); }}>그대로 측정</window.Button>
+              <window.Button variant="emphasis" size="sm" onClick={() => { setShowCalibCheck(false); setShowRecalibration(true); }}>재교정 후 측정</window.Button>
+            </>
+          )}
+        >
+          <div style={{ padding: "10px 12px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)", borderLeft: "3px solid var(--system-caution)" }}>
+            <div style={{ font: "700 13px/1.2 var(--font-kr)", color: "var(--system-caution)" }}>{expiredChannels.length}채널 교정 6개월 경과</div>
+            <div style={{ font: "400 11px/1.4 var(--font-kr)", color: "var(--content-medium)", marginTop: 4 }}>
+              {expiredChannels.map(c => c.toUpperCase()).join(", ")}
+            </div>
+          </div>
+          <div style={{ font: "400 12px/1.5 var(--font-kr)", color: "var(--content-medium)" }}>
+            ASNT SNT-TC-1A 표준에 따르면 6개월 이상 경과된 교정은 측정 신뢰성에 영향을 줄 수 있습니다. 정확한 측정을 위해 재교정을 권장합니다.
+          </div>
+        </window.Modal>
+      )}
+
+      {/* v9.18 (NDT 1.4): 재교정 모드 마법사 — CalibrationWizard 재사용 (옵션 A) */}
+      {showRecalibration && (
+        <window.CalibrationWizard
+          mode="recalibration"
+          channelList={expiredChannels}
+          onClose={() => setShowRecalibration(false)}
+          onComplete={() => { setState("measuring"); setElapsed(0); setShowAlert(true); }}
+        />
+      )}
+
+      {/* v9.18 (NDT 1.9): 결함 검증 재측정 다이얼로그 — 추후 삭제 가능성 명시 */}
+      {showVerification && criticalDefect && (
+        <window.VerificationDialog
+          channel={criticalDefect.channel}
+          defectLevel={criticalDefect.type.toLowerCase()}
+          initialAmp={criticalDefect.amp}
+          onClose={() => setShowVerification(false)}
+          onConfirm={(stats) => { console.log("결함 확정:", stats); setShowAlert(false); }}
+          onRecalibrate={() => { setShowVerification(false); setShowRecalibration(true); }}
+        />
+      )}
     </div>
   );
 };
