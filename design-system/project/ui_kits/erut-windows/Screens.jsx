@@ -2806,8 +2806,8 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
           </div>
           {/* v9.18 (NDT 1.9): 검증 재측정 버튼 — 추후 삭제 가능성 */}
           <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => setShowVerification(true)}>검증 재측정</button>
+          {/* v9.19: 일시정지 버튼 삭제 (측정 제어 패널과 중복) */}
           <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowAlert(false)}>확인 후 계속</button>
-          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={() => setState("paused")}>일시정지</button>
         </div>
       )}
 
