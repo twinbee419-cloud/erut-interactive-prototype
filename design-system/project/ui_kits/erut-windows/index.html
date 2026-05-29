@@ -105,7 +105,7 @@ function App() {
 
   const fileMenu = [
     { label: "프로젝트 열기", shortcut: "Ctrl+O", onClick: () => goto("project") },
-    { label: "저장",          shortcut: "Ctrl+S" },
+    // v9.22 (NDT 1.5): 수동 저장(Ctrl+S) 제거 — 30초 자동 저장으로 대체. 페이지 내 명시적 "저장" 버튼은 유지
     { label: "다른 이름으로 저장", shortcut: "Ctrl+Shift+S" },
     { divider: true },
     { label: "최근 프로젝트" },
@@ -179,8 +179,7 @@ function App() {
   };
   const remaining = Math.max(0, 600 - elapsed); // 10분 기준 세션
 
-  // v9.21 (NDT 1.5): 모든 페이지의 toolbar 우측 hint를 "마지막 저장 N초 전"으로 통일
-  // realtime 화면에서는 측정 상태 dot + elapsed 추가 표시 / 다른 화면에서는 저장 시점만
+  // v9.22 (NDT 1.5): realtime만 "마지막 저장 N초 전" 표시. 다른 화면은 단축키 hint
   let toolbarHint;
   if (screen === "realtime") {
     const c = measureState === "measuring" ? "var(--system-error)"
@@ -199,9 +198,9 @@ function App() {
       </span>
     );
   } else {
-    // 측정 외 화면 — 마지막 저장 시점만 표시
+    // 측정 외 화면 — 단축키 hint 표시
     toolbarHint = (
-      <span className="erut-tb-hint" style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>{fmtSave(lastSaveSec)}</span>
+      <span className="erut-tb-hint" style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>F6 시작 · Space 일시정지 · F7 중지</span>
     );
   }
 
