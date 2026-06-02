@@ -1982,6 +1982,12 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   const [prfManual, setPrfManual]   = $s(2000);
   // v8.5: 채널 배치 마법사 모달
   const [showChannelWizard, setShowChannelWizard] = $s(false);
+  // v9.27 Wave B (#6): 프리셋 모달 + 저장 confirm 모달
+  const [showPresetModal, setShowPresetModal] = $s(false);
+  const [showSaveConfirm, setShowSaveConfirm] = $s(false);
+  const [isFromPreset, setIsFromPreset] = $s(false);
+  const [saveAsPreset, setSaveAsPreset] = $s(false);
+  const [selectedPresetId, setSelectedPresetId] = $s(null);
 
   // 선택된 target 변경 시 form 리셋 (selectedId null = 신규 모드)
   React.useEffect(() => {
@@ -2108,13 +2114,15 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             {selectedId && (
               <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ color: "var(--system-error)" }}>검사 대상 삭제</button>
             )}
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onBack}>← 메인</button>
+            {/* v9.27 Wave B: '← 메인' 삭제 (Breadcrumb '이전으로'와 중복) → '프리셋' 버튼 */}
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowPresetModal(true)}>프리셋</button>
             <button
               className={"erut-btn erut-btn--sm " + (requiredOk ? "erut-btn--emphasis" : "erut-btn--disabled")}
               disabled={!requiredOk}
               title={requiredOk ? "" : "필수 항목(*) 입력 필요"}
+              onClick={requiredOk ? () => setShowSaveConfirm(true) : undefined}
             >
-              변경 사항 저장
+              저장
             </button>
           </div>
         </div>
@@ -2242,42 +2250,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
           </div>
         </div>
 
-        {/* 표준 프리셋 */}
-        <div style={{ marginTop: 20, background: "linear-gradient(rgba(34,133,239,0.05),rgba(34,133,239,0.05)), var(--surface-subtle-2)", border: "1px solid var(--border-emphasis)", padding: "14px 18px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-            <div>
-              <div style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>검사체별 표준 프리셋</div>
-              <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginTop: 2 }}>
-                위 검사 대상 정보(소재·두께·유체)에 맞는 프리셋을 선택하면 측정 파라미터(MHz·dB·Pulser·Gate·DAC 등)가 일괄 적용됩니다. <strong style={{ color: "var(--content-emphasis)" }}>평가 표준(KS B 0817 등)은 검사 대상의 "적용 표준" 항목과 분리</strong>되어 같은 프리셋을 여러 표준에 재사용 가능.
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button className="erut-btn erut-btn--default erut-btn--sm">+ 현재 설정 프리셋으로 저장</button>
-              <button className="erut-btn erut-btn--subtle erut-btn--sm">프리셋 라이브러리 ↗</button>
-            </div>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-            {presets.map((p) => (
-              <div
-                key={p.id}
-                style={{
-                  background: "var(--surface-base)",
-                  border: p.applied ? "1px solid var(--border-emphasis)" : "1px solid var(--border-medium)",
-                  padding: "10px 12px",
-                  position: "relative",
-                  cursor: "pointer",
-                }}
-              >
-                {p.applied && (
-                  <div style={{ position: "absolute", top: 8, right: 8, padding: "1px 5px", font: "700 9px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", border: "1px solid var(--border-emphasis)", background: "var(--surface-base)" }}>적용 중</div>
-                )}
-                <div style={{ font: "700 12px/1.2 var(--font-kr)", letterSpacing: ".02em", color: p.applied ? "var(--content-emphasis)" : "var(--content-high)", marginBottom: 4, paddingRight: p.applied ? 50 : 0 }}>{p.name}</div>
-                <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{p.params}</div>
-                <div style={{ marginTop: 6, font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>사용 {p.uses}회 · 마지막 {p.last}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* v9.27 Wave B: 표준 프리셋 영역을 페이지에서 제거 → 모달로 이동 (상단 '프리셋' 버튼 클릭 시 표시) */}
       </div>
 
       {/* v8.5: 채널 배치 마법사 모달 */}
@@ -2286,6 +2259,87 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
           targetName={form.name || "(신규)"}
           onClose={() => setShowChannelWizard(false)}
         />
+      )}
+
+      {/* v9.27 Wave B: 프리셋 선택 모달 */}
+      {showPresetModal && (
+        <window.Modal
+          title="검사체별 표준 프리셋"
+          onClose={() => { setShowPresetModal(false); setSelectedPresetId(null); }}
+          footer={(
+            <>
+              <window.Button variant="subtle" size="sm" onClick={() => { setShowPresetModal(false); setSelectedPresetId(null); }}>닫기</window.Button>
+              <window.Button
+                variant={selectedPresetId ? "emphasis" : "disabled"}
+                size="sm"
+                onClick={selectedPresetId ? () => { setIsFromPreset(true); setShowPresetModal(false); setSelectedPresetId(null); } : undefined}
+              >불러오기</window.Button>
+            </>
+          )}
+        >
+          <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
+            검사 대상 정보(소재·두께·유체)에 맞는 프리셋을 선택하면 측정 파라미터(MHz·dB·Pulser·Gate·DAC 등)가 일괄 적용됩니다.
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+            {presets.map((p) => {
+              const isSel = selectedPresetId === p.id;
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => setSelectedPresetId(p.id)}
+                  style={{
+                    background: isSel ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "var(--surface-base)",
+                    border: isSel ? "1px solid var(--border-emphasis)" : "1px solid var(--border-medium)",
+                    padding: "10px 12px",
+                    position: "relative",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ font: "700 12px/1.2 var(--font-kr)", letterSpacing: ".02em", color: isSel ? "var(--content-emphasis)" : "var(--content-high)", marginBottom: 4 }}>{p.name}</div>
+                  <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{p.params}</div>
+                  <div style={{ marginTop: 6, font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>사용 {p.uses}회 · 마지막 {p.last}</div>
+                </div>
+              );
+            })}
+          </div>
+        </window.Modal>
+      )}
+
+      {/* v9.27 Wave B: 저장 confirm 모달 — 컨텍스트별 동적 문구. 프리셋에서 불러온 경우 체크박스 미표시 */}
+      {showSaveConfirm && (
+        <window.Modal
+          title="저장 확인"
+          onClose={() => setShowSaveConfirm(false)}
+          footer={(
+            <>
+              <window.Button variant="subtle" size="sm" onClick={() => setShowSaveConfirm(false)}>닫기</window.Button>
+              <window.Button variant="emphasis" size="sm" onClick={() => {
+                // mockup — 실제 저장 로직은 백엔드. 모달 닫기 + 상태 초기화
+                setShowSaveConfirm(false);
+                setIsFromPreset(false);
+                setSaveAsPreset(false);
+              }}>저장</window.Button>
+            </>
+          )}
+        >
+          <div style={{ font: "400 13px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
+            {selectedId
+              ? "변경 사항을 저장하시겠습니까?"
+              : "검사 대상을 추가하시겠습니까?"}
+          </div>
+          {!isFromPreset && (
+            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+              <span
+                className={"erut-cb__box" + (saveAsPreset ? " is-on" : "")}
+                onClick={() => setSaveAsPreset(s => !s)}
+                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+              >
+                {saveAsPreset && <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="#FFFFFF" strokeWidth="2"><polyline points="3,8 7,12 13,4"/></svg>}
+              </span>
+              <span style={{ font: "400 12px/1.2 var(--font-kr)", color: "var(--content-medium)" }}>프리셋으로 저장</span>
+            </label>
+          )}
+        </window.Modal>
       )}
     </div>
   );
