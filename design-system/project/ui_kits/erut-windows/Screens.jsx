@@ -1554,11 +1554,12 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
   const [sn, setSN]       = $s(existing ? existing.id : "");
   const [ip, setIP]       = $s(existing ? existing.ip : "");
   const [port, setPort]   = $s(existing ? existing.port : "");
-  const [timeout, setTimeoutVal] = $s(5000);
+  // v9.26: add 모드에서는 통신/채널 수/주파수/샘플링 입력 필드 비움 (default 값 prefill 제거)
+  const [timeout, setTimeoutVal] = $s(isEdit ? 5000 : "");
   const [autoReconnect, setAutoReconnect] = $s(true);
-  const [chs, setChs]     = $s(existing ? existing.channels : 64);
-  const [freq, setFreq]   = $s(existing ? existing.freq : 5);
-  const [sampling, setSampling] = $s(100);
+  const [chs, setChs]     = $s(existing ? existing.channels : "");
+  const [freq, setFreq]   = $s(existing ? existing.freq : "");
+  const [sampling, setSampling] = $s(isEdit ? 100 : "");
 
   const requiredOk = !!(alias && ip && port);
 
@@ -1609,7 +1610,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
         </div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>통신 Timeout (ms)</div>
-          <input className="erut-field" value={timeout} onChange={(e) => setTimeoutVal(e.target.value)} style={{ width: "100%" }}/>
+          <input className="erut-field" value={timeout} onChange={(e) => setTimeoutVal(e.target.value)} placeholder="예: 5000" style={{ width: "100%" }}/>
         </div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>자동 재연결</div>
@@ -1621,19 +1622,20 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
         <div style={{ gridColumn: "1 / -1", font: "700 12px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "12px 0 4px", borderBottom: "1px solid var(--border-low)" }}>보드 사양</div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>채널 수</div>
-          <input className="erut-field" value={chs} onChange={(e) => setChs(e.target.value)} style={{ width: "100%" }}/>
+          <input className="erut-field" value={chs} onChange={(e) => setChs(e.target.value)} placeholder="예: 64" style={{ width: "100%" }}/>
         </div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>주파수 (MHz)</div>
-          <input className="erut-field" value={freq} onChange={(e) => setFreq(e.target.value)} style={{ width: "100%" }}/>
+          <input className="erut-field" value={freq} onChange={(e) => setFreq(e.target.value)} placeholder="예: 5" style={{ width: "100%" }}/>
         </div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>샘플링 (MHz)</div>
-          <input className="erut-field" value={sampling} onChange={(e) => setSampling(e.target.value)} style={{ width: "100%" }}/>
+          <input className="erut-field" value={sampling} onChange={(e) => setSampling(e.target.value)} placeholder="예: 100" style={{ width: "100%" }}/>
         </div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>펌웨어 버전</div>
-          <input className="erut-field" value={existing ? existing.firmware : "v2.4.1"} style={{ width: "100%" }} disabled/>
+          {/* v9.26: add 모드 — 펌웨어 버전 비움. 연결 후 자동 표시 */}
+          <input className="erut-field" value={existing ? existing.firmware : ""} placeholder={isEdit ? "" : "연결 후 자동 감지"} style={{ width: "100%" }} disabled/>
         </div>
       </div>
 
