@@ -118,7 +118,8 @@ function App() {
     { label: "종료", shortcut: "Alt+F4" },
   ];
   const deviceMenu = [
-    { label: "장비 추가",       onClick: () => goto("settings") },
+    // v9.26: '+ 장비 추가' 메뉴바 진입 — [1] '+장비 추가' 버튼과 동일하게 mc-add 모드로 직접 진입
+    { label: "+ 장비 추가",     onClick: () => { setSettingsInitialSubView("mc-add"); goto("settings"); } },
     { label: "장비 연결 설정",  onClick: () => goto("settings") },
     { divider: true },
     { label: "전체 연결" },
