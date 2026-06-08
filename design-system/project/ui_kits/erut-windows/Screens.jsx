@@ -2557,7 +2557,16 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
   const [showHint, setShowHint] = $s(true);
   const [gateA, setGateA] = $s({ active: true, start: 2.5, width: 8.0, threshold: 80, mode: "Peak" });
   const [gateB, setGateB] = $s({ active: true, start: 14.0, width: 10.0, threshold: 60, mode: "ToF" });
-  const [gateCActive, setGateCActive] = $s(false);
+  // v9.28 Wave C: Gate C 이후는 동적 배열로 관리. 추가/삭제 가능
+  const [extraGates, setExtraGates] = $s([
+    { id: "C", active: false, start: 0, width: 0, threshold: 50, mode: "Peak" },
+  ]);
+  const updateExtra = (id, k, v) => setExtraGates(gs => gs.map(g => g.id === id ? { ...g, [k]: v } : g));
+  const removeExtra = (id) => setExtraGates(gs => gs.filter(g => g.id !== id));
+  const addGate = () => {
+    const nextChar = String.fromCharCode("A".charCodeAt(0) + 2 + extraGates.length); // D, E, F...
+    setExtraGates(gs => [...gs, { id: nextChar, active: false, start: 0, width: 0, threshold: 50, mode: "Peak" }]);
+  };
 
   // chart range: 0 ~ 50 μs, mapped to 0 ~ 100% left
   const toPct = (us) => (us / 50) * 100;
@@ -2673,8 +2682,17 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
     );
   }
 
+  // v9.28 Wave C: 측정값 (mock) — Gate별 Peak/ToF/두께
+  const measureA = { peak: 82, tof: (gateA.start + gateA.width / 2.5).toFixed(1), thick: ((gateA.start + gateA.width / 2.5) * 3.0).toFixed(1) };
+  const measureB = { peak: 68, tof: (gateB.start + gateB.width / 2.0).toFixed(1), thick: ((gateB.start + gateB.width / 2.0) * 3.0).toFixed(1) };
+  const allGates = [
+    { id: "A", color: "var(--system-error)",   state: gateA, setter: setA, removable: false, measure: measureA },
+    { id: "B", color: "var(--brand-primary)",  state: gateB, setter: setB, removable: false, measure: measureB },
+    ...extraGates.map(g => ({ id: g.id, color: "var(--content-medium)", state: g, setter: (k, v) => updateExtra(g.id, k, v), removable: g.id !== "C", measure: null })),
+  ];
+
   return (
-    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "1fr 360px", gridTemplateRows: "40px 1fr", alignContent: "start", columnGap: 20, rowGap: 20, padding: "20px 40px", height: "100%" }}>
+    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "1fr", gridTemplateRows: "40px auto 7fr 3fr", alignContent: "start", rowGap: 16, padding: "20px 40px", height: "100%" }}>
       {/* v8.5 Breadcrumb */}
       <window.Breadcrumb
         onBack={onBack}
@@ -2683,10 +2701,10 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
           { label: "장비 상세 (MCuF-001)" },
           { label: "Gate 설정 (CH " + chNum + ")", current: true },
         ]}
-        style={{ gridRow: 1, gridColumn: "1 / -1" }}
+        style={{ gridRow: 1, gridColumn: 1 }}
       />
 
-      {/* ───── 좌측: 헤더 + 드래그 안내 + A-scan 차트 + 측정값 ───── */}
+      {/* v9.28 Wave C: 채널 헤더 + 드래그 안내 (row 2 — width fill) */}
       <div style={{ gridRow: 2, gridColumn: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         {/* 채널 헤더 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
@@ -2714,13 +2732,15 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
           </div>
         )}
 
-        {/* A-SCAN 차트 (드래그 인터랙션) */}
-        <div ref={chartRef} style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", height: 360, position: "relative", userSelect: drag ? "none" : "auto" }}>
+      </div>
+
+      {/* v9.28 Wave C: A-SCAN 차트 (row 3, width fill, 비율 7) — 드래그 인터랙션 */}
+      <div ref={chartRef} style={{ gridRow: 3, gridColumn: 1, background: "var(--surface-base)", border: "1px solid var(--border-medium)", position: "relative", userSelect: drag ? "none" : "auto", minHeight: 0 }}>
           <div style={{ position: "absolute", top: 8, left: 12, font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>A-SCAN</div>
           <div style={{ position: "absolute", top: 8, right: 12, font: "400 12px/1 var(--font-kr)", color: "var(--content-low)" }}>Range 0 – 50 μs · 시간축</div>
 
           {/* v8.6: 정적 파형 SVG (애니메이션 제거) */}
-          <svg viewBox="0 0 1000 300" preserveAspectRatio="none" width="100%" height="300" style={{ position: "absolute", top: 30, left: 0, right: 0, pointerEvents: "none" }}>
+          <svg viewBox="0 0 1000 300" preserveAspectRatio="none" width="100%" height="calc(100% - 30px)" style={{ position: "absolute", top: 30, left: 0, right: 0, pointerEvents: "none" }}>
             <line x1="0" y1="250" x2="1000" y2="250" stroke="var(--border-low)" strokeWidth="1"/>
             <line x1="0" y1="170" x2="1000" y2="170" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="2,4"/>
             <line x1="0" y1="85" x2="1000" y2="85" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="2,4"/>
@@ -2780,48 +2800,80 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
           )}
         </div>
 
-        {/* Gate 측정값 요약 */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
-          <div style={{ borderLeft: "3px solid var(--system-error)", background: "var(--surface-subtle-2)", padding: "10px 14px" }}>
-            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--system-error)", textTransform: "uppercase", marginBottom: 6 }}>Gate A — {gateA.mode} Mode</div>
-            <div style={{ display: "flex", gap: 18, font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
-              <span>피크 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{aPeak}% FSH</strong></span>
-              <span>ToF <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{aToF} μs</strong></span>
-              <span>두께 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{aThick} mm</strong></span>
+      {/* v9.28 Wave C: Gate 그리드 (row 4, width fill, 비율 3) — 우측 패널 폐기 후 통합 */}
+      <div style={{ gridRow: 4, gridColumn: 1, background: "var(--surface-base)", border: "1px solid var(--border-medium)", overflowY: "auto", minHeight: 0 }}>
+        {/* 그리드 헤더 */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "60px 100px 100px 110px 100px 90px 1fr 50px",
+          background: "var(--surface-subtle-1)",
+          borderBottom: "1px solid var(--border-medium)",
+          font: "700 11px/1 var(--font-kr)", letterSpacing: "0.06em", color: "var(--content-high)", textTransform: "uppercase",
+        }}>
+          <div style={{ padding: "10px 12px" }}>Gate</div>
+          <div style={{ padding: "10px 12px" }}>Start (μs)</div>
+          <div style={{ padding: "10px 12px" }}>Width (μs)</div>
+          <div style={{ padding: "10px 12px" }}>Threshold (%)</div>
+          <div style={{ padding: "10px 12px" }}>Mode</div>
+          <div style={{ padding: "10px 12px" }}>활성</div>
+          <div style={{ padding: "10px 12px" }}>Peak / ToF / 두께</div>
+          <div style={{ padding: "10px 12px" }}></div>
+        </div>
+        {/* Gate 행들 */}
+        {allGates.map(g => (
+          <div
+            key={g.id}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "60px 100px 100px 110px 100px 90px 1fr 50px",
+              alignItems: "center",
+              borderBottom: "1px solid var(--border-low)",
+              opacity: g.state.active ? 1 : 0.5,
+            }}
+          >
+            <div style={{ padding: "8px 12px", font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: g.color }}>Gate {g.id}</div>
+            <div style={{ padding: "8px 12px" }}>
+              <input className="erut-field" value={g.state.start} onChange={(e) => g.setter("start", parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+            </div>
+            <div style={{ padding: "8px 12px" }}>
+              <input className="erut-field" value={g.state.width} onChange={(e) => g.setter("width", parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+            </div>
+            <div style={{ padding: "8px 12px" }}>
+              <input className="erut-field" value={g.state.threshold} onChange={(e) => g.setter("threshold", parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+            </div>
+            <div style={{ padding: "8px 12px" }}>
+              <select className="erut-field" value={g.state.mode} onChange={(e) => g.setter("mode", e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
+                <option>Peak</option><option>Edge</option><option>ToF</option>
+              </select>
+            </div>
+            <div style={{ padding: "8px 12px" }}>
+              <window.Toggle checked={g.state.active} onChange={(v) => g.setter("active", v)} size="sm"/>
+            </div>
+            <div style={{ padding: "8px 12px", font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
+              {g.measure && g.state.active ? (
+                <span>
+                  <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{g.measure.peak}%</strong>
+                  {" / "}
+                  <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{g.measure.tof} μs</strong>
+                  {" / "}
+                  <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{g.measure.thick} mm</strong>
+                </span>
+              ) : (
+                <span style={{ color: "var(--content-low)" }}>—</span>
+              )}
+            </div>
+            <div style={{ padding: "8px 12px" }}>
+              {g.removable && (
+                <button onClick={() => removeExtra(g.id)} aria-label="삭제" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--content-low)", padding: 4, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                  <window.EIcon.Close size={12}/>
+                </button>
+              )}
             </div>
           </div>
-          <div style={{ borderLeft: "3px solid var(--brand-primary)", background: "var(--surface-subtle-2)", padding: "10px 14px" }}>
-            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--brand-primary)", textTransform: "uppercase", marginBottom: 6 }}>Gate B — {gateB.mode} Mode</div>
-            <div style={{ display: "flex", gap: 18, font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
-              <span>피크 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{bPeak}% FSH</strong></span>
-              <span>ToF <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{bToF} μs</strong></span>
-              <span>두께 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{bThick} mm</strong></span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ───── 우측: 정밀 input 패널 (양방향 sync) ───── */}
-      <div style={{ gridRow: 2, gridColumn: 2, minWidth: 0, background: "var(--surface-subtle-1)", border: "1px solid var(--border-medium)", padding: 16, overflowY: "auto" }}>
-        <div style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 4 }}>Gate 파라미터 — 정밀 설정</div>
-        <div style={{ font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 14 }}>차트 드래그와 양방향 sync. 권장값은 채널·탐촉자·주파수 기준 자동 계산.</div>
-
-        <GateGroup name="Gate A" color="var(--system-error)"   gate={gateA} onChange={setA} recommend="권장 : Start 3.0 / Width 7.5 / Thr 75" recommendColor="var(--system-success)"/>
-        <GateGroup name="Gate B" color="var(--brand-primary)" gate={gateB} onChange={setB} recommend="권장 : 12.5 / 11.0 / 65 (미세 차이)" recommendColor="var(--system-caution)"/>
-
-        {/* Gate C 그룹 (비활성) */}
-        <div style={{ borderLeft: "3px solid var(--border-medium)", padding: "10px 12px", background: "var(--surface-base)", marginBottom: 16 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>Gate C</div>
-            <window.Toggle checked={gateCActive} onChange={setGateCActive} size="sm" label={gateCActive ? "활성" : "비활성"}/>
-          </div>
-          <div style={{ marginTop: 6, font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>다중 반사용. 활성화 시 차트에 표시.</div>
-        </div>
-
-        {/* 하단 액션 */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, paddingTop: 12, borderTop: "1px solid var(--border-medium)" }}>
-          <button className="erut-btn erut-btn--default erut-btn--m" style={{ width: "100%" }}>권고값 일괄 적용</button>
-          <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%" }}>저장</button>
+        ))}
+        {/* + Gate 추가 */}
+        <div style={{ padding: "10px 12px", borderTop: "1px solid var(--border-low)", background: "var(--surface-subtle-2)" }}>
+          <button className="erut-btn erut-btn--default erut-btn--sm" onClick={addGate}>+ Gate 추가</button>
         </div>
       </div>
     </div>
