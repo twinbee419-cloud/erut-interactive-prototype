@@ -2820,56 +2820,60 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
           <div style={{ padding: "10px 12px" }}>Peak / ToF / 두께</div>
           <div style={{ padding: "10px 12px" }}></div>
         </div>
-        {/* Gate 행들 */}
-        {allGates.map(g => (
-          <div
-            key={g.id}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "60px 100px 100px 110px 100px 90px 1fr 90px",
-              alignItems: "center",
-              borderBottom: "1px solid var(--border-low)",
-              opacity: g.state.active ? 1 : 0.5,
-            }}
-          >
-            <div style={{ padding: "8px 12px", font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: g.color }}>Gate {g.id}</div>
-            <div style={{ padding: "8px 12px" }}>
-              <input className="erut-field" value={g.state.start} onChange={(e) => g.setter("start", parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+        {/* Gate 행들 — v9.28 fix3: opacity를 행 wrapper 대신 각 셀별로 적용 ('삭제'는 활성 무관 100%) */}
+        {allGates.map(g => {
+          const dim = g.state.active ? {} : { opacity: 0.5 };
+          return (
+            <div
+              key={g.id}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "60px 100px 100px 110px 100px 90px 1fr 90px",
+                alignItems: "center",
+                borderBottom: "1px solid var(--border-low)",
+              }}
+            >
+              <div style={{ padding: "8px 12px", font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: g.color, ...dim }}>Gate {g.id}</div>
+              <div style={{ padding: "8px 12px", ...dim }}>
+                <input className="erut-field" value={g.state.start} onChange={(e) => g.setter("start", parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+              </div>
+              <div style={{ padding: "8px 12px", ...dim }}>
+                <input className="erut-field" value={g.state.width} onChange={(e) => g.setter("width", parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+              </div>
+              <div style={{ padding: "8px 12px", ...dim }}>
+                <input className="erut-field" value={g.state.threshold} onChange={(e) => g.setter("threshold", parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+              </div>
+              <div style={{ padding: "8px 12px", ...dim }}>
+                <select className="erut-field" value={g.state.mode} onChange={(e) => g.setter("mode", e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
+                  <option>Peak</option><option>Edge</option><option>ToF</option>
+                </select>
+              </div>
+              {/* 활성 토글은 항상 100% — 사용자가 토글로 활성화 가능해야 */}
+              <div style={{ padding: "8px 12px" }}>
+                <window.Toggle checked={g.state.active} onChange={(v) => g.setter("active", v)} size="sm"/>
+              </div>
+              <div style={{ padding: "8px 12px", font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", ...dim }}>
+                {g.measure && g.state.active ? (
+                  <span>
+                    <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{g.measure.peak}%</strong>
+                    {" / "}
+                    <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{g.measure.tof} μs</strong>
+                    {" / "}
+                    <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{g.measure.thick} mm</strong>
+                  </span>
+                ) : (
+                  <span style={{ color: "var(--content-low)" }}>—</span>
+                )}
+              </div>
+              {/* 삭제 버튼은 항상 100% — 활성/비활성 무관 */}
+              <div style={{ padding: "8px 12px" }}>
+                {g.removable && (
+                  <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ color: "var(--system-error)", borderColor: "var(--system-error)" }} onClick={() => removeExtra(g.id)}>삭제</button>
+                )}
+              </div>
             </div>
-            <div style={{ padding: "8px 12px" }}>
-              <input className="erut-field" value={g.state.width} onChange={(e) => g.setter("width", parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
-            </div>
-            <div style={{ padding: "8px 12px" }}>
-              <input className="erut-field" value={g.state.threshold} onChange={(e) => g.setter("threshold", parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
-            </div>
-            <div style={{ padding: "8px 12px" }}>
-              <select className="erut-field" value={g.state.mode} onChange={(e) => g.setter("mode", e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
-                <option>Peak</option><option>Edge</option><option>ToF</option>
-              </select>
-            </div>
-            <div style={{ padding: "8px 12px" }}>
-              <window.Toggle checked={g.state.active} onChange={(v) => g.setter("active", v)} size="sm"/>
-            </div>
-            <div style={{ padding: "8px 12px", font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
-              {g.measure && g.state.active ? (
-                <span>
-                  <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{g.measure.peak}%</strong>
-                  {" / "}
-                  <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{g.measure.tof} μs</strong>
-                  {" / "}
-                  <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{g.measure.thick} mm</strong>
-                </span>
-              ) : (
-                <span style={{ color: "var(--content-low)" }}>—</span>
-              )}
-            </div>
-            <div style={{ padding: "8px 12px" }}>
-              {g.removable && (
-                <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ color: "var(--system-error)", borderColor: "var(--system-error)" }} onClick={() => removeExtra(g.id)}>삭제</button>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {/* + Gate 추가 */}
         <div style={{ padding: "10px 12px", borderTop: "1px solid var(--border-low)", background: "var(--surface-subtle-2)" }}>
           <button className="erut-btn erut-btn--default erut-btn--sm" onClick={addGate}>+ Gate 추가</button>
