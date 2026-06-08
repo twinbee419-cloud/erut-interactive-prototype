@@ -120,10 +120,12 @@ window.Badge = function Badge({ children, tone = "emphasis" }) {
 // ----------- MODAL DIALOG ----------------
 // 2026-05-26 added for interactive prototype.
 // v8.10: 헤더 X 닫기 버튼 표준화 — 모든 Modal에 동일한 SVG X 아이콘 적용
-window.Modal = function Modal({ title, children, onClose, footer }) {
+window.Modal = function Modal({ title, children, onClose, footer, width }) {
+  // v9.34: width prop으로 max-width 오버라이드 가능 (기본은 kit.css의 760px)
+  const modalStyle = width ? { maxWidth: width, width: "100%" } : undefined;
   return (
     <div className="erut-modal__backdrop" onClick={onClose}>
-      <div className="erut-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="erut-modal" style={modalStyle} onClick={(e) => e.stopPropagation()}>
         <div className="erut-modal__header" style={{ justifyContent: "space-between" }}>
           <span>{title}</span>
           <button onClick={onClose} aria-label="닫기" style={{ background: "transparent", border: "none", color: "var(--content-inverse)", cursor: "pointer", padding: 4, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>

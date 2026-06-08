@@ -918,40 +918,15 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
         </div>
       </div>
 
-      {/* v8.11: "+ 센서 추가" 모달 — 메인 기획과 동일 (채널 번호 select · 교정 토글 · 3 버튼 푸터) */}
+      {/* v9.34 Wave E: 센서 추가 모달 — Gate A/B 통합 (옵션 D) */}
       {showAddSensor && (
-        <window.Modal title="센서 채널 추가 — MCF-2024-001" onClose={() => setShowAddSensor(false)}
-          footer={(
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-              <a style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", textDecoration: "underline", cursor: "pointer" }}>
-                여러 채널 일괄 등록 / 관리 → [4-3] 탐촉자 설정
-              </a>
-              <div style={{ display: "flex", gap: 6 }}>
-                <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={() => setShowAddSensor(false)}>닫기</button>
-                <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowAddSensor(false)}>추가만</button>
-                <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => { setShowAddSensor(false); setShowCalibration(true); }}>추가 + 교정</button>
-              </div>
-            </div>
-          )}
-        >
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 480 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div>
-                <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>채널 번호 <span style={{ color: "var(--system-error)" }}>*</span></div>
-                <select className="erut-field" style={{ width: "100%" }}>
-                  <option>65 (다음 빈 슬롯 자동 할당)</option>
-                  <option>16 (현재 미등록)</option>
-                  <option>직접 입력...</option>
-                </select>
-              </div>
-              <div>
-                <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>Serial 번호 (SN) <span style={{ color: "var(--system-error)" }}>*</span></div>
-                <input className="erut-field" placeholder="예: PXT-2024-065" style={{ width: "100%" }}/>
-              </div>
-            </div>
-            <window.Toggle checked={true} size="sm" label="추가 직후 교정 마법사 자동 실행 (영점·음속·감도)"/>
-          </div>
-        </window.Modal>
+        <window.AddSensorModal
+          deviceName="MCF-2024-001"
+          targets={TARGETS}
+          onClose={() => setShowAddSensor(false)}
+          onAddOnly={() => setShowAddSensor(false)}
+          onAddAndCalibrate={() => { setShowAddSensor(false); setShowCalibration(true); }}
+        />
       )}
 
       {/* v8.10: 등록 후 교정 마법사 자동 트리거 */}
@@ -960,6 +935,176 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
       {/* v8.8: 진단 / 로그 모달 */}
       {showDiagnostics && <window.DiagnosticsModal onClose={() => setShowDiagnostics(false)}/>}
     </div>
+  );
+};
+
+// =================== v9.34 Wave E: 센서 추가 모달 (Gate 통합) ===================
+// 옵션 D — 채널 commissioning 시점에 Gate A/B 초기 설정을 동시에 진행.
+// Gate 값은 자동 채움하지 않음 (검사자가 직접 설정). A-scan 미리보기는 입력값에 실시간 반영.
+window.AddSensorModal = function AddSensorModal({ deviceName, targets, onClose, onAddOnly, onAddAndCalibrate }) {
+  // ───── 폼 state ─────
+  const [channel, setChannel] = $s("");
+  const [serial, setSerial] = $s("");
+  const [target, setTarget] = $s("");
+  const [probeType, setProbeType] = $s("");
+  const [autoCalib, setAutoCalib] = $s(true);
+  // ───── Gate state (검사자 직접 설정 — 자동 채움 X) ─────
+  const [gateA, setGateA] = $s({ active: false, start: 0, width: 0, threshold: 50, mode: "Peak" });
+  const [gateB, setGateB] = $s({ active: false, start: 0, width: 0, threshold: 50, mode: "ToF" });
+  const setA = (k, v) => setGateA(g => ({ ...g, [k]: v }));
+  const setB = (k, v) => setGateB(g => ({ ...g, [k]: v }));
+
+  // 차트 범위 0~50μs → 0~100% width
+  const toPct = (us) => Math.max(0, Math.min(100, (us / 50) * 100));
+  const aOn = gateA.active && gateA.width > 0;
+  const bOn = gateB.active && gateB.width > 0;
+
+  // 필수값 검증
+  const canSubmit = channel && serial && target;
+
+  // Gate 입력 그룹 (인라인 — Gate A/B 공유)
+  function GateInputs({ name, color, gate, onChange }) {
+    return (
+      <div style={{ borderLeft: "3px solid " + color, padding: "10px 14px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color }}>{name}</div>
+          <label className="erut-toggle" onClick={() => onChange("active", !gate.active)} style={{ cursor: "pointer" }}>
+            <span className={"erut-toggle__track" + (gate.active ? " is-on" : "")}>
+              <span className="erut-toggle__thumb"/>
+            </span>
+            <span className="erut-toggle__label erut-toggle__label--sm">활성</span>
+          </label>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "6px 8px" }}>
+          <div>
+            <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>Start (μs)</div>
+            <input className="erut-field" type="number" step="0.1" value={gate.start} onChange={(e) => onChange("start", parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+          </div>
+          <div>
+            <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>Width (μs)</div>
+            <input className="erut-field" type="number" step="0.1" value={gate.width} onChange={(e) => onChange("width", parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+          </div>
+          <div>
+            <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>Threshold (%)</div>
+            <input className="erut-field" type="number" value={gate.threshold} onChange={(e) => onChange("threshold", parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+          </div>
+          <div>
+            <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>Mode</div>
+            <select className="erut-field" value={gate.mode} onChange={(e) => onChange("mode", e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
+              <option>Peak</option><option>Edge</option><option>ToF</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <window.Modal
+      title={`센서 채널 추가 — ${deviceName}`}
+      onClose={onClose}
+      width={1200}
+      footer={(
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+          <a style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", textDecoration: "underline", cursor: "pointer" }}>
+            여러 채널 일괄 등록 / 관리 → [4-3] 탐촉자 설정
+          </a>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose}>닫기</button>
+            <button className={"erut-btn erut-btn--default erut-btn--sm" + (canSubmit ? "" : " erut-btn--disabled")} disabled={!canSubmit} onClick={onAddOnly}>추가만</button>
+            <button className={"erut-btn erut-btn--emphasis erut-btn--sm" + (canSubmit ? "" : " erut-btn--disabled")} disabled={!canSubmit} onClick={onAddAndCalibrate}>추가 + 교정</button>
+          </div>
+        </div>
+      )}
+    >
+      <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 20, minHeight: 560 }}>
+        {/* ───── 좌: 폼 필드 ───── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>채널 번호 <span style={{ color: "var(--system-error)" }}>*</span></div>
+            <select className="erut-field" value={channel} onChange={(e) => setChannel(e.target.value)} style={{ width: "100%" }}>
+              <option value="">선택하세요</option>
+              <option value="65">65 (다음 빈 슬롯 자동 할당)</option>
+              <option value="16">16 (현재 미등록)</option>
+              <option value="manual">직접 입력...</option>
+            </select>
+          </div>
+          <div>
+            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>Serial 번호 (SN) <span style={{ color: "var(--system-error)" }}>*</span></div>
+            <input className="erut-field" value={serial} onChange={(e) => setSerial(e.target.value)} placeholder="예: PXT-2024-065" style={{ width: "100%" }}/>
+          </div>
+          <div>
+            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>검사 대상 <span style={{ color: "var(--system-error)" }}>*</span></div>
+            <select className="erut-field" value={target} onChange={(e) => setTarget(e.target.value)} style={{ width: "100%" }}>
+              <option value="">선택하세요</option>
+              {(targets || []).map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>탐촉자 종류</div>
+            <select className="erut-field" value={probeType} onChange={(e) => setProbeType(e.target.value)} style={{ width: "100%" }}>
+              <option value="">선택하세요</option>
+              <option value="std-5mhz">표준 (5 MHz, ∅ 10mm)</option>
+              <option value="high-10mhz">고주파 (10 MHz, ∅ 6mm)</option>
+              <option value="low-2.25mhz">저주파 (2.25 MHz, ∅ 13mm)</option>
+              <option value="custom">직접 입력...</option>
+            </select>
+          </div>
+          <div style={{ marginTop: 6, paddingTop: 14, borderTop: "1px solid var(--border-low)" }}>
+            <label className="erut-toggle" onClick={() => setAutoCalib(!autoCalib)} style={{ cursor: "pointer" }}>
+              <span className={"erut-toggle__track" + (autoCalib ? " is-on" : "")}>
+                <span className="erut-toggle__thumb"/>
+              </span>
+              <span className="erut-toggle__label erut-toggle__label--sm">추가 직후 교정 마법사 자동 실행 (영점·음속·감도)</span>
+            </label>
+          </div>
+        </div>
+
+        {/* ───── 우: A-scan 미리보기 + Gate 설정 ───── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
+          {/* A-scan 미리보기 */}
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+              <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>A-SCAN 미리보기</span>
+              <span style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>0 – 50 μs · Gate 입력값에 실시간 반영</span>
+            </div>
+            <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", height: 220, position: "relative" }}>
+              {/* Gate A overlay */}
+              {aOn && (
+                <>
+                  <div style={{ position: "absolute", top: 0, bottom: 0, left: toPct(gateA.start) + "%", width: toPct(gateA.width) + "%", background: "var(--system-error)", opacity: 0.12, borderLeft: "2px solid var(--system-error)", borderRight: "2px solid var(--system-error)" }}/>
+                  <div style={{ position: "absolute", top: 4, left: `calc(${toPct(gateA.start)}% + 4px)`, font: "700 10px/1 var(--font-kr)", color: "var(--system-error)" }}>Gate A</div>
+                  <div style={{ position: "absolute", left: 0, right: 0, top: (75 - (gateA.threshold / 100) * 43) + "%", borderTop: "1px dashed var(--system-error)" }}/>
+                </>
+              )}
+              {/* Gate B overlay */}
+              {bOn && (
+                <>
+                  <div style={{ position: "absolute", top: 0, bottom: 0, left: toPct(gateB.start) + "%", width: toPct(gateB.width) + "%", background: "var(--brand-primary)", opacity: 0.12, borderLeft: "2px solid var(--brand-primary)", borderRight: "2px solid var(--brand-primary)" }}/>
+                  <div style={{ position: "absolute", top: 4, left: `calc(${toPct(gateB.start)}% + 4px)`, font: "700 10px/1 var(--font-kr)", color: "var(--brand-primary)" }}>Gate B</div>
+                  <div style={{ position: "absolute", left: 0, right: 0, top: (75 - (gateB.threshold / 100) * 43) + "%", borderTop: "1px dashed var(--brand-primary)" }}/>
+                </>
+              )}
+              {/* 정적 mock 파형 */}
+              <svg viewBox="0 0 800 220" preserveAspectRatio="none" width="100%" height="100%" style={{ position: "absolute", top: 0, left: 0 }}>
+                <line x1="0" y1="180" x2="800" y2="180" stroke="var(--border-low)" strokeWidth="1"/>
+                <path d="M0 180 L120 180 L140 160 L156 30 L172 196 L188 180 L380 180 L400 158 L416 70 L432 192 L448 180 L800 180" stroke="var(--brand-primary)" strokeWidth="1.4" fill="none"/>
+              </svg>
+              {/* 비어있는 안내 */}
+              {!aOn && !bOn && (
+                <div style={{ position: "absolute", top: 12, right: 12, font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", textAlign: "right" }}>
+                  Gate를 활성화하고<br/>Start · Width 값을 입력하세요.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Gate A / B 입력 */}
+          <GateInputs name="Gate A — 1차 반사" color="var(--system-error)" gate={gateA} onChange={setA}/>
+          <GateInputs name="Gate B — 2차 반사 / 두께 측정" color="var(--brand-primary)" gate={gateB} onChange={setB}/>
+        </div>
+      </div>
+    </window.Modal>
   );
 };
 
