@@ -821,7 +821,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
         <div style={{ display: "flex", justifyContent: "flex-start", gap: 10, marginBottom: 8, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-success)" }}/>정상 {okCount}</span>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-caution)" }}/>약함 {warnCount}</span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-error)" }}/>미부착 {errCount}</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-error)" }}/>나쁨 {errCount}</span>
         </div>
         <window.ChannelGrid
           cells={cells}

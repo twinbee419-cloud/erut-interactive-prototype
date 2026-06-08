@@ -373,7 +373,7 @@ window.ChannelGrid = function ChannelGrid({
             <div style={{ display: "flex", gap: 10, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-success)" }}/>정상 {counts.normal}</span>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-caution)" }}/>약함 {counts.weak}</span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-error)" }}/>미부착 {counts.unattached}</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-error)" }}/>나쁨 {counts.unattached}</span>
             </div>
           )}
         </div>
@@ -382,7 +382,7 @@ window.ChannelGrid = function ChannelGrid({
           <div style={{ display: "flex", justifyContent: "flex-start", gap: 10, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-success)" }}/>정상 {counts.normal}</span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-caution)" }}/>약함 {counts.weak}</span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-error)" }}/>미부착 {counts.unattached}</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-error)" }}/>나쁨 {counts.unattached}</span>
           </div>
         )
       )}
@@ -470,23 +470,20 @@ window.ChannelGrid = function ChannelGrid({
         })}
       </div>
 
-      {/* 하단 범례: 결함 등급 (border+fill, breathing 없음) + 선택됨 */}
-      {showDefectLegend && (
-        <div style={{ display: "flex", gap: 14, marginTop: 4, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-            <span style={{ width: 12, height: 12, background: "rgba(255,0,94,0.42)", border: "1px solid var(--system-error)" }}/>Critical {defectCounts.critical}
-          </span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-            <span style={{ width: 12, height: 12, background: "rgba(255,146,0,0.44)", border: "1px solid var(--system-caution)" }}/>Major {defectCounts.major}
-          </span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-            <span style={{ width: 12, height: 12, background: "rgba(107,124,155,0.36)", border: "1px solid var(--content-low)" }}/>Minor {defectCounts.minor}
-          </span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, marginLeft: "auto" }}>
-            <span style={{ width: 12, height: 12, background: "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-subtle-2)", border: "1px solid var(--border-emphasis)" }}/>선택됨
-          </span>
-        </div>
-      )}
+      {/* v9.32: 하단 범례 — '교정 필요' (breathe) + '선택됨' 인라인 (좌측 정렬) */}
+      {showDefectLegend && (() => {
+        const needsCalibCount = cells.filter(c => c.calibrationStatus === "uncalibrated" || c.calibrationStatus === "expired").length;
+        return (
+          <div style={{ display: "flex", gap: 14, marginTop: 4, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <span style={{ width: 12, height: 12, background: "rgba(255,146,0,0.44)", border: "1px solid var(--system-caution)" }}/>교정 필요 {needsCalibCount}
+            </span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <span style={{ width: 12, height: 12, background: "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-subtle-2)", border: "1px solid var(--border-emphasis)" }}/>선택됨
+            </span>
+          </div>
+        );
+      })()}
     </div>
   );
 };
