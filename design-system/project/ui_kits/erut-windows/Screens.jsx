@@ -2806,7 +2806,7 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
         {/* 그리드 헤더 */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "60px 100px 100px 110px 100px 90px 1fr 50px",
+          gridTemplateColumns: "60px 100px 100px 110px 100px 90px 1fr 90px",
           background: "var(--surface-subtle-1)",
           borderBottom: "1px solid var(--border-medium)",
           font: "700 11px/1 var(--font-kr)", letterSpacing: "0.06em", color: "var(--content-high)", textTransform: "uppercase",
@@ -2826,7 +2826,7 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
             key={g.id}
             style={{
               display: "grid",
-              gridTemplateColumns: "60px 100px 100px 110px 100px 90px 1fr 50px",
+              gridTemplateColumns: "60px 100px 100px 110px 100px 90px 1fr 90px",
               alignItems: "center",
               borderBottom: "1px solid var(--border-low)",
               opacity: g.state.active ? 1 : 0.5,
@@ -2865,9 +2865,7 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
             </div>
             <div style={{ padding: "8px 12px" }}>
               {g.removable && (
-                <button onClick={() => removeExtra(g.id)} aria-label="삭제" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--content-low)", padding: 4, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                  <window.EIcon.Close size={12}/>
-                </button>
+                <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ color: "var(--system-error)", borderColor: "var(--system-error)" }} onClick={() => removeExtra(g.id)}>삭제</button>
               )}
             </div>
           </div>
