@@ -290,6 +290,21 @@ function App() {
             onOpenGate={(channel) => { setSelectedChannel(channel); goto("gate"); }}
             onAddTarget={() => { setManageInitialMode("new"); goto("manage"); }}
             onEditTarget={(name) => { setSelectedTarget(name); setManageInitialMode("edit"); goto("manage"); }}
+            onAddSensor={() => goto("commission")}
+          />
+        )}
+        {/* v9.35 Wave E+F: 채널 commissioning 풀스크린 페이지 (센서 추가 + 교정 + Gate + 시편 확인) */}
+        {screen === "commission" && (
+          <window.ChannelCommissioning
+            deviceName="MCuF-001"
+            targets={[
+              { name: "PIPE-A-204" },
+              { name: "TANK-B-101" },
+              { name: "VESSEL-C-301" },
+            ]}
+            onBack={() => goto("device")}
+            onAddOnly={() => goto("device")}
+            onAddAndStart={() => { setSelectedChannel("ch65"); goto("realtime"); }}
           />
         )}
         {screen === "gate" && (
