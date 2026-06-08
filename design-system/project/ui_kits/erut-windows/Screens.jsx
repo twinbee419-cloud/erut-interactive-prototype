@@ -736,18 +736,16 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
           {TARGETS.map(t => {
             const isSelected = selectedTargetSet.includes(t.name);
             const isDimmed = selectedTargetSet.length > 0 && !isSelected;
-            const hasDefect = t.defectCount > 0;
-            const defectColor = hasDefect ? DEFECT_COLOR[t.topLevel] : null;
+            // v9.31: 결함 표시 border 삭제 — 결함 표시는 웹에서 처리 예정
             return (
               <div
                 key={t.name}
                 className="target-card target-card-v9"
-                title={hasDefect ? "클릭하여 결함 영역에 부착된 센서를 확인할 수 있습니다." : undefined}
                 onClick={() => onTargetCardClick(t.name)}
                 style={{
                   position: "relative",
                   background: isSelected ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "var(--surface-base)",
-                  border: isSelected ? "1px solid var(--border-emphasis)" : (defectColor ? `1px solid ${defectColor}` : "1px solid var(--border-medium)"),
+                  border: isSelected ? "1px solid var(--border-emphasis)" : "1px solid var(--border-medium)",
                   padding: "10px 12px",
                   marginBottom: 8,
                   opacity: isDimmed ? 0.6 : 1,

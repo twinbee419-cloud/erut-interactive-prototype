@@ -419,7 +419,7 @@ window.ChannelGrid = function ChannelGrid({
           const cellOpacity = !active ? 0.55 : isOtherCardNormal ? 0.6 : 1;
           const cellStyle = isRealtime
             ? { aspectRatio: "1 / 1", opacity: cellOpacity, position: "relative", padding: "2px", gap: 0, justifyContent: "center", alignItems: "center" }
-            : { aspectRatio: "20 / 9", opacity: cellOpacity, position: "relative", padding: "4px 8px", gap: 1, justifyContent: "center" };
+            : { aspectRatio: "20 / 7", opacity: cellOpacity, position: "relative", padding: "4px 8px", gap: 1, justifyContent: "center" };
 
           // 부착 LED dot 색
           const dotColor = !active ? "var(--surface-disabled)"
@@ -444,16 +444,25 @@ window.ChannelGrid = function ChannelGrid({
                 </>
               ) : (
                 <>
-                  {/* v9.29 Wave D: 위 = 채널명 + LED dot (통신 세기) / 중 = 검사 대상 / 아래 = Amp (신호 세기) */}
+                  {/* v9.31: 위 = 채널명 + 통신 세기 LED dot / 중 = 검사 대상 / 우하단 = Amp 4-bar 아이콘 */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span className="erut-ch-cell__val">{(c.id || ("ch" + String(c.num).padStart(2, "0"))).toUpperCase().replace("CH", "CH ")}</span>
                     <span style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor, flexShrink: 0 }}/>
                   </div>
-                  <span className="erut-ch-cell__id" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{active ? (c.targetName || "—") : "—"}</span>
-                  {/* 신호 세기 (Amp %) — 통신 세기(dot)와 구분 */}
-                  <span style={{ font: "400 9px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 1 }}>
-                    {active && s && s.amp != null ? `Amp ${s.amp}%` : ""}
-                  </span>
+                  <span className="erut-ch-cell__id" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 20 }}>{active ? (c.targetName || "—") : "—"}</span>
+                  {/* 신호 세기 (Amp) — 셀룰러 4-bar 아이콘 (우하단). 0/20/40/60/80 임계로 0~4개 활성 */}
+                  {active && s && s.amp != null && (() => {
+                    const amp = s.amp;
+                    const filled = amp >= 80 ? 4 : amp >= 60 ? 3 : amp >= 40 ? 2 : amp >= 20 ? 1 : 0;
+                    const bars = [{ x: 0, h: 3 }, { x: 4, h: 5 }, { x: 8, h: 7 }, { x: 12, h: 9 }];
+                    return (
+                      <svg width="14" height="9" viewBox="0 0 14 9" style={{ position: "absolute", right: 6, bottom: 4 }} aria-label={`Amp ${amp}%`}>
+                        {bars.map((b, i) => (
+                          <rect key={i} x={b.x} y={9 - b.h} width="2" height={b.h} fill={i < filled ? "var(--content-high)" : "var(--border-medium)"}/>
+                        ))}
+                      </svg>
+                    );
+                  })()}
                 </>
               )}
             </div>
