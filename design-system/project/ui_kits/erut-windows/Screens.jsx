@@ -2021,11 +2021,14 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
     return t.desc || "";
   };
 
-  // 표준 프리셋 (메인 매칭 — 3개 카드)
+  // v9.27 Wave B fix: 프리셋 데이터에 실제 form 매핑 추가 — '불러오기' 시 input field 자동 적용
   const presets = [
-    { id: "p1", name: "탄소강 배관 6~12mm @ 고온 스팀", params: "5 MHz · 28 dB · Pulser 200V · PRF 2,000 Hz · DAC ON", uses: 12, last: "2026-05-19", applied: true  },
-    { id: "p2", name: "탄소강 배관 표준 (범용)",         params: "5 MHz · 26 dB · Pulser 180V · PRF 2,000 Hz",          uses: 28, last: "2026-05-21", applied: false },
-    { id: "p3", name: "탄소강 고압 배관 (압력 ≥ 4 MPa)", params: "2.25 MHz · 32 dB · TCG ON · PRF 1,000 Hz",            uses:  5, last: "2026-05-15", applied: false },
+    { id: "p1", name: "탄소강 배관 6~12mm @ 고온 스팀", params: "5 MHz · 28 dB · Pulser 200V · PRF 2,000 Hz · DAC ON", uses: 12, last: "2026-05-19", applied: true,
+      data: { shape: "배관", th: "10", od: "300", material: "탄소강 (S355)", fluid: "고온 스팀", std: "KS B 0817", temp: "380", press: "4.2", allow: "2.0 mm" } },
+    { id: "p2", name: "탄소강 배관 표준 (범용)",         params: "5 MHz · 26 dB · Pulser 180V · PRF 2,000 Hz",          uses: 28, last: "2026-05-21", applied: false,
+      data: { shape: "배관", th: "8",  od: "200", material: "탄소강 (S355)", fluid: "액체 — 물",   std: "KS B 0817", temp: "25",  press: "1.0", allow: "1.5 mm" } },
+    { id: "p3", name: "탄소강 고압 배관 (압력 ≥ 4 MPa)", params: "2.25 MHz · 32 dB · TCG ON · PRF 1,000 Hz",            uses:  5, last: "2026-05-15", applied: false,
+      data: { shape: "배관", th: "14", od: "400", material: "탄소강 (S355)", fluid: "고온 스팀", std: "ASME Sec.V", temp: "350", press: "5.5", allow: "3.0 mm" } },
   ];
 
   const formLabel = (txt, req) => (
@@ -2159,6 +2162,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
           <div>
             {formLabel("형태", true)}
             <select className="erut-field" value={form.shape} onChange={(e) => setField("shape", e.target.value)} style={{ width: "100%" }}>
+              <option value="">선택하세요</option>
               <option>배관</option><option>탱크 (구형)</option><option>탱크 (원통형)</option><option>플랜지</option><option>용접부</option><option>Dome 헤드</option>
             </select>
           </div>
@@ -2187,6 +2191,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
           <div>
             {formLabel("소재", true)}
             <select className="erut-field" value={form.material} onChange={(e) => setField("material", e.target.value)} style={{ width: "100%" }}>
+              <option value="">선택하세요</option>
               {Object.keys(window.SOUND_SPEEDS).map(m => <option key={m}>{m}</option>)}
               <option>기타 / 직접 입력</option>
             </select>
@@ -2194,6 +2199,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
           <div>
             {formLabel("유체 종류", true)}
             <select className="erut-field" value={form.fluid} onChange={(e) => setField("fluid", e.target.value)} style={{ width: "100%" }}>
+              <option value="">선택하세요</option>
               <option>고온 스팀</option><option>가스 — 수소</option><option>가스 — LNG</option><option>액체 — 원유</option><option>액체 — 물</option><option>액체 — 화학약품</option><option>기타</option>
             </select>
           </div>
@@ -2272,7 +2278,16 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
               <window.Button
                 variant={selectedPresetId ? "emphasis" : "disabled"}
                 size="sm"
-                onClick={selectedPresetId ? () => { setIsFromPreset(true); setShowPresetModal(false); setSelectedPresetId(null); } : undefined}
+                onClick={selectedPresetId ? () => {
+                  // v9.27 Wave B fix: 선택된 프리셋의 data 필드를 form에 적용
+                  const preset = presets.find(p => p.id === selectedPresetId);
+                  if (preset && preset.data) {
+                    setForm(f => ({ ...f, ...preset.data }));
+                  }
+                  setIsFromPreset(true);
+                  setShowPresetModal(false);
+                  setSelectedPresetId(null);
+                } : undefined}
               >불러오기</window.Button>
             </>
           )}
