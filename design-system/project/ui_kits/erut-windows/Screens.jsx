@@ -2688,7 +2688,8 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
   const allGates = [
     { id: "A", color: "var(--system-error)",   state: gateA, setter: setA, removable: false, measure: measureA },
     { id: "B", color: "var(--brand-primary)",  state: gateB, setter: setB, removable: false, measure: measureB },
-    ...extraGates.map(g => ({ id: g.id, color: "var(--content-medium)", state: g, setter: (k, v) => updateExtra(g.id, k, v), removable: g.id !== "C", measure: null })),
+    // v9.28 fix: 모든 extraGates 삭제 가능 (C 포함). A/B만 표준이라 보호
+    ...extraGates.map(g => ({ id: g.id, color: "var(--content-medium)", state: g, setter: (k, v) => updateExtra(g.id, k, v), removable: true, measure: null })),
   ];
 
   return (
