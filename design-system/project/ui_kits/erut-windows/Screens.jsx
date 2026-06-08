@@ -1988,9 +1988,13 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   const [isFromPreset, setIsFromPreset] = $s(false);
   const [saveAsPreset, setSaveAsPreset] = $s(false);
   const [selectedPresetId, setSelectedPresetId] = $s(null);
+  // v9.27 Wave B fix: '+새 검사 대상 추가' 클릭 시 입력 초기화 confirm
+  const [showResetConfirm, setShowResetConfirm] = $s(false);
 
   // 선택된 target 변경 시 form 리셋 (selectedId null = 신규 모드)
   React.useEffect(() => {
+    // v9.27 Wave B fix #1: selectedId 변경 시 isFromPreset 리셋 — 신규 작성 시 '프리셋으로 저장' 체크박스 정상 표시
+    setIsFromPreset(false);
     if (!selectedId) { setForm(buildEmptyTargetForm()); return; }
     const t = targets.find(x => x.id === selectedId);
     setForm(buildTargetForm(t));
@@ -2060,9 +2064,14 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             className="erut-btn erut-btn--emphasis erut-btn--sm"
             style={{ width: "100%", marginTop: 8 }}
             onClick={() => {
-              // 새 빈 폼 (mock — 새 검사 대상 신규 작성 시뮬레이션)
-              setSelectedId(null);
-              setForm({ name: "", code: "", shape: "배관", od: "", th: "", idim: "", length: "", allow: "", material: "탄소강 (S355)", fluid: "고온 스팀", std: "KS B 0817", temp: "", press: "", note: "" });
+              // v9.27 Wave B fix #2: 입력된 데이터(또는 프리셋)가 있으면 confirm. 없으면 즉시 초기화
+              const isDirty = isFromPreset || Object.values(form).some(v => v !== "" && v != null);
+              if (isDirty) {
+                setShowResetConfirm(true);
+              } else {
+                setSelectedId(null);
+                setForm(buildEmptyTargetForm());
+              }
             }}
           >+ 새 검사 대상 추가</button>
         </div>
@@ -2316,6 +2325,30 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
                 </div>
               );
             })}
+          </div>
+        </window.Modal>
+      )}
+
+      {/* v9.27 Wave B fix #2: 입력 초기화 confirm 모달 */}
+      {showResetConfirm && (
+        <window.Modal
+          title="입력 초기화"
+          onClose={() => setShowResetConfirm(false)}
+          footer={(
+            <>
+              <window.Button variant="subtle" size="sm" onClick={() => setShowResetConfirm(false)}>닫기</window.Button>
+              <window.Button variant="emphasis" size="sm" onClick={() => {
+                // 폼 초기화 + 프리셋 상태 리셋
+                setSelectedId(null);
+                setForm(buildEmptyTargetForm());
+                setIsFromPreset(false);
+                setShowResetConfirm(false);
+              }}>확인</window.Button>
+            </>
+          )}
+        >
+          <div style={{ font: "400 13px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
+            입력한 정보가 초기화됩니다. 진행하시겠습니까?
           </div>
         </window.Modal>
       )}
