@@ -387,8 +387,15 @@ window.ChannelGrid = function ChannelGrid({
         )
       )}
 
-      {/* 셀 그리드 */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: isRealtime ? 3 : 6, maxHeight: isRealtime ? undefined : 320, overflowY: isRealtime ? undefined : "auto", paddingRight: isRealtime ? 0 : 4 }}>
+      {/* v9.33: 셀 그리드 — 64개 이하 자연 높이(스크롤 X), 64개 초과 시 60vh maxHeight + scroll */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(8, 1fr)",
+        gap: isRealtime ? 3 : 6,
+        maxHeight: isRealtime ? undefined : (cells.length > 64 ? "60vh" : undefined),
+        overflowY: isRealtime ? undefined : (cells.length > 64 ? "auto" : "visible"),
+        paddingRight: isRealtime ? 0 : (cells.length > 64 ? 4 : 0),
+      }}>
         {cells.map((c) => {
           const s = c.sensor;
           const active = s != null;
