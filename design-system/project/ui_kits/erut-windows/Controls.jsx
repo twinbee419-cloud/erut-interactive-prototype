@@ -323,7 +323,8 @@ window.ChannelGrid = function ChannelGrid({
   cells,
   totalCh,
   selectedCh,
-  selectedTargetCard,
+  selectedTargetCard,      // (legacy) 단일 카드 string. selectedTargets 우선
+  selectedTargets,          // v9.29 Wave D: array of target names (multi-select)
   variant = "device-detail",
   forceStrongAll = false,
   focusActive = false,
@@ -334,6 +335,11 @@ window.ChannelGrid = function ChannelGrid({
   showAttachCounters = true,
   showDefectLegend = true,
 }) {
+  // v9.29 Wave D: multi-select 정규화 — selectedTargets 우선, 없으면 legacy selectedTargetCard
+  const targetSet = selectedTargets && selectedTargets.length > 0
+    ? selectedTargets
+    : (selectedTargetCard ? [selectedTargetCard] : []);
+  const hasSelection = targetSet.length > 0;
   const isRealtime = variant === "realtime";
   const n = totalCh != null ? totalCh : cells.length;
 
@@ -392,7 +398,8 @@ window.ChannelGrid = function ChannelGrid({
           const isFocus = isSel && focusActive;
           const hasDefect = c.defectLevel != null;
           // [11]은 모든 결함 strong / [2]는 선택 카드의 결함만 strong
-          const isStrong = hasDefect && (forceStrongAll || (selectedTargetCard && c.targetName === selectedTargetCard));
+          // v9.29 Wave D: multi-select 지원 — targetSet 안의 카드 결함은 strong
+          const isStrong = hasDefect && (forceStrongAll || (hasSelection && targetSet.includes(c.targetName)));
 
           const clsParts = ["erut-ch-cell"];
           if (isSel) clsParts.push("is-active");
@@ -403,11 +410,12 @@ window.ChannelGrid = function ChannelGrid({
           }
 
           // v9.10: 다른 카드의 정상 채널만 dim 0.6 (결함 채널은 유지). 카드 미선택 시 1.0
-          const isOtherCardNormal = selectedTargetCard && c.targetName && c.targetName !== selectedTargetCard && !hasDefect;
+          // v9.29 Wave D: multi-select 지원 — 선택된 카드 외 정상 채널만 dim
+          const isOtherCardNormal = hasSelection && c.targetName && !targetSet.includes(c.targetName) && !hasDefect;
           const cellOpacity = !active ? 0.55 : isOtherCardNormal ? 0.6 : 1;
           const cellStyle = isRealtime
             ? { aspectRatio: "1 / 1", opacity: cellOpacity, position: "relative", padding: "2px", gap: 0, justifyContent: "center", alignItems: "center" }
-            : { aspectRatio: "20 / 7", opacity: cellOpacity, position: "relative", padding: "4px 8px", gap: 0, justifyContent: "center" };
+            : { aspectRatio: "20 / 9", opacity: cellOpacity, position: "relative", padding: "4px 8px", gap: 1, justifyContent: "center" };
 
           // 부착 LED dot 색
           const dotColor = !active ? "var(--surface-disabled)"
@@ -432,11 +440,16 @@ window.ChannelGrid = function ChannelGrid({
                 </>
               ) : (
                 <>
+                  {/* v9.29 Wave D: 위 = 채널명 + LED dot (통신 세기) / 중 = 검사 대상 / 아래 = Amp (신호 세기) */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span className="erut-ch-cell__val">{(c.id || ("ch" + String(c.num).padStart(2, "0"))).toUpperCase().replace("CH", "CH ")}</span>
                     <span style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor, flexShrink: 0 }}/>
                   </div>
                   <span className="erut-ch-cell__id" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{active ? (c.targetName || "—") : "—"}</span>
+                  {/* 신호 세기 (Amp %) — 통신 세기(dot)와 구분 */}
+                  <span style={{ font: "400 9px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 1 }}>
+                    {active && s && s.amp != null ? `Amp ${s.amp}%` : ""}
+                  </span>
                 </>
               )}
             </div>

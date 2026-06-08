@@ -637,8 +637,8 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   const [showAddSensor, setShowAddSensor] = $s(false);
   const [showCalibration, setShowCalibration] = $s(false);
   const [showDiagnostics, setShowDiagnostics] = $s(false);
-  // v9.0 (NDT 1.7): 검사 대상 카드 선택 (결함 채널 강조용). null=no selection. 외부 targetId와 분리
-  const [selectedTargetCard, setSelectedTargetCard] = $s(null);
+  // v9.29 Wave D: 검사 대상 multi-select (array of names). 재클릭 = 토글 해제
+  const [selectedTargetSet, setSelectedTargetSet] = $s([]);
 
   React.useEffect(() => {
     if (focusChannel) {
@@ -649,12 +649,12 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
     }
   }, [focusChannel]);
 
-  // v9.1 (NDT 1.7): 카드 외부 클릭 또는 ESC 키 시 카드 선택 해제 (셀 강조도 함께 해제)
+  // v9.29 Wave D: 카드 외부 클릭 또는 ESC 시 전체 해제 (multi-select 모두 클리어)
   React.useEffect(() => {
-    if (!selectedTargetCard) return;
-    const handleKey = (e) => { if (e.key === "Escape") setSelectedTargetCard(null); };
+    if (selectedTargetSet.length === 0) return;
+    const handleKey = (e) => { if (e.key === "Escape") setSelectedTargetSet([]); };
     const handleClickOutside = (e) => {
-      if (!e.target.closest || !e.target.closest(".target-card-v9")) setSelectedTargetCard(null);
+      if (!e.target.closest || !e.target.closest(".target-card-v9")) setSelectedTargetSet([]);
     };
     document.addEventListener("keydown", handleKey);
     document.addEventListener("click", handleClickOutside);
@@ -662,7 +662,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
       document.removeEventListener("keydown", handleKey);
       document.removeEventListener("click", handleClickOutside);
     };
-  }, [selectedTargetCard]);
+  }, [selectedTargetSet]);
 
   const cur = sensorMap[selected] || window.MOCK.sensors[0];
   const isCurWarn = cur.state === "warn";
@@ -686,8 +686,10 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   ];
   // 결함 등급별 색 매핑
   const DEFECT_COLOR = { critical: "var(--system-error)", major: "var(--system-caution)", minor: "var(--content-low)" };
-  // 카드 클릭 핸들러 (같은 카드 재클릭 = 현상 유지)
-  const onTargetCardClick = (name) => { if (selectedTargetCard !== name) setSelectedTargetCard(name); };
+  // v9.29 Wave D: 카드 클릭 토글 — multi-select. 재클릭 = 해제
+  const onTargetCardClick = (name) => {
+    setSelectedTargetSet(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]);
+  };
 
   const okCount       = window.MOCK.sensors.filter(s => s.state === "ok").length;
   const warnCount     = window.MOCK.sensors.filter(s => s.state === "warn").length;
@@ -703,7 +705,8 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   ];
 
   return (
-    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "1fr 400px", gridTemplateRows: "40px 1fr", alignContent: "start", columnGap: 20, rowGap: 20, padding: "20px 40px", height: "100%" }}>
+    // v9.29 Wave D: 외부 grid 3컬럼 — 좌(검사 대상 세로 리스트 260px) + 중(MC보드 정보 + 64ch) + 우(우측 패널 400px)
+    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "260px 1fr 400px", gridTemplateRows: "40px 1fr", alignContent: "start", columnGap: 16, rowGap: 16, padding: "20px 24px 20px 0", height: "100%" }}>
       {/* v8.5 Breadcrumb */}
       <window.Breadcrumb
         onBack={onBack}
@@ -711,11 +714,71 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
           { label: "메인" },
           { label: "장비 상세 (MCuF-001)", current: true },
         ]}
-        style={{ gridRow: 1, gridColumn: "1 / -1" }}
+        style={{ gridRow: 1, gridColumn: "1 / -1", marginLeft: 24 }}
       />
 
-      {/* ───── 좌측: MC보드 정보 + 센서 그리드 ───── */}
-      <div style={{ gridRow: 2, gridColumn: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+      {/* ───── v9.29 Wave D: 좌측 검사 대상 세로 리스트 ([6] 좌측 패널 스타일 차용) ───── */}
+      <div style={{ gridRow: 2, gridColumn: 1, background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", display: "flex", flexDirection: "column", minHeight: 0 }}>
+        <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-medium)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+            <h3 style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>검사 대상</h3>
+            <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>{TARGETS.length}개</span>
+          </div>
+          <p style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", margin: "4px 0 0" }}>카드 클릭으로 다중 선택 가능</p>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", padding: "8px 12px" }}>
+          {TARGETS.map(t => {
+            const isSelected = selectedTargetSet.includes(t.name);
+            const isDimmed = selectedTargetSet.length > 0 && !isSelected;
+            const hasDefect = t.defectCount > 0;
+            const defectColor = hasDefect ? DEFECT_COLOR[t.topLevel] : null;
+            return (
+              <div
+                key={t.name}
+                className="target-card target-card-v9"
+                title={hasDefect ? "클릭하여 결함 영역에 부착된 센서를 확인할 수 있습니다." : undefined}
+                onClick={() => onTargetCardClick(t.name)}
+                style={{
+                  position: "relative",
+                  background: isSelected ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "var(--surface-base)",
+                  border: isSelected ? "1px solid var(--border-emphasis)" : (defectColor ? `1px solid ${defectColor}` : "1px solid var(--border-medium)"),
+                  padding: "10px 12px",
+                  marginBottom: 8,
+                  opacity: isDimmed ? 0.6 : 1,
+                  cursor: "pointer",
+                  transition: "opacity 120ms ease",
+                }}
+              >
+                {hasDefect && (
+                  <span style={{
+                    position: "absolute", top: 8, right: 8,
+                    font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em",
+                    padding: "4px 8px", color: "var(--on-primary)",
+                    background: defectColor,
+                  }}>결함 {t.defectCount}건</span>
+                )}
+                <div className="target-card__name" style={{ color: isSelected ? "var(--content-emphasis)" : "var(--content-high)", paddingRight: hasDefect ? 80 : 0 }}>{t.name}</div>
+                <div className="target-card__meta" style={{ marginTop: 4 }}>{t.meta}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+                  <span className="target-card__range">{t.range}</span>
+                  <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-success)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ width: 6, height: 6, background: "var(--system-success)", borderRadius: "50%" }}/>측정 중
+                  </span>
+                </div>
+                {/* hover 시 우하단 "편집 →" 링크 */}
+                <span className="target-card__edit-link" style={{
+                  position: "absolute", bottom: 6, right: 10,
+                  font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em",
+                  color: "var(--content-emphasis)", textDecoration: "underline",
+                }} onClick={(e) => { e.stopPropagation(); onEditTarget && onEditTarget(t.name); }}>편집 →</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ───── 중앙: MC보드 정보 + 64ch 그리드 ───── */}
+      <div style={{ gridRow: 2, gridColumn: 2, minWidth: 0, display: "flex", flexDirection: "column" }}>
         {/* ▼ MC보드 메타 정보 패널 (main 매칭) — v8.7: fill 제거, 검사 대상 목록 통합 ▼ */}
         <div style={{ background: "transparent", border: "1px solid var(--border-medium)", padding: "12px 16px", marginBottom: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -749,64 +812,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
             ))}
           </div>
 
-          {/* v8.7: 검사 대상 목록을 MC보드 정보 컨테이너 안으로 통합 */}
-          <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border-low)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-                <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>검사 대상</span>
-                <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>3개 · 채널 모두 할당</span>
-              </div>
-              <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onAddTarget}>+ 검사 대상 추가</button>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-              {/* v9.0 (NDT 1.7): 결함 표시 + 카드 클릭 인터랙션 */}
-              {TARGETS.map(t => {
-                const isSelected = selectedTargetCard === t.name;
-                const isDimmed = selectedTargetCard && !isSelected;
-                const hasDefect = t.defectCount > 0;
-                const defectColor = hasDefect ? DEFECT_COLOR[t.topLevel] : null;
-                return (
-                  <div
-                    key={t.name}
-                    className="target-card target-card-v9"
-                    title={hasDefect ? "클릭하여 결함 영역에 부착된 센서를 확인할 수 있습니다." : undefined}
-                    onClick={() => onTargetCardClick(t.name)}
-                    style={{
-                      position: "relative",
-                      cursor: "pointer",
-                      opacity: isDimmed ? 0.6 : 1,
-                      transition: "opacity 120ms ease",
-                      borderColor: isSelected ? "var(--border-emphasis)" : (defectColor || undefined),
-                      background: isSelected ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-subtle-2)" : undefined,
-                    }}
-                  >
-                    {hasDefect && (
-                      <span style={{
-                        position: "absolute", top: 8, right: 8,
-                        font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em",
-                        padding: "4px 8px", color: "var(--on-primary)",
-                        background: defectColor,
-                      }}>결함 {t.defectCount}건 검출</span>
-                    )}
-                    <div className="target-card__name">{t.name}</div>
-                    <div className="target-card__meta">{t.meta}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
-                      <span className="target-card__range">{t.range}</span>
-                      <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-success)", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                        <span style={{ width: 6, height: 6, background: "var(--system-success)", borderRadius: "50%" }}/>측정 중
-                      </span>
-                    </div>
-                    {/* hover 시 우하단 "편집 →" 링크 */}
-                    <span className="target-card__edit-link" style={{
-                      position: "absolute", bottom: 6, right: 10,
-                      font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em",
-                      color: "var(--content-emphasis)", textDecoration: "underline",
-                    }} onClick={(e) => { e.stopPropagation(); onEditTarget && onEditTarget(t.name); }}>편집 →</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          {/* v9.29 Wave D: 검사 대상 목록 — 좌측 사이드로 이동 */}
         </div>
 
         {/* v9.9: 1행 = h3 + 우측 서브 안내 + 우측 끝 버튼 / 2행 = 카운터 좌측 정렬 */}
@@ -826,7 +832,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
           cells={cells}
           totalCh={64}
           selectedCh={selected}
-          selectedTargetCard={selectedTargetCard}
+          selectedTargets={selectedTargetSet}
           variant="device-detail"
           forceStrongAll={false}
           focusActive={focusActive}
@@ -839,8 +845,8 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
         {/* v9.16: [1-1] 대시보드 deep link 안내 배너 삭제 — v7.0에서 [1-1] 폐기로 메시지 obsolete */}
       </div>
 
-      {/* ───── 우측 사이드패널 (main 매칭) ───── */}
-      <div className="erut-panel" style={{ gridRow: 2, gridColumn: 2, minWidth: 0 }}>
+      {/* v9.29 Wave D: 우측 사이드패널 — gridColumn 2 → 3 */}
+      <div className="erut-panel" style={{ gridRow: 2, gridColumn: 3, minWidth: 0 }}>
         <div className="erut-panel__header">{selected.toUpperCase().replace("CH","CH ")}</div>
         <div className="erut-panel__body" style={{ overflowY: "auto", padding: 16, display: "flex", flexDirection: "column" }}>
 
