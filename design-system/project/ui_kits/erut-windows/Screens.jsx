@@ -672,10 +672,16 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   const getTargetName = (i) => i <= 24 ? "PIPE-A-204" : i <= 48 ? "TANK-B-101" : "VESSEL-C-301";
   // v9.17: 결함 검출 채널 — PIPE 4건 + VESSEL 2건 (mockup 다양성)
   const DEFECT_CHANNELS = { 4: "critical", 7: "major", 12: "minor", 18: "minor", 51: "major", 56: "minor" };
+  // v9.30: 교정 상태 — 미교정(신규 추가 후 미진행) + 만료(주기 초과) 채널은 major 컬러 breathe
+  const UNCALIBRATED_CHANNELS = ["ch20", "ch33"]; // 추가만 됨 / 교정 미진행
+  const EXPIRED_CHANNELS = ["ch04", "ch09", "ch12"]; // 6개월 초과 — 재교정 필요
   const cells = [];
   for (let i = 1; i <= 64; i++) {
     const id = "ch" + String(i).padStart(2, "0");
-    cells.push({ id, sensor: sensorMap[id], targetName: getTargetName(i), defectLevel: DEFECT_CHANNELS[i] || null });
+    const calibrationStatus = UNCALIBRATED_CHANNELS.includes(id)
+      ? "uncalibrated"
+      : EXPIRED_CHANNELS.includes(id) ? "expired" : "ok";
+    cells.push({ id, sensor: sensorMap[id], targetName: getTargetName(i), defectLevel: DEFECT_CHANNELS[i] || null, calibrationStatus });
   }
 
   // v9.14: 검사 대상 — PIPE-A-204에 결함 4건, 나머지 정상 (CH 25~64 비활성화)
@@ -705,8 +711,8 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   ];
 
   return (
-    // v9.29 Wave D: 외부 grid 3컬럼 — 좌(검사 대상 세로 리스트 260px) + 중(MC보드 정보 + 64ch) + 우(우측 패널 400px)
-    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "260px 1fr 400px", gridTemplateRows: "40px 1fr", alignContent: "start", columnGap: 16, rowGap: 16, padding: "20px 24px 20px 0", height: "100%" }}>
+    // v9.30: MC보드 정보 full-width 배너(row 2) + 검사 대상/64ch/우측 패널 동일 행(row 3)
+    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "260px 1fr 400px", gridTemplateRows: "40px auto 1fr", alignContent: "start", columnGap: 16, rowGap: 16, padding: "20px 24px 20px 0", height: "100%" }}>
       {/* v8.5 Breadcrumb */}
       <window.Breadcrumb
         onBack={onBack}
@@ -717,8 +723,8 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
         style={{ gridRow: 1, gridColumn: "1 / -1", marginLeft: 24 }}
       />
 
-      {/* ───── v9.29 Wave D: 좌측 검사 대상 세로 리스트 ([6] 좌측 패널 스타일 차용) ───── */}
-      <div style={{ gridRow: 2, gridColumn: 1, background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", display: "flex", flexDirection: "column", minHeight: 0 }}>
+      {/* ───── v9.30: 좌측 검사 대상 세로 리스트 — row 3 col 1 (MC보드 배너 아래) ───── */}
+      <div style={{ gridRow: 3, gridColumn: 1, background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", display: "flex", flexDirection: "column", minHeight: 0 }}>
         <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-medium)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
             <h3 style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>검사 대상</h3>
@@ -749,15 +755,8 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
                   transition: "opacity 120ms ease",
                 }}
               >
-                {hasDefect && (
-                  <span style={{
-                    position: "absolute", top: 8, right: 8,
-                    font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em",
-                    padding: "4px 8px", color: "var(--on-primary)",
-                    background: defectColor,
-                  }}>결함 {t.defectCount}건</span>
-                )}
-                <div className="target-card__name" style={{ color: isSelected ? "var(--content-emphasis)" : "var(--content-high)", paddingRight: hasDefect ? 80 : 0 }}>{t.name}</div>
+                {/* v9.30: 결함 N건 태그 제거 — 카드 border 색상으로 결함 등급 표시 유지 */}
+                <div className="target-card__name" style={{ color: isSelected ? "var(--content-emphasis)" : "var(--content-high)" }}>{t.name}</div>
                 <div className="target-card__meta" style={{ marginTop: 4 }}>{t.meta}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
                   <span className="target-card__range">{t.range}</span>
@@ -777,44 +776,42 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
         </div>
       </div>
 
-      {/* ───── 중앙: MC보드 정보 + 64ch 그리드 ───── */}
-      <div style={{ gridRow: 2, gridColumn: 2, minWidth: 0, display: "flex", flexDirection: "column" }}>
-        {/* ▼ MC보드 메타 정보 패널 (main 매칭) — v8.7: fill 제거, 검사 대상 목록 통합 ▼ */}
-        <div style={{ background: "transparent", border: "1px solid var(--border-medium)", padding: "12px 16px", marginBottom: 16 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-              <span style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>MCuF-001</span>
-              <span className="erut-pill" style={{ padding: "2px 8px", fontSize: 11, lineHeight: 1 }}>
-                <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
-                연결됨
-              </span>
-              <span className="erut-pill" style={{ padding: "2px 8px", fontSize: 11, lineHeight: 1, background: "linear-gradient(rgba(34,133,239,0.12),rgba(34,133,239,0.12)), var(--surface-subtle-2)", color: "var(--content-emphasis)", borderColor: "var(--border-emphasis)" }}>
-                <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
-                측정 중
-              </span>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowDiagnostics(true)}>진단 / 로그</button>
-            </div>
+      {/* ───── v9.30: MC보드 정보 — row 2 cols 1-3 (full-width 배너) ───── */}
+      <div style={{ gridRow: 2, gridColumn: "1 / -1", background: "transparent", border: "1px solid var(--border-medium)", padding: "12px 16px", marginLeft: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+            <span style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>MCuF-001</span>
+            <span className="erut-pill" style={{ padding: "2px 8px", fontSize: 11, lineHeight: 1 }}>
+              <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
+              연결됨
+            </span>
+            <span className="erut-pill" style={{ padding: "2px 8px", fontSize: 11, lineHeight: 1, background: "linear-gradient(rgba(34,133,239,0.12),rgba(34,133,239,0.12)), var(--surface-subtle-2)", color: "var(--content-emphasis)", borderColor: "var(--border-emphasis)" }}>
+              <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
+              측정 중
+            </span>
           </div>
-          {/* v8.8: 메타 정보 4-col stripe (Config/샘플링/펌웨어는 진단/로그 모달로 이동) */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, paddingTop: 10, borderTop: "1px solid var(--border-low)" }}>
-            {META.map((m) => (
-              <div key={m.label}>
-                <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>{m.label}</div>
-                <div style={{
-                  font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em",
-                  color: m.emphasis ? "var(--content-emphasis)" : m.success ? "var(--system-success)" : m.link ? "var(--content-emphasis)" : "var(--content-high)",
-                  textDecoration: m.link ? "underline" : "none",
-                  cursor: m.link ? "pointer" : "default",
-                }}>{m.value}</div>
-              </div>
-            ))}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowDiagnostics(true)}>진단 / 로그</button>
           </div>
-
-          {/* v9.29 Wave D: 검사 대상 목록 — 좌측 사이드로 이동 */}
         </div>
+        {/* v8.8: 메타 정보 4-col stripe (Config/샘플링/펌웨어는 진단/로그 모달로 이동) */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, paddingTop: 10, borderTop: "1px solid var(--border-low)" }}>
+          {META.map((m) => (
+            <div key={m.label}>
+              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>{m.label}</div>
+              <div style={{
+                font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em",
+                color: m.emphasis ? "var(--content-emphasis)" : m.success ? "var(--system-success)" : m.link ? "var(--content-emphasis)" : "var(--content-high)",
+                textDecoration: m.link ? "underline" : "none",
+                cursor: m.link ? "pointer" : "default",
+              }}>{m.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
+      {/* ───── v9.30: 중앙 64ch 그리드 — row 3 col 2 ───── */}
+      <div style={{ gridRow: 3, gridColumn: 2, minWidth: 0, display: "flex", flexDirection: "column" }}>
         {/* v9.9: 1행 = h3 + 우측 서브 안내 + 우측 끝 버튼 / 2행 = 카운터 좌측 정렬 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
@@ -845,8 +842,8 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
         {/* v9.16: [1-1] 대시보드 deep link 안내 배너 삭제 — v7.0에서 [1-1] 폐기로 메시지 obsolete */}
       </div>
 
-      {/* v9.29 Wave D: 우측 사이드패널 — gridColumn 2 → 3 */}
-      <div className="erut-panel" style={{ gridRow: 2, gridColumn: 3, minWidth: 0 }}>
+      {/* v9.30: 우측 사이드패널 — row 3 col 3 */}
+      <div className="erut-panel" style={{ gridRow: 3, gridColumn: 3, minWidth: 0 }}>
         <div className="erut-panel__header">{selected.toUpperCase().replace("CH","CH ")}</div>
         <div className="erut-panel__body" style={{ overflowY: "auto", padding: 16, display: "flex", flexDirection: "column" }}>
 
@@ -2920,17 +2917,24 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
 
   // v9.15: 64ch cells — MOCK.sensors 기반 (두 화면 데이터 단일 진실 공급원)
   const sensorMap64 = Object.fromEntries(window.MOCK.sensors.map(s => [s.id, s]));
+  // v9.30: [2]와 동일한 교정 상태 mock (단일 진실 공급원 유지)
+  const UNCALIBRATED_CHANNELS_64 = ["ch20", "ch33"];
+  const EXPIRED_CHANNELS_64 = ["ch04", "ch09", "ch12"];
   const cells64 = [];
   for (let i = 1; i <= 64; i++) {
     const def = defects.find(d => d.channel === i);
     const id = "ch" + String(i).padStart(2, "0");
     const sensor = sensorMap64[id];
+    const calibrationStatus = UNCALIBRATED_CHANNELS_64.includes(id)
+      ? "uncalibrated"
+      : EXPIRED_CHANNELS_64.includes(id) ? "expired" : "ok";
     cells64.push({
       num: i,
       id,
       sensor: sensor || { id, state: "ok" }, // sensors에 없으면 default ok
       defectLevel: def ? def.type.toLowerCase() : null, // "Critical" → "critical"
       targetName: i <= 24 ? "PIPE-A-204" : i <= 48 ? "TANK-B-101" : "VESSEL-C-301",
+      calibrationStatus,
     });
   }
 

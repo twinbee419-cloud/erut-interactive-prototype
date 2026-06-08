@@ -400,6 +400,8 @@ window.ChannelGrid = function ChannelGrid({
           // [11]은 모든 결함 strong / [2]는 선택 카드의 결함만 strong
           // v9.29 Wave D: multi-select 지원 — targetSet 안의 카드 결함은 strong
           const isStrong = hasDefect && (forceStrongAll || (hasSelection && targetSet.includes(c.targetName)));
+          // v9.30: 교정 상태 — 미교정/만료 채널은 major 컬러 breathe (결함과 독립)
+          const needsCalibration = c.calibrationStatus === "uncalibrated" || c.calibrationStatus === "expired";
 
           const clsParts = ["erut-ch-cell"];
           if (isSel) clsParts.push("is-active");
@@ -408,6 +410,8 @@ window.ChannelGrid = function ChannelGrid({
             clsParts.push("is-defect-" + c.defectLevel);
             if (isStrong) clsParts.push("is-strong");
           }
+          // v9.30: breathe 애니메이션은 결함 → 교정 상태로 이전
+          if (needsCalibration) clsParts.push("is-needs-calibration");
 
           // v9.10: 다른 카드의 정상 채널만 dim 0.6 (결함 채널은 유지). 카드 미선택 시 1.0
           // v9.29 Wave D: multi-select 지원 — 선택된 카드 외 정상 채널만 dim

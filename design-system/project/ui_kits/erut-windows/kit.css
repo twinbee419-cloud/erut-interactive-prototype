@@ -503,49 +503,46 @@
     var(--surface-subtle-1);
 }
 
-/* ---------- v9.4 NDT 1.7: fill + border 모두 breathing ---------- */
+/* ---------- v9.30: 결함 셀 = static border+fill (breathe 제거) ----------
+   breathe 애니메이션은 교정 상태(is-needs-calibration)로 이전. 결함은 색상만으로 식별. */
 .erut-ch-cell.is-defect-critical{
-  --defect-fill-low:    rgba(255,0,94,0.05);
-  --defect-fill-high:   rgba(255,0,94,0.13);
-  --defect-border-low:  rgba(255,0,94,0.30);
-  --defect-border-high: rgba(255,0,94,0.55);
-  animation: erut-defect-breathe 1.6s ease-in-out infinite;
+  background-color: rgba(255,0,94,0.13);
+  border-color: rgba(255,0,94,0.55);
 }
 .erut-ch-cell.is-defect-critical.is-strong{
-  --defect-fill-low:    rgba(255,0,94,0.18);
-  --defect-fill-high:   rgba(255,0,94,0.42);
-  --defect-border-low:  rgba(255,0,94,0.70);
-  --defect-border-high: rgba(255,0,94,1.00);
+  background-color: rgba(255,0,94,0.42);
+  border-color: rgba(255,0,94,1.00);
 }
 .erut-ch-cell.is-defect-major{
-  --defect-fill-low:    rgba(255,146,0,0.06);
-  --defect-fill-high:   rgba(255,146,0,0.13);
-  --defect-border-low:  rgba(255,146,0,0.30);
-  --defect-border-high: rgba(255,146,0,0.55);
-  animation: erut-defect-breathe 1.6s ease-in-out infinite;
+  background-color: rgba(255,146,0,0.13);
+  border-color: rgba(255,146,0,0.55);
 }
 .erut-ch-cell.is-defect-major.is-strong{
-  --defect-fill-low:    rgba(255,146,0,0.20);
-  --defect-fill-high:   rgba(255,146,0,0.44);
-  --defect-border-low:  rgba(255,146,0,0.70);
-  --defect-border-high: rgba(255,146,0,1.00);
+  background-color: rgba(255,146,0,0.44);
+  border-color: rgba(255,146,0,1.00);
 }
 .erut-ch-cell.is-defect-minor{
-  --defect-fill-low:    rgba(107,124,155,0.06);
-  --defect-fill-high:   rgba(107,124,155,0.13);
-  --defect-border-low:  rgba(107,124,155,0.35);
-  --defect-border-high: rgba(107,124,155,0.60);
-  animation: erut-defect-breathe 1.6s ease-in-out infinite;
+  background-color: rgba(107,124,155,0.13);
+  border-color: rgba(107,124,155,0.60);
 }
 .erut-ch-cell.is-defect-minor.is-strong{
-  --defect-fill-low:    rgba(107,124,155,0.18);
-  --defect-fill-high:   rgba(107,124,155,0.36);
-  --defect-border-low:  rgba(107,124,155,0.75);
-  --defect-border-high: rgba(107,124,155,1.00);
+  background-color: rgba(107,124,155,0.36);
+  border-color: rgba(107,124,155,1.00);
 }
-@keyframes erut-defect-breathe {
-  0%, 100% { background-color: var(--defect-fill-low);  border-color: var(--defect-border-low); }
-  50%      { background-color: var(--defect-fill-high); border-color: var(--defect-border-high); }
+
+/* ---------- v9.30: 교정 필요 셀 (미교정 + 만료) — major 컬러 breathe ----------
+   추가만 되고 교정 미진행 + 주기 초과로 재교정 필요한 채널 표시.
+   defect 색상이 동시에 있을 경우 needs-calibration이 우선 (animation override). */
+.erut-ch-cell.is-needs-calibration{
+  --calib-fill-low:    rgba(255,146,0,0.10);
+  --calib-fill-high:   rgba(255,146,0,0.38);
+  --calib-border-low:  rgba(255,146,0,0.45);
+  --calib-border-high: rgba(255,146,0,1.00);
+  animation: erut-calib-breathe 1.6s ease-in-out infinite;
+}
+@keyframes erut-calib-breathe {
+  0%, 100% { background-color: var(--calib-fill-low);  border-color: var(--calib-border-low); }
+  50%      { background-color: var(--calib-fill-high); border-color: var(--calib-border-high); }
 }
 
 /* ---------- Roll indicator (측정 중) ---------- */
