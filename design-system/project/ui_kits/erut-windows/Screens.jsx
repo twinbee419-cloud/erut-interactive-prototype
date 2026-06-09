@@ -1402,6 +1402,218 @@ function DiagLogPlaceholder({ title, desc }) {
   );
 }
 
+// =================== Modal · [8] 환경 설정 (v10.0 신규 — 메뉴바 [설정] + 툴바 gear 공통 진입) ===================
+window.SettingsModal = function SettingsModal({ onClose }) {
+  const [cat, setCat] = $s("general"); // general / shortcuts / autosave / report
+  const cats = [
+    { id: "general",   label: "일반" },
+    { id: "shortcuts", label: "단축키" },
+    { id: "autosave",  label: "자동 저장" },
+    { id: "report",    label: "보고서 기본값" },
+  ];
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: 1100, maxHeight: "90vh", background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
+        {/* 헤더 (titlebar 컬러 통일) */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderBottom: "1px solid var(--border-medium)", background: "var(--content-medium)" }}>
+          <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>설정</div>
+          <button onClick={onClose} aria-label="닫기" style={{ background: "transparent", border: "none", color: "var(--content-inverse)", cursor: "pointer", padding: 4, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><window.EIcon.Close size={14}/></button>
+        </div>
+        {/* 본문 (좌: 카테고리 사이드바 / 우: 콘텐츠) */}
+        <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", minHeight: 480 }}>
+          <div style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", padding: "8px 0" }}>
+            {cats.map(c => (
+              <button key={c.id} onClick={() => setCat(c.id)} style={{
+                display: "flex", alignItems: "center", width: "100%",
+                padding: "10px 16px", textAlign: "left",
+                font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em",
+                color: cat === c.id ? "var(--content-emphasis)" : "var(--content-medium)",
+                background: cat === c.id ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "transparent",
+                border: "none", borderLeft: cat === c.id ? "3px solid var(--brand-primary)" : "3px solid transparent",
+                cursor: "pointer"
+              }}>
+                {c.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ padding: "18px 24px", overflowY: "auto" }}>
+            {cat === "general"   && <SettingsGeneral/>}
+            {cat === "shortcuts" && <SettingsShortcuts/>}
+            {cat === "autosave"  && <SettingsAutosave/>}
+            {cat === "report"    && <SettingsReport/>}
+          </div>
+        </div>
+        {/* 푸터 — 좌측: 초기화 / 우측: 취소·적용 */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
+          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose}>기본값으로 초기화</button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onClose}>취소</button>
+            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onClose}>적용</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+function SettingsRow({ label, hint, children }) {
+  return (
+    <>
+      <div style={{ font: "700 12px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", paddingTop: 8 }}>{label}</div>
+      <div>
+        {children}
+        {hint && <div style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4 }}>{hint}</div>}
+      </div>
+    </>
+  );
+}
+
+function SettingsSectionHeader({ title, desc }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: "0 0 4px" }}>{title}</h3>
+      <p style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", margin: 0 }}>{desc}</p>
+    </div>
+  );
+}
+
+function SettingsGeneral() {
+  const [startScreen, setStartScreen] = $s("last");
+  const [sound, setSound] = $s(true);
+  return (
+    <>
+      <SettingsSectionHeader title="일반" desc="앱의 기본 동작과 표시 방식을 설정합니다."/>
+      <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: "16px 24px", alignItems: "start" }}>
+        <SettingsRow label="테마" hint="v1.0은 라이트만 지원. 다크 테마는 v2.0 예정.">
+          <select className="erut-field" defaultValue="light" style={{ width: 240 }}>
+            <option value="light">라이트 (기본)</option>
+          </select>
+        </SettingsRow>
+        <SettingsRow label="언어" hint="영문은 v1.0 Beta. 단위 변환(mm ↔ inch)은 v2.0 예정.">
+          <select className="erut-field" defaultValue="ko" style={{ width: 240 }}>
+            <option value="ko">한국어</option>
+            <option value="en">English (Beta)</option>
+          </select>
+        </SettingsRow>
+        <SettingsRow label="시작 화면">
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: startScreen === "last" ? "var(--content-high)" : "var(--content-medium)" }} onClick={() => setStartScreen("last")}>
+              <span className="erut-cb"><span className={"erut-cb__box" + (startScreen === "last" ? " is-on" : "")}></span></span>
+              마지막 프로젝트 자동 열기
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: startScreen === "picker" ? "var(--content-high)" : "var(--content-medium)" }} onClick={() => setStartScreen("picker")}>
+              <span className="erut-cb"><span className={"erut-cb__box" + (startScreen === "picker" ? " is-on" : "")}></span></span>
+              [0] 프로젝트 선택 화면
+            </label>
+          </div>
+        </SettingsRow>
+        <SettingsRow label="측정 알림음" hint="결함 검출 · 부착력 저하 시 효과음 재생.">
+          <label className="erut-toggle" onClick={() => setSound(s => !s)}>
+            <span className={"erut-toggle__track" + (sound ? " is-on" : "")}><span className="erut-toggle__thumb"></span></span>
+            <span className="erut-toggle__label erut-toggle__label--sm">{sound ? "활성" : "비활성"}</span>
+          </label>
+        </SettingsRow>
+      </div>
+    </>
+  );
+}
+
+function SettingsShortcuts() {
+  const shortcuts = [
+    ["측정 시작",       "F6"],
+    ["측정 중지",       "F7"],
+    ["측정 일시정지",   "Space"],
+    ["프로젝트 열기",   "Ctrl+O"],
+    ["다른 이름으로 저장", "Ctrl+Shift+S"],
+    ["검사 이력",       "Ctrl+D"],
+    ["보고서 출력",     "Ctrl+P"],
+    ["메뉴 닫기 · 모달 닫기", "Esc"],
+  ];
+  return (
+    <>
+      <SettingsSectionHeader title="단축키" desc="자주 쓰는 동작의 단축키를 변경할 수 있습니다. 충돌이 발생하면 경고가 표시됩니다."/>
+      <div style={{ border: "1px solid var(--border-low)" }}>
+        {shortcuts.map(([label, key], i) => (
+          <div key={label} style={{ display: "grid", gridTemplateColumns: "1fr 180px 80px", alignItems: "center", padding: "10px 14px", borderTop: i === 0 ? "none" : "1px solid var(--border-low)" }}>
+            <div style={{ font: "400 12px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{label}</div>
+            <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", padding: "6px 10px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", display: "inline-block", justifySelf: "start" }}>{key}</div>
+            <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ justifySelf: "end" }}>변경</button>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function SettingsAutosave() {
+  const [interval, setIntervalSec] = $s("30");
+  return (
+    <>
+      <SettingsSectionHeader title="자동 저장" desc="측정 중 데이터 손실을 방지하기 위한 자동 저장 주기와 저장 위치입니다."/>
+      <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: "16px 24px", alignItems: "start" }}>
+        <SettingsRow label="자동 저장 주기" hint="짧을수록 안전하나 디스크 부하 증가. 기본 30초 권장.">
+          <select className="erut-field" value={interval} onChange={(e) => setIntervalSec(e.target.value)} style={{ width: 240 }}>
+            <option value="10">10초</option>
+            <option value="30">30초 (기본)</option>
+            <option value="60">1분</option>
+            <option value="300">5분</option>
+          </select>
+        </SettingsRow>
+        <SettingsRow label="데이터 폴더 경로" hint="C-SCAN/A-SCAN 바이너리(.bin)와 세션 메타데이터가 저장되는 위치.">
+          <div style={{ display: "flex", gap: 8 }}>
+            <input className="erut-field" defaultValue="C:\\ERUT_Data\\" style={{ flex: 1 }}/>
+            <button className="erut-btn erut-btn--default erut-btn--sm">변경...</button>
+          </div>
+        </SettingsRow>
+        <SettingsRow label="저장 실패 시 동작">
+          <select className="erut-field" defaultValue="retry" style={{ width: 240 }}>
+            <option value="retry">3회 재시도 후 경고</option>
+            <option value="warn">즉시 경고</option>
+          </select>
+        </SettingsRow>
+      </div>
+    </>
+  );
+}
+
+function SettingsReport() {
+  return (
+    <>
+      <SettingsSectionHeader title="보고서 기본값" desc="[18] 보고서 자동 생성 시 사전 채워질 기본값입니다."/>
+      <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: "16px 24px", alignItems: "start" }}>
+        <SettingsRow label="출력 형식">
+          <select className="erut-field" defaultValue="pdf" style={{ width: 240 }}>
+            <option value="pdf">PDF (기본)</option>
+            <option value="docx">DOCX (Word 편집 가능)</option>
+          </select>
+        </SettingsRow>
+        <SettingsRow label="회사 로고" hint="보고서 헤더 좌측 상단에 표시. PNG/JPG, 권장 300×80px.">
+          <div style={{ display: "flex", gap: 8 }}>
+            <input className="erut-field" defaultValue="(로고 미등록)" disabled style={{ flex: 1 }}/>
+            <button className="erut-btn erut-btn--default erut-btn--sm">파일 선택...</button>
+          </div>
+        </SettingsRow>
+        <SettingsRow label="검사자 기본 정보" hint="신규 세션 생성 시 사전 채워질 검사자 이름·자격·소속.">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <input className="erut-field" placeholder="이름 (예: 김검사)"/>
+            <input className="erut-field" placeholder="자격 (예: ASNT Lv.II)"/>
+            <input className="erut-field" placeholder="소속" style={{ gridColumn: "1 / -1" }}/>
+          </div>
+        </SettingsRow>
+        <SettingsRow label="적용 표준 기본값" hint="신규 세션 생성 시 사전 선택될 NDT 표준.">
+          <select className="erut-field" defaultValue="none" style={{ width: 240 }}>
+            <option value="none">선택 안 함</option>
+            <option value="ks">KS B 0817</option>
+            <option value="asme">ASME Sec.V</option>
+            <option value="api">API 510</option>
+            <option value="nace">NACE MR0175</option>
+          </select>
+        </SettingsRow>
+      </div>
+    </>
+  );
+}
+
 // =================== Screen 7 · [11] REALTIME SCAN ===================
 // =================== AnimatedAscan — 실시간 A-scan 파형 (재사용 컴포넌트) ===================
 // requestAnimationFrame 기반 ~30 fps 갱신. 초음파 echo packet (damped sinusoid) 합성으로 NDT 진정성 확보.
