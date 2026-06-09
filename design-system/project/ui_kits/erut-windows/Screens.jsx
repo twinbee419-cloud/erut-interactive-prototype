@@ -223,7 +223,12 @@ window.MOCK = {
     if ([41, 42, 47, 48].includes(num)) return { ch: num, sn: "", status: "empty" };
     return { ch: num, sn: "PXT-2024-" + String(num).padStart(3, "0"), status: "ok" };
   }),
+  // v12.0: 교정 필요 채널 (uncalibrated: 신규 추가 후 미진행 + expired: 180일 초과 만료) — DeviceDetail breathe 셀과 동일 소스
+  uncalibratedChannels: ["ch20", "ch33"],
+  expiredChannels:      ["ch04", "ch09", "ch12"],
 };
+// 공통 접근자 — DeviceDetail / index.html F6 차단 다이얼로그 / DiagCalibHistory 모두 이걸 참조
+window.MOCK.needsCalibrationChannels = [...window.MOCK.uncalibratedChannels, ...window.MOCK.expiredChannels];
 
 // =================== Screen · [0] PROJECT PICKER ===================
 // First screen of the app.
@@ -635,7 +640,10 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   const [selected, setSelected] = $s(focusChannel || "ch01");
   const [focusActive, setFocusActive] = $s(!!focusChannel);
   // v9.35: showAddSensor 폐기 → 풀스크린 ChannelCommissioning 페이지로 라우팅
+  // v12.0: 교정 진입 — 단일(우측 패널) / 일괄(상단 버튼) 두 모드 지원
   const [showCalibration, setShowCalibration] = $s(false);
+  const [calibMode, setCalibMode] = $s("new");          // "new" (단일) | "recalibration" (일괄)
+  const [calibChannels, setCalibChannels] = $s([]);     // recalibration 모드일 때 대상 채널 목록
   const [showDiagnostics, setShowDiagnostics] = $s(false);
   // v9.29 Wave D: 검사 대상 multi-select (array of names). 재클릭 = 토글 해제
   const [selectedTargetSet, setSelectedTargetSet] = $s([]);
@@ -673,8 +681,9 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
   // v9.17: 결함 검출 채널 — PIPE 4건 + VESSEL 2건 (mockup 다양성)
   const DEFECT_CHANNELS = { 4: "critical", 7: "major", 12: "minor", 18: "minor", 51: "major", 56: "minor" };
   // v9.30: 교정 상태 — 미교정(신규 추가 후 미진행) + 만료(주기 초과) 채널은 major 컬러 breathe
-  const UNCALIBRATED_CHANNELS = ["ch20", "ch33"]; // 추가만 됨 / 교정 미진행
-  const EXPIRED_CHANNELS = ["ch04", "ch09", "ch12"]; // 6개월 초과 — 재교정 필요
+  // v12.0: window.MOCK으로 통합 — F6 차단 다이얼로그·일괄 재교정과 동일 소스
+  const UNCALIBRATED_CHANNELS = window.MOCK.uncalibratedChannels;
+  const EXPIRED_CHANNELS = window.MOCK.expiredChannels;
   const cells = [];
   for (let i = 1; i <= 64; i++) {
     const id = "ch" + String(i).padStart(2, "0");
@@ -816,7 +825,24 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
             <h3 style={{ font: "700 15px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>64CH 채널 상태</h3>
             <span style={{ font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>더블 클릭 → 우측 패널 A-scan 확대</span>
           </div>
-          <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => onAddSensor && onAddSensor()}>+ 센서 추가</button>
+          {/* v12.0: '+ 센서 추가' 좌측 — 교정 필요 채널 일괄 재교정 진입 (N > 0 시에만 노출) */}
+          <div style={{ display: "flex", gap: 8 }}>
+            {(() => {
+              const needsCalibChannels = cells.filter(c => c.calibrationStatus === "uncalibrated" || c.calibrationStatus === "expired");
+              if (needsCalibChannels.length === 0) return null;
+              return (
+                <button
+                  className="erut-btn erut-btn--default erut-btn--sm"
+                  style={{ color: "var(--system-caution)", borderColor: "var(--system-caution)" }}
+                  onClick={() => { setCalibMode("recalibration"); setCalibChannels(needsCalibChannels.map(c => c.id)); setShowCalibration(true); }}
+                  title="만료(180일 초과) 또는 미진행 채널을 일괄 재교정"
+                >
+                  교정 필요 {needsCalibChannels.length} · 일괄 재교정
+                </button>
+              );
+            })()}
+            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => onAddSensor && onAddSensor()}>+ 센서 추가</button>
+          </div>
         </div>
         <div style={{ display: "flex", justifyContent: "flex-start", gap: 10, marginBottom: 8, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-success)" }}/>정상 {okCount}</span>
@@ -913,15 +939,37 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
           </div>
 
           {/* 액션 버튼 (사이드패널 하단) */}
-          <button className="erut-btn erut-btn--default erut-btn--m" style={{ width: "100%", marginTop: 12 }} onClick={() => onOpenGate && onOpenGate(selected)}>[3] Gate 설정 →</button>
+          {/* v12.0: 선택 채널 교정 진행 — breathe 채널 선택 시 emphasis, 그 외 subtle */}
+          {(() => {
+            const selectedCell = cells.find(c => c.id === selected);
+            const needsCalib = selectedCell && (selectedCell.calibrationStatus === "uncalibrated" || selectedCell.calibrationStatus === "expired");
+            return (
+              <button
+                className={"erut-btn " + (needsCalib ? "erut-btn--emphasis" : "erut-btn--subtle") + " erut-btn--m"}
+                style={{ width: "100%", marginTop: 12, ...(needsCalib ? { background: "var(--system-caution)", borderColor: "var(--system-caution)" } : {}) }}
+                onClick={() => { setCalibMode("new"); setCalibChannels([selected]); setShowCalibration(true); }}
+                title={needsCalib ? "이 채널의 교정 진행이 필요합니다" : "이 채널 재교정 진행"}
+              >
+                {needsCalib ? "교정 필요 — " : ""}이 채널 교정 진행
+              </button>
+            );
+          })()}
+          <button className="erut-btn erut-btn--default erut-btn--m" style={{ width: "100%", marginTop: 8 }} onClick={() => onOpenGate && onOpenGate(selected)}>[3] Gate 설정 →</button>
           <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%", marginTop: 8 }} onClick={() => onStartMeasure && onStartMeasure(selected)}>[11] 실시간 전체 화면 ↗</button>
         </div>
       </div>
 
       {/* v9.35 Wave E+F: 센서 추가 + 교정을 한 화면으로 통합 → 풀스크린 [4-3-1] ChannelCommissioning 페이지로 라우팅 */}
 
-      {/* v8.10: 등록 후 교정 마법사 자동 트리거 */}
-      {showCalibration && <window.CalibrationWizard onClose={() => setShowCalibration(false)}/>}
+      {/* v12.0: 교정 마법사 — 단일(우측 패널) / 일괄(상단 "교정 필요 N · 일괄 재교정") 모드 분기 */}
+      {showCalibration && (
+        <window.CalibrationWizard
+          mode={calibMode}
+          channelList={calibChannels}
+          onClose={() => setShowCalibration(false)}
+          onComplete={() => setShowCalibration(false)}
+        />
+      )}
 
       {/* v8.8: 진단 / 로그 모달 */}
       {showDiagnostics && <window.DiagnosticsModal onClose={() => setShowDiagnostics(false)}/>}
@@ -1389,6 +1437,51 @@ function DiagCalibHistory() {
     </>
   );
 }
+
+// v12.0: F6 측정 시작 차단 다이얼로그 — 미교정/만료 채널 존재 시 noop measurement 방지
+// 기본 액션: 일괄 재교정 (NDT 안전 보증 default). "그대로 측정 시작"은 명시 선택 시에만.
+window.CalibrationStartDialog = function CalibrationStartDialog({ uncalibratedIds, expiredIds, onRecalibrateAll, onContinueAnyway, onClose }) {
+  const total = (uncalibratedIds?.length || 0) + (expiredIds?.length || 0);
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: 560, background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderBottom: "1px solid var(--border-medium)", background: "var(--system-caution)" }}>
+          <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>측정 시작 — 교정 확인 필요</div>
+          <button onClick={onClose} aria-label="닫기" style={{ background: "transparent", border: "none", color: "var(--content-inverse)", cursor: "pointer", padding: 4, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><window.EIcon.Close size={14}/></button>
+        </div>
+        <div style={{ padding: "18px 22px", display: "flex", flexDirection: "column", gap: 14 }}>
+          <p style={{ font: "400 13px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>
+            <strong style={{ fontWeight: 700, color: "var(--system-caution)" }}>{total}개</strong> 채널이 교정되지 않았거나 만료(180일 초과)되었습니다.<br/>
+            교정되지 않은 채널의 측정 데이터는 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>신뢰성을 보장할 수 없습니다</strong>.
+          </p>
+          <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 6, font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em" }}>
+            {uncalibratedIds?.length > 0 && (
+              <div>
+                <span style={{ color: "var(--content-low)" }}>미교정 (신규 추가 후 미진행)</span>{" "}
+                <strong style={{ color: "var(--content-high)" }}>{uncalibratedIds.length}개</strong>
+                <span style={{ color: "var(--content-medium)", marginLeft: 8 }}>· {uncalibratedIds.map(c => c.toUpperCase().replace("CH", "CH ")).join(" · ")}</span>
+              </div>
+            )}
+            {expiredIds?.length > 0 && (
+              <div>
+                <span style={{ color: "var(--content-low)" }}>만료 (180일 초과)</span>{" "}
+                <strong style={{ color: "var(--content-high)" }}>{expiredIds.length}개</strong>
+                <span style={{ color: "var(--content-medium)", marginLeft: 8 }}>· {expiredIds.map(c => c.toUpperCase().replace("CH", "CH ")).join(" · ")}</span>
+              </div>
+            )}
+          </div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
+          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose}>취소</button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onContinueAnyway}>그대로 측정 시작</button>
+            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onRecalibrateAll} autoFocus>일괄 재교정 ({total}ch)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // v11.0: 진단/로그 모달 공통 — 필터바 + 시계열 테이블 + CSV export
 // 3개 탭(에러·연결·측정)이 columns/rows/filters props만 다르게 재사용. 행 클릭 시 인라인 펼침(확장 row)으로 depth 유지.
