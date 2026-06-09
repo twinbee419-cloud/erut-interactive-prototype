@@ -835,9 +835,9 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
                   className="erut-btn erut-btn--default erut-btn--sm"
                   style={{ color: "var(--system-caution)", borderColor: "var(--system-caution)" }}
                   onClick={() => { setCalibMode("recalibration"); setCalibChannels(needsCalibChannels.map(c => c.id)); setShowCalibration(true); }}
-                  title="만료(180일 초과) 또는 미진행 채널을 일괄 재교정"
+                  title={`만료(180일 초과) 또는 미진행 ${needsCalibChannels.length}채널 일괄 재교정`}
                 >
-                  교정 필요 {needsCalibChannels.length} · 일괄 재교정
+                  일괄 재교정
                 </button>
               );
             })()}
@@ -948,9 +948,9 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
                 className={"erut-btn " + (needsCalib ? "erut-btn--emphasis" : "erut-btn--subtle") + " erut-btn--m"}
                 style={{ width: "100%", marginTop: 12, ...(needsCalib ? { background: "var(--system-caution)", borderColor: "var(--system-caution)" } : {}) }}
                 onClick={() => { setCalibMode("new"); setCalibChannels([selected]); setShowCalibration(true); }}
-                title={needsCalib ? "이 채널의 교정 진행이 필요합니다" : "이 채널 재교정 진행"}
+                title={needsCalib ? "이 채널 교정 필요 — 마법사로 진행" : "이 채널 재교정 진행"}
               >
-                {needsCalib ? "교정 필요 — " : ""}이 채널 교정 진행
+                교정 마법사
               </button>
             );
           })()}
