@@ -1004,6 +1004,36 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const [zero, setZero]       = $s(pre.zero     || { value: null, unit: "μs" });
   const [gain, setGain]       = $s(pre.gain     || { value: 28,   unit: "dB" });
 
+  // v15.0: 참조 블록 — 영점·음속 측정의 기준 시편. 표준 블록 선택 시 두께 자동 prefill.
+  // 식: 음속(m/s) = 2 × 두께(mm) × 1000 / ToF(μs) — 왕복 시간 보정
+  const STANDARD_BLOCKS = {
+    "iiw-v1": { label: "IIW V1 (25 mm · 탄소강)",   thickness: 25.0 },
+    "iiw-v2": { label: "IIW V2 (12.5 mm · 탄소강)", thickness: 12.5 },
+    "stb-a1": { label: "STB-A1 (25 mm · 탄소강)",   thickness: 25.0 },
+    "stb-a2": { label: "STB-A2 (12.5 mm · 탄소강)", thickness: 12.5 },
+    "custom": { label: "사용자 정의",                thickness: null },
+  };
+  const VEL_STANDARDS = { "탄소강": 5920, "SS 304": 5790, "SS 316L": 5740, "알루미늄": 6320, "티타늄": 6070, "구리": 4660, "Inconel": 5820, "황동": 4430, "주철": 4600 };
+  const [refBlock, setRefBlockRaw] = $s(pre.refBlock || "iiw-v1");
+  const [refThickness, setRefThickness] = $s(pre.refThickness != null ? pre.refThickness : 25.0);
+  // 표준 블록 선택 시 두께 자동 채움 (사용자 정의 선택 시 유지)
+  const setRefBlock = (key) => {
+    setRefBlockRaw(key);
+    const t = STANDARD_BLOCKS[key]?.thickness;
+    if (t != null) setRefThickness(t);
+  };
+  const canMeasureWithRef = refThickness > 0;
+  // 측정값 → 가장 가까운 표준 음속과 비교
+  const velHint = (() => {
+    if (velocity.value == null) return null;
+    const closest = Object.entries(VEL_STANDARDS)
+      .map(([name, std]) => ({ name, std, pct: Math.abs((velocity.value - std) / std) * 100 }))
+      .sort((a, b) => a.pct - b.pct)[0];
+    if (closest.pct <= 1) return { tone: "var(--system-success)", text: `✓ ${closest.name} 표준 (${closest.std} m/s ±1%)` };
+    if (closest.pct <= 3) return { tone: "var(--system-info)", text: `~ ${closest.name} 근사 (${closest.std} m/s ±${closest.pct.toFixed(1)}%)` };
+    return { tone: "var(--system-caution)", text: `⚠ 표준 음속과 ±3% 초과 — 블록 재확인 권장` };
+  })();
+
   // ───── Gate state — edit 모드 시 기존 Gate 값 prefill ─────
   const [gateA, setGateA] = $s(pre.gateA || { active: false, start: 0, width: 0, threshold: 50, mode: "Peak" });
   const [gateB, setGateB] = $s(pre.gateB || { active: false, start: 0, width: 0, threshold: 50, mode: "ToF" });
@@ -1034,9 +1064,21 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const canAddStart = requiredDone;
 
   // ───── mock 측정 동작 ─────
+  // v15.0: 음속·영점은 참조 블록 두께 기반 계산. 두께 미입력 시 disabled.
+  // 식: 음속(m/s) = 2 × 두께(mm) × 1000 / ToF(μs)
   const measureWedge = () => setWedge({ value: 27, unit: "°" });
-  const measureVel   = () => setVel({ value: 5920, unit: "m/s" });
-  const measureZero  = () => setZero({ value: 0.0, unit: "μs" });
+  const measureVel   = () => {
+    if (!canMeasureWithRef) return;
+    // mock ToF — 탄소강 음속(5920) 기준 두께/ToF 환산 + ±0.5% 잡음 추가
+    const tofIdeal = (2 * refThickness * 1000) / 5920;
+    const tof = tofIdeal * (1 + (Math.random() - 0.5) * 0.01);
+    const vel = Math.round((2 * refThickness * 1000) / tof);
+    setVel({ value: vel, unit: "m/s" });
+  };
+  const measureZero  = () => {
+    if (!canMeasureWithRef) return;
+    setZero({ value: 2.13, unit: "μs" });
+  };
   const measureSpec  = () => setSpecimen(s => ({ ...s, measured: 9.8 }));
   const adjustGain   = (delta) => setGain(g => ({ ...g, value: Math.max(0, Math.min(80, g.value + delta)) }));
 
@@ -1044,8 +1086,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const specError = specimen.measured != null ? (specimen.measured - specimen.nominal).toFixed(1) : null;
   const specOk = specError != null && Math.abs(parseFloat(specError)) <= 0.5;
 
-  // 교정 cell 컴포넌트
-  function CalibCell({ label, state, onMeasure, isGain }) {
+  // 교정 cell 컴포넌트 — v15.0: disabled + hint(표준 비교) prop 지원
+  function CalibCell({ label, state, onMeasure, isGain, disabled, hint }) {
     const filled = state.value != null;
     return (
       <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
@@ -1063,9 +1105,26 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
               <button className="erut-btn erut-btn--default erut-btn--sm" style={{ minWidth: 28, padding: "4px 8px" }} onClick={() => adjustGain(+1)}>+1</button>
             </div>
           ) : (
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onMeasure}>{filled ? "재측정" : "측정"}</button>
+            <button
+              className={"erut-btn erut-btn--sm " + (disabled ? "erut-btn--disabled" : "erut-btn--default")}
+              disabled={disabled}
+              onClick={onMeasure}
+              title={disabled ? "참조 블록 두께를 먼저 입력하세요" : undefined}
+            >
+              {filled ? "재측정" : "측정"}
+            </button>
           )}
         </div>
+        {hint && (
+          <div style={{ marginTop: 6, font: "700 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: hint.tone }}>
+            {hint.text}
+          </div>
+        )}
+        {!isGain && disabled && !filled && (
+          <div style={{ marginTop: 6, font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+            ◯ 참조 블록 두께 입력 필요
+          </div>
+        )}
       </div>
     );
   }
@@ -1284,13 +1343,35 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
 
         {/* v14.1: 교정 측정 + Gate 설정 2열 배치 (가로로 나란히) */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-          {/* 교정 측정 (내부 2×2 grid 유지) */}
+          {/* 교정 측정 (내부 2×2 grid 유지) — v15.0: 상단에 참조 블록 카드 추가 */}
           <div>
             <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 8 }}>교정 측정</div>
+            {/* v15.0 참조 블록 — 영점·음속 측정의 기준 시편 */}
+            <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-emphasis)", padding: "10px 12px", marginBottom: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+                <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>참조 블록</span>
+                <span style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>영점·음속 기준 시편</span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>블록 종류</div>
+                  <select className="erut-field" value={refBlock} onChange={(e) => setRefBlock(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
+                    {Object.entries(STANDARD_BLOCKS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>두께 (mm) <span style={{ color: "var(--system-error)" }}>*</span></div>
+                  <input className="erut-field" type="number" step="0.1" value={refThickness} onChange={(e) => { setRefBlockRaw("custom"); setRefThickness(parseFloat(e.target.value) || 0); }} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                </div>
+              </div>
+              <div style={{ marginTop: 6, font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+                음속 = 2 × 두께(mm) × 1000 / ToF(μs). 표준 블록 선택 시 두께 자동 채움.
+              </div>
+            </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <CalibCell label="Wedge 각도"   state={wedge}    onMeasure={measureWedge}/>
-              <CalibCell label="음속"         state={velocity} onMeasure={measureVel}/>
-              <CalibCell label="영점 (Zero)"  state={zero}     onMeasure={measureZero}/>
+              <CalibCell label="음속"         state={velocity} onMeasure={measureVel}  disabled={!canMeasureWithRef} hint={velHint}/>
+              <CalibCell label="영점 (Zero)"  state={zero}     onMeasure={measureZero} disabled={!canMeasureWithRef}/>
               <CalibCell label="Gain"         state={gain}     isGain={true}/>
             </div>
           </div>
