@@ -226,6 +226,14 @@ window.MOCK = {
   // v12.0: 교정 필요 채널 (uncalibrated: 신규 추가 후 미진행 + expired: 180일 초과 만료) — DeviceDetail breathe 셀과 동일 소스
   uncalibratedChannels: ["ch20", "ch33"],
   expiredChannels:      ["ch04", "ch09", "ch12"],
+  // v13.0: 마지막 교정일 — 재교정 마법사 좌측 채널 카드에 표시. uncalibrated 채널은 null
+  lastCalibrationDate: {
+    ch04: "2025-11-20",  // 191일 전 (오늘 2026-06-10 기준 — 가장 오래됨)
+    ch09: "2025-11-25",  // 186일 전
+    ch12: "2025-12-10",  // 171일 전
+    ch20: null,          // 미교정 (신규 추가 후 미진행)
+    ch33: null,          // 미교정
+  },
 };
 // 공통 접근자 — DeviceDetail / index.html F6 차단 다이얼로그 / DiagCalibHistory 모두 이걸 참조
 window.MOCK.needsCalibrationChannels = [...window.MOCK.uncalibratedChannels, ...window.MOCK.expiredChannels];
@@ -2058,16 +2066,47 @@ window.AnimatedAscan = function AnimatedAscan({
 // ───── Calibration Wizard Modal ([4-3-1]) ─────
 // v9.18 (NDT 1.4): mode "new" (신규 등록 — 기존) / "recalibration" (재교정 — 다채널 일괄)
 window.CalibrationWizard = function CalibrationWizard({ onClose, mode = "new", channelList = [], onComplete }) {
-  const [step, setStep] = $s(1); // 1: 영점, 2: 음속, 3: 감도
-  const [chIdx, setChIdx] = $s(0); // 재교정 모드 — 현재 진행 중인 채널 인덱스
+  const isRecal = mode === "recalibration";
+  // v13.0: 재교정 모드 — 채널 정렬 (미교정 먼저 → 만료 경과일 내림차순). new 모드는 단일.
+  const sortedChannels = isRecal ? (() => {
+    const dates = (window.MOCK && window.MOCK.lastCalibrationDate) || {};
+    const today = new Date("2026-06-10");
+    const daysAgo = (id) => {
+      const d = dates[id];
+      if (!d) return Infinity; // 미교정 = 최우선
+      return Math.floor((today - new Date(d)) / 86400000);
+    };
+    return [...channelList].sort((a, b) => daysAgo(b) - daysAgo(a));
+  })() : channelList;
+
+  // v13.0: 채널별 state 분리 보관 — 자유 점프 후 복귀 시 step·완료 상태 유지
+  const initialChStates = isRecal
+    ? Object.fromEntries(sortedChannels.map(id => [id, { step: 1, completed: [false, false, false] }]))
+    : { CH09: { step: 1, completed: [false, false, false] } };
+  const [chStates, setChStates] = $s(initialChStates);
+  const [focusCh, setFocusCh] = $s(isRecal ? sortedChannels[0] : "CH09");
+  const focusState = chStates[focusCh] || { step: 1, completed: [false, false, false] };
+  const step = focusState.step;
+  const setStep = (n) => setChStates(s => ({ ...s, [focusCh]: { ...s[focusCh], step: typeof n === "function" ? n(s[focusCh].step) : n } }));
+  const markStepComplete = (stepN) => setChStates(s => {
+    const c = [...s[focusCh].completed];
+    c[stepN - 1] = true;
+    return { ...s, [focusCh]: { ...s[focusCh], completed: c } };
+  });
+  const isChannelCompleted = (id) => (chStates[id]?.completed || []).every(Boolean);
+  const isChannelStarted   = (id) => (chStates[id]?.completed || []).some(Boolean) || (chStates[id]?.step || 1) > 1;
+
   const [refBlock, setRefBlock] = $s("IIW V1 (25 mm)");
   const [refThickness, setRefThickness] = $s(25.0);
   const [refMaterial, setRefMaterial] = $s("탄소강 (S355)");
   const [repeats, setRepeats] = $s(5);
   const [batch, setBatch] = $s(true);
-  const isRecal = mode === "recalibration";
-  const totalCh = isRecal ? channelList.length : 1;
-  const currentCh = isRecal ? channelList[chIdx] : "CH 09";
+  // v13.0: 부분 완료 confirm 다이얼로그
+  const [showPartialConfirm, setShowPartialConfirm] = $s(false);
+
+  const totalCh = isRecal ? sortedChannels.length : 1;
+  const completedCount = isRecal ? sortedChannels.filter(isChannelCompleted).length : 0;
+  const currentCh = focusCh;
 
   const stepInfo = {
     1: { title: "영점 (Zero / Wedge Delay)",  desc: "참조 블록(IIW V1·V2 또는 STB-A1·A2)에 탐촉자를 접촉하고 [측정 시작] 클릭. 후면 에코의 ToF를 기준으로 wedge delay 자동 계산." },
@@ -2078,14 +2117,14 @@ window.CalibrationWizard = function CalibrationWizard({ onClose, mode = "new", c
   return (
     <div className="erut-modal__backdrop" onClick={onClose} style={{ background: "rgba(10,28,60,0.15)" }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 1100, maxHeight: 760, background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
-        {/* v8.8: 헤더 — titlebar 컬러 통일 */}
+        {/* v8.8: 헤더 — titlebar 컬러 통일. v13.0: 재교정 헤더에 'N/M 완료' 카운터 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid var(--border-medium)", background: "var(--content-medium)" }}>
           <div>
             <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>
-              {isRecal ? `정기 재교정 — ${totalCh}채널 (${chIdx + 1}/${totalCh} 진행 중)` : "탐촉자 교정 마법사 — CH 09 / 4"}
+              {isRecal ? `정기 재교정 — ${completedCount}/${totalCh} 완료` : "탐촉자 교정 마법사 — CH 09 / 4"}
             </div>
             <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "rgba(255,255,255,0.7)", marginTop: 4 }}>
-              {isRecal ? `현재 ${currentCh.toUpperCase()} · 6개월 이상 경과 채널 일괄 재교정` : "PXT-2024-009 · 5 MHz · 신규 등록 후 필수 교정"}
+              {isRecal ? `현재 작업 중 — ${currentCh.toUpperCase().replace("CH","CH ")} · 좌측 카드 클릭으로 자유 이동 가능` : "PXT-2024-009 · 5 MHz · 신규 등록 후 필수 교정"}
             </div>
           </div>
           <button onClick={onClose} aria-label="닫기" style={{ background: "transparent", border: "none", color: "var(--content-inverse)", cursor: "pointer", padding: 4, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><window.EIcon.Close size={14}/></button>
@@ -2123,9 +2162,82 @@ window.CalibrationWizard = function CalibrationWizard({ onClose, mode = "new", c
           })}
         </div>
 
-        {/* 본문 */}
-        <div style={{ flex: 1, padding: "20px 24px", display: "grid", gridTemplateColumns: "1fr 360px", gap: 20, overflowY: "auto" }}>
-          {/* 좌측: 참조 블록 + A-scan */}
+        {/* 본문 — v13.0 recalibration: 3 col (220px 채널 카드 + 1fr A-scan + 320px 참조 블록) / new: 기존 2 col */}
+        <div style={{ flex: 1, padding: "20px 24px", display: "grid", gridTemplateColumns: isRecal ? "220px 1fr 320px" : "1fr 360px", gap: 20, overflowY: "auto" }}>
+
+          {/* v13.0: 재교정 모드 좌측 사이드바 — 채널 카드 리스트 (점프 가능, 마지막 교정일 표시) */}
+          {isRecal && (() => {
+            const dates = (window.MOCK && window.MOCK.lastCalibrationDate) || {};
+            const today = new Date("2026-06-10");
+            const daysAgo = (id) => {
+              const d = dates[id];
+              if (!d) return null;
+              return Math.floor((today - new Date(d)) / 86400000);
+            };
+            const stepIcons = (completed, currentStep) => {
+              const names = ["영점", "음속", "감도"];
+              return names.map((n, i) => {
+                const done = completed[i];
+                const cur = currentStep === i + 1;
+                return (
+                  <span key={n} style={{ color: done ? "var(--system-success)" : cur ? "var(--content-emphasis)" : "var(--content-low)" }}>
+                    {n} {done ? "✓" : cur ? "▸" : "–"}
+                  </span>
+                );
+              });
+            };
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowY: "auto", minHeight: 0 }}>
+                <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "0 2px 6px", borderBottom: "1px solid var(--border-low)" }}>교정 대상 {totalCh}채널</div>
+                {sortedChannels.map(id => {
+                  const st = chStates[id] || { step: 1, completed: [false, false, false] };
+                  const done = isChannelCompleted(id);
+                  const started = isChannelStarted(id);
+                  const isFocus = id === focusCh;
+                  const da = daysAgo(id);
+                  // 상태 분기
+                  let badgeLabel, badgeBg, borderColor;
+                  if (done) { badgeLabel = "완료"; badgeBg = "var(--system-success)"; borderColor = "var(--system-success)"; }
+                  else if (started) { badgeLabel = "진행중"; badgeBg = "var(--brand-primary)"; borderColor = "var(--border-emphasis)"; }
+                  else { badgeLabel = "대기"; badgeBg = "var(--surface-disabled)"; borderColor = "var(--border-medium)"; }
+                  return (
+                    <div
+                      key={id}
+                      onClick={() => setFocusCh(id)}
+                      style={{
+                        background: isFocus ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "var(--surface-base)",
+                        border: "1px solid " + borderColor,
+                        borderLeft: isFocus ? "3px solid var(--brand-primary)" : "1px solid " + borderColor,
+                        padding: "8px 10px",
+                        cursor: "pointer",
+                        transition: "background 120ms ease",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                        <span style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: isFocus ? "var(--content-emphasis)" : "var(--content-high)" }}>
+                          {id.toUpperCase().replace("CH", "CH ")}
+                        </span>
+                        <span style={{ font: "700 9px/1 var(--font-kr)", padding: "2px 6px", background: badgeBg, color: "var(--on-primary)" }}>{badgeLabel}</span>
+                      </div>
+                      <div style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>
+                        {da === null ? "마지막 교정 — 없음" : `마지막 교정 ${da}일 전`}
+                      </div>
+                      {started && !done && (
+                        <div style={{ font: "700 9px/1 var(--font-kr)", letterSpacing: ".02em", marginBottom: 3, color: "var(--content-medium)" }}>
+                          Step {st.step}/3
+                        </div>
+                      )}
+                      <div style={{ display: "flex", gap: 6, font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em" }}>
+                        {stepIcons(st.completed, st.step)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {/* 좌측(new 모드) / 중앙(recal): 참조 블록 + A-scan */}
           <div>
             <div style={{ marginBottom: 12 }}>
               <div style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 6 }}>Step {step}. {stepInfo[step].title} 측정</div>
@@ -2201,24 +2313,85 @@ window.CalibrationWizard = function CalibrationWizard({ onClose, mode = "new", c
           </div>
         </div>
 
-        {/* 푸터 */}
+        {/* 푸터 — v13.0 recalibration: 다음 step/다음 채널/전체 완료 로직 + 부분 완료 confirm */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 24px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
           <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-            {isRecal ? `${currentCh.toUpperCase()} (${chIdx + 1}/${totalCh}) · ${stepInfo[step].title.split(" ")[0]} 진행 중` : `CH 09 / 4 채널 · ${stepInfo[step].title.split(" ")[0]} 측정 완료 후 ${step < 3 ? ["", "음속", "감도"][step] : "다음 채널"} 단계로 진행`}
+            {isRecal
+              ? `${currentCh.toUpperCase().replace("CH","CH ")} · ${stepInfo[step].title.split(" ")[0]} 진행 중`
+              : `CH 09 / 4 채널 · ${stepInfo[step].title.split(" ")[0]} 측정 완료 후 ${step < 3 ? ["", "음속", "감도"][step] : "다음 채널"} 단계로 진행`}
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button className={"erut-btn erut-btn--m " + (step === 1 ? "erut-btn--disabled" : "erut-btn--subtle")} disabled={step === 1} onClick={() => setStep(s => Math.max(1, s - 1))}>이전</button>
             <button className="erut-btn erut-btn--default erut-btn--m" onClick={onClose}>{isRecal ? "취소" : "건너뛰기 (CH 차단)"}</button>
-            {step < 3 ? (
+            {isRecal ? (() => {
+              // 재교정 모드 — 다음 step / 채널 완료 후 다음 미완료 채널 / 전체 완료
+              const allCompleted = completedCount === totalCh;
+              if (step < 3) {
+                return (
+                  <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => { markStepComplete(step); setStep(s => s + 1); }}>
+                    다음 — {["", "음속", "감도"][step]}
+                  </button>
+                );
+              }
+              // step === 3: 채널 완료 또는 전체 완료
+              // 다음 미완료 채널 찾기 (현재 focus 다음부터, 없으면 처음부터)
+              const startIdx = sortedChannels.indexOf(focusCh);
+              const nextIncomplete = sortedChannels.find((id, i) => i > startIdx && !isChannelCompleted(id))
+                                  || sortedChannels.find((id) => id !== focusCh && !isChannelCompleted(id));
+              if (nextIncomplete) {
+                return (
+                  <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => { markStepComplete(3); setFocusCh(nextIncomplete); }}>
+                    이 채널 완료 → {nextIncomplete.toUpperCase().replace("CH","CH ")}
+                  </button>
+                );
+              }
+              return (
+                <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => { markStepComplete(3); if (onComplete) onComplete(); onClose(); }}>
+                  전체 재교정 완료 → 측정 시작
+                </button>
+              );
+            })() : step < 3 ? (
               <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => setStep(s => s + 1)}>다음 — {["", "음속", "감도"][step]}</button>
-            ) : isRecal && chIdx < totalCh - 1 ? (
-              <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => { setChIdx(i => i + 1); setStep(1); }}>다음 채널 — {channelList[chIdx + 1].toUpperCase()}</button>
             ) : (
-              <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => { if (isRecal && onComplete) onComplete(); onClose(); }}>{isRecal ? "전체 재교정 완료 → 측정 시작" : "교정 완료"}</button>
+              <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => { if (onComplete) onComplete(); onClose(); }}>교정 완료</button>
+            )}
+            {/* v13.0: 재교정 — 1개 이상 완료 시 '전체 완료' 별도 버튼. 부분 완료 시 confirm */}
+            {isRecal && completedCount >= 1 && completedCount < totalCh && (
+              <button
+                className="erut-btn erut-btn--default erut-btn--m"
+                style={{ color: "var(--system-caution)", borderColor: "var(--system-caution)" }}
+                onClick={() => setShowPartialConfirm(true)}
+                title={`${completedCount}/${totalCh} 완료 — 나머지 미완료 채널이 있습니다`}
+              >
+                전체 완료 ({completedCount}/{totalCh})
+              </button>
             )}
           </div>
         </div>
       </div>
+
+      {/* v13.0: 부분 완료 confirm 다이얼로그 */}
+      {showPartialConfirm && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={(e) => { e.stopPropagation(); setShowPartialConfirm(false); }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: 460, background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderBottom: "1px solid var(--border-medium)", background: "var(--system-caution)" }}>
+              <div style={{ font: "700 15px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>교정 미완료 채널 확인</div>
+              <button onClick={() => setShowPartialConfirm(false)} aria-label="닫기" style={{ background: "transparent", border: "none", color: "var(--content-inverse)", cursor: "pointer", padding: 4, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><window.EIcon.Close size={14}/></button>
+            </div>
+            <div style={{ padding: "18px 22px", font: "400 13px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>
+              교정이 완료되지 않은 탐촉자가 있습니다.<br/>
+              계속 진행하시겠습니까?
+              <div style={{ marginTop: 10, font: "400 11px/1.4 var(--font-kr)", color: "var(--content-low)" }}>
+                미완료 채널 {totalCh - completedCount}개 · 완료 {completedCount}/{totalCh}
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, padding: "12px 18px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
+              <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={() => setShowPartialConfirm(false)}>닫기</button>
+              <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => { setShowPartialConfirm(false); if (onComplete) onComplete(); onClose(); }}>확인</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
