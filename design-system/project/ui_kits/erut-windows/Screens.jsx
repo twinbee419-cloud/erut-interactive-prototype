@@ -2243,11 +2243,6 @@ window.CalibrationWizard = function CalibrationWizard({ onClose, mode = "new", c
                       <div style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>
                         {da === null ? "마지막 교정 — 없음" : `마지막 교정 ${da}일 전`}
                       </div>
-                      {started && !done && (
-                        <div style={{ font: "700 9px/1 var(--font-kr)", letterSpacing: ".02em", marginBottom: 3, color: "var(--content-medium)" }}>
-                          Step {st.step}/3
-                        </div>
-                      )}
                       <div style={{ display: "flex", gap: 6, font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em" }}>
                         {stepIcons(st.completed, st.step)}
                       </div>
