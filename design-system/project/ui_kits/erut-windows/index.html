@@ -49,7 +49,7 @@ const TITLE_BY_SCREEN = {
 };
 
 // Screens where the device is "connected" (status bar green LEDs)
-const CONNECTED_SCREENS = new Set(["main", "device", "gate", "realtime", "manage", "settings", "report", "history"]);
+const CONNECTED_SCREENS = new Set(["main", "device", "commission", "realtime", "manage", "settings", "report", "history"]);
 
 function App() {
   const [screen, setScreen]                   = useState("project");
@@ -76,6 +76,12 @@ function App() {
   // settings 화면을 떠날 때 초기 sub-view 리셋 (다음 진입 시 list부터)
   useEffect(() => {
     if (screen !== "settings") setSettingsInitialSubView(null);
+  }, [screen]);
+
+  // v14.0: commission 화면 진입 모드 — "new" (센서 추가) / "edit" ([2]에서 이 채널 설정 편집)
+  const [commissionMode, setCommissionMode] = useState("new");
+  useEffect(() => {
+    if (screen !== "commission") setCommissionMode("new");
   }, [screen]);
 
   // v8.5: [6] 검사 대상 관리 진입 모드 (edit | new) — DeviceDetail "+ 검사 대상 추가" → new
@@ -147,12 +153,12 @@ function App() {
     { key: "set",    label: "설정",             icon: <window.EIcon.Setting/> },
   ];
 
-  // v8.5: [1-1] 대시보드 폐기
+  // v8.5: [1-1] 대시보드 폐기. v14.0: [3] Gate 설정 폐기 → [4-3-1] commission 통합
   const navItems = [
     { id: "project",   label: "[0] 프로젝트" },
     { id: "main",      label: "[1] 메인" },
     { id: "device",    label: "[2] 장비 상세" },
-    { id: "gate",      label: "[3] Gate 설정" },
+    { id: "commission",label: "[4-3-1] 채널 설정" },
     { id: "settings",  label: "[4] 장비 연결 설정" },
     { id: "manage",    label: "[6] 검사 대상 관리" },
     { id: "realtime",  label: "[11] 실시간" },
@@ -309,16 +315,30 @@ function App() {
             focusChannel={selectedChannel}
             onBack={() => goto("main")}
             onStartMeasure={(channel) => { setSelectedChannel(channel); goto("realtime"); }}
-            onOpenGate={(channel) => { setSelectedChannel(channel); goto("gate"); }}
+            /* v14.0: onOpenGate(=[3] Gate 설정) 폐기 → onEditChannel로 통합. commission(edit 모드)로 진입 */
+            onEditChannel={(channel) => { setSelectedChannel(channel); setCommissionMode("edit"); goto("commission"); }}
             onAddTarget={() => { setManageInitialMode("new"); goto("manage"); }}
             onEditTarget={(name) => { setSelectedTarget(name); setManageInitialMode("edit"); goto("manage"); }}
-            onAddSensor={() => goto("commission")}
+            onAddSensor={() => { setCommissionMode("new"); goto("commission"); }}
           />
         )}
-        {/* v9.35 Wave E+F: 채널 commissioning 풀스크린 페이지 (센서 추가 + 교정 + Gate + 시편 확인) */}
+        {/* v14.0: ChannelCommissioning이 new/edit 두 모드 모두 처리 — [3] GateSetup·CalibrationWizard new 모드 폐기 */}
         {screen === "commission" && (
           <window.ChannelCommissioning
             deviceName="MCuF-001"
+            mode={commissionMode}
+            prefilledChannel={commissionMode === "edit" ? {
+              channel: (selectedChannel || "ch04").replace(/\D/g, ""),
+              serial: "PXT-2024-" + (selectedChannel || "ch04").replace(/\D/g, "").padStart(3, "0"),
+              target: "PIPE-A-204",
+              probeType: "std-5mhz",
+              wedge:    { value: 27,   unit: "°"   },
+              velocity: { value: 5920, unit: "m/s" },
+              zero:     { value: 0.0,  unit: "μs"  },
+              gain:     { value: 28,   unit: "dB"  },
+              gateA: { active: true, start: 2.5,  width: 8.0,  threshold: 80, mode: "Peak" },
+              gateB: { active: true, start: 14.0, width: 10.0, threshold: 60, mode: "ToF"  },
+            } : undefined}
             targets={[
               { name: "PIPE-A-204" },
               { name: "TANK-B-101" },
@@ -327,16 +347,12 @@ function App() {
             onBack={() => goto("device")}
             onAddOnly={() => goto("device")}
             onAddAndStart={() => { setSelectedChannel("ch65"); goto("realtime"); }}
+            onSave={() => goto("device")}
+            onSaveAndMeasure={() => goto("realtime")}
+            onRemove={() => goto("device")}
           />
         )}
-        {screen === "gate" && (
-          <window.GateSetup
-            channel={selectedChannel || "ch04"}
-            onBack={() => goto("device")}
-            onPrevChannel={() => {}}
-            onNextChannel={() => {}}
-          />
-        )}
+        {/* v14.0: screen "gate" 라우팅 폐기 — commission(edit 모드)로 통합 */}
         {screen === "manage" && (
           <window.TargetManage
             targetId={selectedTarget}

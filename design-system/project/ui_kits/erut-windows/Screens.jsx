@@ -642,16 +642,16 @@ window.MainScreen = function MainScreen({ onAddDevice, onOpenDevice, onChangePro
 };
 
 // =================== Screen · [2] DEVICE DETAIL ===================
-window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, onStartMeasure, onOpenGate, onAddTarget, onEditTarget, onAddSensor }) {
+window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, onStartMeasure, onEditChannel, onAddTarget, onEditTarget, onAddSensor }) {
+  // v14.0: onOpenGate → onEditChannel — Gate/교정 분리 폐기, commission(edit 모드) 단일 진입점
   const target = window.MOCK.targets.find(t => t.id === targetId) || window.MOCK.targets[0];
   const sensorMap = Object.fromEntries(window.MOCK.sensors.map(s => [s.id, s]));
   const [selected, setSelected] = $s(focusChannel || "ch01");
   const [focusActive, setFocusActive] = $s(!!focusChannel);
   // v9.35: showAddSensor 폐기 → 풀스크린 ChannelCommissioning 페이지로 라우팅
-  // v12.0: 교정 진입 — 단일(우측 패널) / 일괄(상단 버튼) 두 모드 지원
-  const [showCalibration, setShowCalibration] = $s(false);
-  const [calibMode, setCalibMode] = $s("new");          // "new" (단일) | "recalibration" (일괄)
-  const [calibChannels, setCalibChannels] = $s([]);     // recalibration 모드일 때 대상 채널 목록
+  // v14.0: 단일 채널 교정/Gate 진입 → commission(edit 모드)으로 라우팅. 일괄 재교정만 모달 유지.
+  const [showRecalibration, setShowRecalibration] = $s(false);  // 일괄 재교정 마법사 모달 trigger
+  const [recalibChannels, setRecalibChannels]     = $s([]);
   const [showDiagnostics, setShowDiagnostics] = $s(false);
   // v9.29 Wave D: 검사 대상 multi-select (array of names). 재클릭 = 토글 해제
   const [selectedTargetSet, setSelectedTargetSet] = $s([]);
@@ -842,7 +842,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
                 <button
                   className="erut-btn erut-btn--default erut-btn--sm"
                   style={{ color: "var(--system-caution)", borderColor: "var(--system-caution)" }}
-                  onClick={() => { setCalibMode("recalibration"); setCalibChannels(needsCalibChannels.map(c => c.id)); setShowCalibration(true); }}
+                  onClick={() => { setRecalibChannels(needsCalibChannels.map(c => c.id)); setShowRecalibration(true); }}
                   title={`만료(180일 초과) 또는 미진행 ${needsCalibChannels.length}채널 일괄 재교정`}
                 >
                   일괄 재교정
@@ -946,36 +946,34 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
             영점 정상 · 마지막 측정 {cur.age}
           </div>
 
-          {/* 액션 버튼 (사이드패널 하단) */}
-          {/* v12.0: 선택 채널 교정 진행 — breathe 채널 선택 시 emphasis, 그 외 subtle */}
+          {/* 액션 버튼 (사이드패널 하단) — v14.0: 교정/Gate 통합 → 'Gain·Gate·교정 통합 편집' 단일 진입점 */}
           {(() => {
             const selectedCell = cells.find(c => c.id === selected);
             const needsCalib = selectedCell && (selectedCell.calibrationStatus === "uncalibrated" || selectedCell.calibrationStatus === "expired");
             return (
               <button
-                className={"erut-btn " + (needsCalib ? "erut-btn--emphasis" : "erut-btn--subtle") + " erut-btn--m"}
+                className={"erut-btn " + (needsCalib ? "erut-btn--emphasis" : "erut-btn--default") + " erut-btn--m"}
                 style={{ width: "100%", marginTop: 12, ...(needsCalib ? { background: "var(--system-caution)", borderColor: "var(--system-caution)" } : {}) }}
-                onClick={() => { setCalibMode("new"); setCalibChannels([selected]); setShowCalibration(true); }}
-                title={needsCalib ? "이 채널 교정 필요 — 마법사로 진행" : "이 채널 재교정 진행"}
+                onClick={() => onEditChannel && onEditChannel(selected)}
+                title={needsCalib ? "이 채널 교정 필요 — 편집 화면에서 교정·Gate 통합 처리" : "Gain·교정·Gate 통합 편집"}
               >
-                교정 마법사
+                {needsCalib ? "교정 필요 — 이 채널 설정 편집" : "이 채널 설정 편집"}
               </button>
             );
           })()}
-          <button className="erut-btn erut-btn--default erut-btn--m" style={{ width: "100%", marginTop: 8 }} onClick={() => onOpenGate && onOpenGate(selected)}>[3] Gate 설정 →</button>
           <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%", marginTop: 8 }} onClick={() => onStartMeasure && onStartMeasure(selected)}>[11] 실시간 전체 화면 ↗</button>
         </div>
       </div>
 
       {/* v9.35 Wave E+F: 센서 추가 + 교정을 한 화면으로 통합 → 풀스크린 [4-3-1] ChannelCommissioning 페이지로 라우팅 */}
 
-      {/* v12.0: 교정 마법사 — 단일(우측 패널) / 일괄(상단 "교정 필요 N · 일괄 재교정") 모드 분기 */}
-      {showCalibration && (
+      {/* v14.0: 일괄 재교정 마법사 — 다채널 wizard. 단일 채널 교정은 commission(edit 모드)로 통합되어 별도 trigger 폐기 */}
+      {showRecalibration && (
         <window.CalibrationWizard
-          mode={calibMode}
-          channelList={calibChannels}
-          onClose={() => setShowCalibration(false)}
-          onComplete={() => setShowCalibration(false)}
+          mode="recalibration"
+          channelList={recalibChannels}
+          onClose={() => setShowRecalibration(false)}
+          onComplete={() => setShowRecalibration(false)}
         />
       )}
 
@@ -988,22 +986,27 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
 // =================== v9.35 Wave E+F: 채널 Commissioning 풀스크린 페이지 ===================
 // 옵션 C — 채널 추가 + 교정(Wedge/음속/영점/Gain) + Gate + 시편 확인을 한 화면에 통합.
 // 좌측 320px sticky: 채널 정보 + 진행 체크리스트. 우측 메인: A-scan + 4 sections.
-window.ChannelCommissioning = function ChannelCommissioning({ deviceName, targets, onBack, onAddOnly, onAddAndStart }) {
-  // ───── 채널 정보 state ─────
-  const [channel, setChannel] = $s("");
-  const [serial, setSerial] = $s("");
-  const [target, setTarget] = $s("");
-  const [probeType, setProbeType] = $s("");
+window.ChannelCommissioning = function ChannelCommissioning({ deviceName, targets, onBack, onAddOnly, onAddAndStart, mode = "new", prefilledChannel, onSave, onSaveAndMeasure, onRemove }) {
+  // v14.0: mode "new" (신규 추가 — 기존) / "edit" (운영 중 채널 편집 — 신규)
+  // edit 모드: prefilledChannel로 state 초기화, 체크리스트 hide, 좌측 패널 = 채널 메타+마지막 교정+액션, 하단 toolbar = 저장/저장+측정/제거
+  const isEdit = mode === "edit";
+  const pre = prefilledChannel || {};
 
-  // ───── 교정 측정 state (mock — "측정" 버튼 클릭 시 산업 표준값 자동 입력) ─────
-  const [wedge, setWedge]     = $s({ value: null, unit: "°" });        // Wedge 각도
-  const [velocity, setVel]    = $s({ value: null, unit: "m/s" });      // 음속
-  const [zero, setZero]       = $s({ value: null, unit: "μs" });       // 영점
-  const [gain, setGain]       = $s({ value: 28,   unit: "dB" });       // Gain (기본값 28 dB, ±1 조정)
+  // ───── 채널 정보 state — edit 모드 시 prefilledChannel로 초기화 ─────
+  const [channel, setChannel] = $s(pre.channel || "");
+  const [serial, setSerial]   = $s(pre.serial || "");
+  const [target, setTarget]   = $s(pre.target || "");
+  const [probeType, setProbeType] = $s(pre.probeType || "");
 
-  // ───── Gate state (검사자 직접 설정) ─────
-  const [gateA, setGateA] = $s({ active: false, start: 0, width: 0, threshold: 50, mode: "Peak" });
-  const [gateB, setGateB] = $s({ active: false, start: 0, width: 0, threshold: 50, mode: "ToF" });
+  // ───── 교정 측정 state — edit 모드 시 기존 교정값 prefill ─────
+  const [wedge, setWedge]     = $s(pre.wedge    || { value: null, unit: "°" });
+  const [velocity, setVel]    = $s(pre.velocity || { value: null, unit: "m/s" });
+  const [zero, setZero]       = $s(pre.zero     || { value: null, unit: "μs" });
+  const [gain, setGain]       = $s(pre.gain     || { value: 28,   unit: "dB" });
+
+  // ───── Gate state — edit 모드 시 기존 Gate 값 prefill ─────
+  const [gateA, setGateA] = $s(pre.gateA || { active: false, start: 0, width: 0, threshold: 50, mode: "Peak" });
+  const [gateB, setGateB] = $s(pre.gateB || { active: false, start: 0, width: 0, threshold: 50, mode: "ToF" });
   const setA = (k, v) => setGateA(g => ({ ...g, [k]: v }));
   const setB = (k, v) => setGateB(g => ({ ...g, [k]: v }));
 
@@ -1114,84 +1117,133 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
       columnGap: 20,
       rowGap: 14,
     }}>
-      {/* Breadcrumb */}
+      {/* Breadcrumb — v14.0 모드별 라벨 분기 */}
       <window.Breadcrumb
         onBack={onBack}
         items={[
           { label: "메인" },
           { label: "장비 상세 (" + (deviceName || "MCuF-001") + ")" },
-          { label: "센서 채널 추가 + 교정", current: true },
+          { label: isEdit ? `센서 채널 편집 — ${(pre.channel ? "CH " + String(pre.channel).padStart(2, "0") : "")}`.trim() : "센서 채널 추가 + 교정", current: true },
         ]}
         style={{ gridRow: 1, gridColumn: "1 / -1" }}
       />
 
-      {/* ───── 좌측 sticky 패널 (320px) ───── */}
+      {/* ───── 좌측 sticky 패널 (320px) — v14.0: 모드별 분기 ───── */}
       <div style={{ gridRow: 2, gridColumn: 1, background: "var(--surface-subtle-1)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column", overflowY: "auto", minHeight: 0 }}>
-        {/* 채널 정보 */}
-        <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-low)" }}>
-          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 10 }}>채널 정보</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <div>
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>채널 번호 <span style={{ color: "var(--system-error)" }}>*</span></div>
-              <select className="erut-field" value={channel} onChange={(e) => setChannel(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
-                <option value="">선택하세요</option>
-                <option value="65">65 (다음 빈 슬롯)</option>
-                <option value="16">16 (현재 미등록)</option>
-                <option value="manual">직접 입력...</option>
-              </select>
-            </div>
-            <div>
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>Serial 번호 (SN) <span style={{ color: "var(--system-error)" }}>*</span></div>
-              <input className="erut-field" value={serial} onChange={(e) => setSerial(e.target.value)} placeholder="예: PXT-2024-065" style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
-            </div>
-            <div>
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>검사 대상 <span style={{ color: "var(--system-error)" }}>*</span></div>
-              <select className="erut-field" value={target} onChange={(e) => setTarget(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
-                <option value="">선택하세요</option>
-                {(targets || []).map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>탐촉자 종류</div>
-              <select className="erut-field" value={probeType} onChange={(e) => setProbeType(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
-                <option value="">선택하세요</option>
-                <option value="std-5mhz">표준 (5 MHz, ∅ 10mm)</option>
-                <option value="high-10mhz">고주파 (10 MHz, ∅ 6mm)</option>
-                <option value="low-2.25mhz">저주파 (2.25 MHz, ∅ 13mm)</option>
-                <option value="custom">직접 입력...</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* 진행 체크리스트 */}
-        <div style={{ padding: "14px 16px" }}>
-          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 10 }}>진행 체크리스트</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {checklist.map(c => (
-              <div key={c.key} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0" }}>
-                <span style={{
-                  width: 14, height: 14, borderRadius: "50%",
-                  border: c.done ? "none" : "1.5px solid var(--border-medium)",
-                  background: c.done ? "var(--system-success)" : "transparent",
-                  display: "inline-flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0,
-                }}>
-                  {c.done && (
-                    <svg width="9" height="9" viewBox="0 0 9 9"><path d="M1.5 4.5 L3.5 6.5 L7.5 2" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  )}
-                </span>
-                <span style={{ font: c.done ? "700 12px/1.3 var(--font-kr)" : "400 12px/1.3 var(--font-kr)", letterSpacing: ".02em", color: c.done ? "var(--content-high)" : "var(--content-medium)" }}>
-                  {c.label}
-                  {c.optional && <span style={{ color: "var(--content-low)", fontWeight: 400, fontSize: 10, marginLeft: 4 }}>(선택)</span>}
-                </span>
+        {isEdit ? (
+          // ─── EDIT 모드: 채널 메타 (readonly 위주) + 마지막 교정일 + 액션 카드 ───
+          <>
+            <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-low)" }}>
+              <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 10 }}>채널 정보</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em" }}>
+                <div><span style={{ color: "var(--content-low)" }}>채널 번호</span> <strong style={{ color: "var(--content-high)", fontWeight: 700 }}>CH {String(pre.channel || "?").padStart(2, "0")}</strong></div>
+                <div><span style={{ color: "var(--content-low)" }}>Serial (SN)</span> <strong style={{ color: "var(--content-high)", fontWeight: 700 }}>{pre.serial || "—"}</strong></div>
+                <div><span style={{ color: "var(--content-low)" }}>검사 대상</span> <strong style={{ color: "var(--content-emphasis)", fontWeight: 700 }}>{pre.target || "—"}</strong></div>
+                <div><span style={{ color: "var(--content-low)" }}>탐촉자</span> <strong style={{ color: "var(--content-high)", fontWeight: 700 }}>{pre.probeType || "표준 (5 MHz)"}</strong></div>
               </div>
-            ))}
-          </div>
-          <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--border-low)", font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-            ◯ 필수 항목을 모두 완료하면 "추가 + 측정 시작" 버튼이 활성화됩니다.
-          </div>
-        </div>
+            </div>
+            {/* 마지막 교정 / 만료 상태 */}
+            <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-low)" }}>
+              <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 10 }}>교정 상태</div>
+              {(() => {
+                const dates = (window.MOCK && window.MOCK.lastCalibrationDate) || {};
+                const chId = "ch" + String(pre.channel || "").padStart(2, "0");
+                const lastDate = dates[chId];
+                const today = new Date("2026-06-10");
+                const daysAgo = lastDate ? Math.floor((today - new Date(lastDate)) / 86400000) : null;
+                const expired = daysAgo != null && daysAgo > 180;
+                const tone = lastDate == null ? "var(--system-error)" : expired ? "var(--system-caution)" : "var(--system-success)";
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em" }}>
+                    <div><span style={{ color: "var(--content-low)" }}>마지막 교정</span> <strong style={{ color: "var(--content-high)", fontWeight: 700 }}>{lastDate || "— (미교정)"}</strong></div>
+                    {daysAgo != null && <div><span style={{ color: "var(--content-low)" }}>경과</span> <strong style={{ color: tone, fontWeight: 700 }}>{daysAgo}일 전</strong></div>}
+                    {daysAgo != null && (
+                      <div><span style={{ color: "var(--content-low)" }}>만료까지</span> <strong style={{ color: tone, fontWeight: 700 }}>{expired ? `만료 ${daysAgo - 180}일 초과` : `${180 - daysAgo}일 남음`}</strong></div>
+                    )}
+                    {lastDate == null && <div style={{ color: "var(--system-error)", fontWeight: 700 }}>미교정 — 교정 후 측정 가능</div>}
+                  </div>
+                );
+              })()}
+            </div>
+            {/* 액션 */}
+            <div style={{ padding: "14px 16px" }}>
+              <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 10 }}>액션</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <button className="erut-btn erut-btn--default erut-btn--sm" style={{ width: "100%" }} onClick={() => { setWedge({ value: null, unit: "°" }); setVel({ value: null, unit: "m/s" }); setZero({ value: null, unit: "μs" }); }}>교정값 초기화</button>
+                <button className="erut-btn erut-btn--default erut-btn--sm" style={{ width: "100%" }} onClick={() => { setGateA(g => ({ ...g, active: false, start: 0, width: 0 })); setGateB(g => ({ ...g, active: false, start: 0, width: 0 })); }}>Gate 초기화</button>
+                {onRemove && <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ width: "100%", color: "var(--system-error)", borderColor: "var(--system-error)" }} onClick={onRemove}>채널 제거</button>}
+              </div>
+            </div>
+          </>
+        ) : (
+          // ─── NEW 모드: 기존 채널 정보 입력 + 진행 체크리스트 ───
+          <>
+            <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-low)" }}>
+              <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 10 }}>채널 정보</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>채널 번호 <span style={{ color: "var(--system-error)" }}>*</span></div>
+                  <select className="erut-field" value={channel} onChange={(e) => setChannel(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
+                    <option value="">선택하세요</option>
+                    <option value="65">65 (다음 빈 슬롯)</option>
+                    <option value="16">16 (현재 미등록)</option>
+                    <option value="manual">직접 입력...</option>
+                  </select>
+                </div>
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>Serial 번호 (SN) <span style={{ color: "var(--system-error)" }}>*</span></div>
+                  <input className="erut-field" value={serial} onChange={(e) => setSerial(e.target.value)} placeholder="예: PXT-2024-065" style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                </div>
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>검사 대상 <span style={{ color: "var(--system-error)" }}>*</span></div>
+                  <select className="erut-field" value={target} onChange={(e) => setTarget(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
+                    <option value="">선택하세요</option>
+                    {(targets || []).map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>탐촉자 종류</div>
+                  <select className="erut-field" value={probeType} onChange={(e) => setProbeType(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
+                    <option value="">선택하세요</option>
+                    <option value="std-5mhz">표준 (5 MHz, ∅ 10mm)</option>
+                    <option value="high-10mhz">고주파 (10 MHz, ∅ 6mm)</option>
+                    <option value="low-2.25mhz">저주파 (2.25 MHz, ∅ 13mm)</option>
+                    <option value="custom">직접 입력...</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* 진행 체크리스트 — new 모드 전용 */}
+            <div style={{ padding: "14px 16px" }}>
+              <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 10 }}>진행 체크리스트</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {checklist.map(c => (
+                  <div key={c.key} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0" }}>
+                    <span style={{
+                      width: 14, height: 14, borderRadius: "50%",
+                      border: c.done ? "none" : "1.5px solid var(--border-medium)",
+                      background: c.done ? "var(--system-success)" : "transparent",
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                    }}>
+                      {c.done && (
+                        <svg width="9" height="9" viewBox="0 0 9 9"><path d="M1.5 4.5 L3.5 6.5 L7.5 2" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      )}
+                    </span>
+                    <span style={{ font: c.done ? "700 12px/1.3 var(--font-kr)" : "400 12px/1.3 var(--font-kr)", letterSpacing: ".02em", color: c.done ? "var(--content-high)" : "var(--content-medium)" }}>
+                      {c.label}
+                      {c.optional && <span style={{ color: "var(--content-low)", fontWeight: 400, fontSize: 10, marginLeft: 4 }}>(선택)</span>}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--border-low)", font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+                ◯ 필수 항목을 모두 완료하면 "추가 + 측정 시작" 버튼이 활성화됩니다.
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* ───── 우측 메인 영역 ───── */}
@@ -1277,16 +1329,25 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
         </div>
       </div>
 
-      {/* ───── 하단 sticky 액션 바 ───── */}
+      {/* ───── 하단 sticky 액션 바 — v14.0 모드별 분기 ───── */}
       <div style={{ gridRow: 3, gridColumn: "1 / -1", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 24px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
         <a style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", textDecoration: "underline", cursor: "pointer" }}>
           여러 채널 일괄 등록 / 관리 → [4-3] 탐촉자 설정
         </a>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onBack}>취소</button>
-          <button className="erut-btn erut-btn--default erut-btn--sm" disabled={!canAddOnly}>임시 저장</button>
-          <button className={"erut-btn erut-btn--default erut-btn--sm" + (canAddOnly ? "" : " erut-btn--disabled")} disabled={!canAddOnly} onClick={onAddOnly}>추가만</button>
-          <button className={"erut-btn erut-btn--emphasis erut-btn--sm" + (canAddStart ? "" : " erut-btn--disabled")} disabled={!canAddStart} onClick={onAddAndStart}>추가 + 측정 시작</button>
+          {isEdit ? (
+            <>
+              <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onSave}>저장</button>
+              <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onSaveAndMeasure}>저장 + 측정 시작</button>
+            </>
+          ) : (
+            <>
+              <button className="erut-btn erut-btn--default erut-btn--sm" disabled={!canAddOnly}>임시 저장</button>
+              <button className={"erut-btn erut-btn--default erut-btn--sm" + (canAddOnly ? "" : " erut-btn--disabled")} disabled={!canAddOnly} onClick={onAddOnly}>추가만</button>
+              <button className={"erut-btn erut-btn--emphasis erut-btn--sm" + (canAddStart ? "" : " erut-btn--disabled")} disabled={!canAddStart} onClick={onAddAndStart}>추가 + 측정 시작</button>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -2063,9 +2124,10 @@ window.AnimatedAscan = function AnimatedAscan({
 //   - mqtt:  MQTT 설정
 //   - probe: 탐촉자 설정 ([4-3-1] 교정 마법사 트리거)
 
-// ───── Calibration Wizard Modal ([4-3-1]) ─────
-// v9.18 (NDT 1.4): mode "new" (신규 등록 — 기존) / "recalibration" (재교정 — 다채널 일괄)
-window.CalibrationWizard = function CalibrationWizard({ onClose, mode = "new", channelList = [], onComplete }) {
+// ───── Calibration Wizard Modal ─────
+// v9.18 (NDT 1.4): mode "new" (신규 등록) / "recalibration" (재교정 — 다채널 일괄)
+// v14.0: mode="new" 단일 채널 wizard는 사용 폐기 (commission edit 모드로 통합). mode="recalibration"만 활성. new 분기는 향후 정리 wave에서 제거.
+window.CalibrationWizard = function CalibrationWizard({ onClose, mode = "recalibration", channelList = [], onComplete }) {
   const isRecal = mode === "recalibration";
   // v13.0: 재교정 모드 — 채널 정렬 (미교정 먼저 → 만료 경과일 내림차순). new 모드는 단일.
   const sortedChannels = isRecal ? (() => {
@@ -3581,6 +3643,8 @@ window.ChannelPlacementWizard = function ChannelPlacementWizard({ targetName, on
 // Layout matches ServiceFlow_Analysis SLIDE 8 [3] 센서 Gate 설정 (v3.1).
 // 드래그 인터랙션은 시각적 mockup (실제 드래그 핸들러 없음 — input 양방향 sync는 구현).
 
+// v14.0 DEPRECATED: [3] Gate 설정 화면은 [4-3-1] ChannelCommissioning(edit 모드)에 통합됨.
+// 본 컴포넌트는 라우팅에서 더 이상 사용되지 않으며, 다음 정리 wave에서 드래그 인터랙션을 commission으로 이식 후 제거 예정.
 window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextChannel }) {
   const chNum = (channel || "ch04").replace(/\D/g, "").padStart(2, "0");
   const [showGateOverlay, setShowGateOverlay] = $s(true);
