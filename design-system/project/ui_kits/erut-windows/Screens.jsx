@@ -1281,23 +1281,26 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
           </div>
         </div>
 
-        {/* 교정 측정 (2×2 grid) */}
-        <div>
-          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 8 }}>교정 측정</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <CalibCell label="Wedge 각도"   state={wedge}    onMeasure={measureWedge}/>
-            <CalibCell label="음속"         state={velocity} onMeasure={measureVel}/>
-            <CalibCell label="영점 (Zero)"  state={zero}     onMeasure={measureZero}/>
-            <CalibCell label="Gain"         state={gain}     isGain={true}/>
+        {/* v14.1: 교정 측정 + Gate 설정 2열 배치 (가로로 나란히) */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          {/* 교정 측정 (내부 2×2 grid 유지) */}
+          <div>
+            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 8 }}>교정 측정</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <CalibCell label="Wedge 각도"   state={wedge}    onMeasure={measureWedge}/>
+              <CalibCell label="음속"         state={velocity} onMeasure={measureVel}/>
+              <CalibCell label="영점 (Zero)"  state={zero}     onMeasure={measureZero}/>
+              <CalibCell label="Gain"         state={gain}     isGain={true}/>
+            </div>
           </div>
-        </div>
 
-        {/* Gate 설정 */}
-        <div>
-          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 8 }}>Gate 설정</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <GateInputs name="Gate A — 1차 반사" color="var(--system-error)" gate={gateA} onChange={setA}/>
-            <GateInputs name="Gate B — 2차 반사 / 두께 측정" color="var(--brand-primary)" gate={gateB} onChange={setB}/>
+          {/* Gate 설정 (Gate A / Gate B stack) */}
+          <div>
+            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 8 }}>Gate 설정</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <GateInputs name="Gate A — 1차 반사" color="var(--system-error)" gate={gateA} onChange={setA}/>
+              <GateInputs name="Gate B — 2차 반사 / 두께 측정" color="var(--brand-primary)" gate={gateB} onChange={setB}/>
+            </div>
           </div>
         </div>
 
