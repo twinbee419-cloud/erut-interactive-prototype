@@ -2079,28 +2079,49 @@ window.CalibrationWizard = function CalibrationWizard({ onClose, mode = "new", c
     return [...channelList].sort((a, b) => daysAgo(b) - daysAgo(a));
   })() : channelList;
 
-  // v13.0: 채널별 state 분리 보관 — 자유 점프 후 복귀 시 step·완료 상태 유지
+  // v13.1: 채널별 state 분리 — step·completed + 우측 참조 블록 정보(refBlock/refThickness/refMaterial/repeats/batch) + dirty 플래그
+  // dirty: 우측 입력이 한 번이라도 변경되었는지 (변경 시 카드 상태 '진행중'으로 자동 전환)
+  const DEFAULT_CH_STATE = {
+    step: 1,
+    completed: [false, false, false],
+    refBlock: "IIW V1 (25 mm)",
+    refThickness: 25.0,
+    refMaterial: "탄소강 (S355)",
+    repeats: 5,
+    batch: true,
+    dirty: false,
+  };
   const initialChStates = isRecal
-    ? Object.fromEntries(sortedChannels.map(id => [id, { step: 1, completed: [false, false, false] }]))
-    : { CH09: { step: 1, completed: [false, false, false] } };
+    ? Object.fromEntries(sortedChannels.map(id => [id, { ...DEFAULT_CH_STATE }]))
+    : { CH09: { ...DEFAULT_CH_STATE } };
   const [chStates, setChStates] = $s(initialChStates);
   const [focusCh, setFocusCh] = $s(isRecal ? sortedChannels[0] : "CH09");
-  const focusState = chStates[focusCh] || { step: 1, completed: [false, false, false] };
+  const focusState = chStates[focusCh] || DEFAULT_CH_STATE;
   const step = focusState.step;
-  const setStep = (n) => setChStates(s => ({ ...s, [focusCh]: { ...s[focusCh], step: typeof n === "function" ? n(s[focusCh].step) : n } }));
+  // 채널별 state 갱신 헬퍼 — 우측 입력 변경 시 자동으로 dirty=true
+  const updateFocusChState = (patch, markDirty = false) =>
+    setChStates(s => ({ ...s, [focusCh]: { ...s[focusCh], ...patch, ...(markDirty ? { dirty: true } : {}) } }));
+  const setStep = (n) => updateFocusChState({ step: typeof n === "function" ? n(focusState.step) : n });
   const markStepComplete = (stepN) => setChStates(s => {
     const c = [...s[focusCh].completed];
     c[stepN - 1] = true;
     return { ...s, [focusCh]: { ...s[focusCh], completed: c } };
   });
   const isChannelCompleted = (id) => (chStates[id]?.completed || []).every(Boolean);
-  const isChannelStarted   = (id) => (chStates[id]?.completed || []).some(Boolean) || (chStates[id]?.step || 1) > 1;
+  // v13.1: '진행중' = step 진행 / 단계 완료 / 우측 입력 변경 중 하나라도 발생
+  const isChannelStarted   = (id) => (chStates[id]?.completed || []).some(Boolean) || (chStates[id]?.step || 1) > 1 || !!chStates[id]?.dirty;
 
-  const [refBlock, setRefBlock] = $s("IIW V1 (25 mm)");
-  const [refThickness, setRefThickness] = $s(25.0);
-  const [refMaterial, setRefMaterial] = $s("탄소강 (S355)");
-  const [repeats, setRepeats] = $s(5);
-  const [batch, setBatch] = $s(true);
+  // 우측 입력 값 — focusState에서 derive
+  const refBlock     = focusState.refBlock;
+  const refThickness = focusState.refThickness;
+  const refMaterial  = focusState.refMaterial;
+  const repeats      = focusState.repeats;
+  const batch        = focusState.batch;
+  const setRefBlock     = (v) => updateFocusChState({ refBlock: v }, true);
+  const setRefThickness = (v) => updateFocusChState({ refThickness: v }, true);
+  const setRefMaterial  = (v) => updateFocusChState({ refMaterial: v }, true);
+  const setRepeats      = (v) => updateFocusChState({ repeats: v }, true);
+  const setBatch        = (v) => updateFocusChState({ batch: v }, true);
   // v13.0: 부분 완료 confirm 다이얼로그
   const [showPartialConfirm, setShowPartialConfirm] = $s(false);
 
