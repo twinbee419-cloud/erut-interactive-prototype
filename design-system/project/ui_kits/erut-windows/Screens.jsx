@@ -754,6 +754,15 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
             const isSelected = selectedTargetSet.includes(t.name);
             const isDimmed = selectedTargetSet.length > 0 && !isSelected;
             // v9.31: 결함 표시 border 삭제 — 결함 표시는 웹에서 처리 예정
+            // v15.1: '측정 중' → 활성 채널 신호 상태 집계 (우선순위: 나쁨 > 약함 > 정상). 활성 채널 0개면 표시 hide.
+            const targetActiveCells = cells.filter(c => c.targetName === t.name && c.sensor);
+            const sigCounts = targetActiveCells.reduce((acc, c) => { acc[c.sensor.state] = (acc[c.sensor.state] || 0) + 1; return acc; }, {});
+            const sigStatus = targetActiveCells.length === 0 ? null
+              : (sigCounts.err > 0)  ? "err"
+              : (sigCounts.warn > 0) ? "warn"
+              : "ok";
+            const sigLabel = sigStatus === "err" ? "나쁨" : sigStatus === "warn" ? "약함" : "정상";
+            const sigColor = sigStatus === "err" ? "var(--system-error)" : sigStatus === "warn" ? "var(--system-caution)" : "var(--system-success)";
             return (
               <div
                 key={t.name}
@@ -775,9 +784,11 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
                 <div className="target-card__meta" style={{ marginTop: 4 }}>{t.meta}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
                   <span className="target-card__range">{t.range}</span>
-                  <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-success)", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                    <span style={{ width: 6, height: 6, background: "var(--system-success)", borderRadius: "50%" }}/>측정 중
-                  </span>
+                  {sigStatus && (
+                    <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: sigColor, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ width: 6, height: 6, background: sigColor, borderRadius: "50%" }}/>{sigLabel}
+                    </span>
+                  )}
                 </div>
                 {/* hover 시 우하단 "편집 →" 링크 */}
                 <span className="target-card__edit-link" style={{
