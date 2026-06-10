@@ -1255,26 +1255,27 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
             <span style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>0 – 50 μs · Gate / 교정값 실시간 반영</span>
           </div>
           <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", height: 320, position: "relative" }}>
+            {/* v14.2: SVG를 먼저 그리고 Gate overlay를 위에 올려 가시성 보장 (이전엔 SVG가 Gate 박스 위에 올라가 stacking 상 가림) */}
+            <svg viewBox="0 0 800 320" preserveAspectRatio="none" width="100%" height="100%" style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none" }}>
+              <line x1="0" y1="262" x2="800" y2="262" stroke="var(--border-low)" strokeWidth="1"/>
+              <path d="M0 262 L120 262 L140 232 L156 40 L172 280 L188 262 L380 262 L400 228 L416 90 L432 274 L448 262 L800 262" stroke="var(--brand-primary)" strokeWidth="1.5" fill="none"/>
+            </svg>
             {aOn && (
               <>
-                <div style={{ position: "absolute", top: 0, bottom: 0, left: toPct(gateA.start) + "%", width: toPct(gateA.width) + "%", background: "var(--system-error)", opacity: 0.12, borderLeft: "2px solid var(--system-error)", borderRight: "2px solid var(--system-error)" }}/>
-                <div style={{ position: "absolute", top: 4, left: `calc(${toPct(gateA.start)}% + 4px)`, font: "700 10px/1 var(--font-kr)", color: "var(--system-error)" }}>Gate A</div>
-                <div style={{ position: "absolute", left: 0, right: 0, top: (75 - (gateA.threshold / 100) * 43) + "%", borderTop: "1px dashed var(--system-error)" }}/>
+                <div style={{ position: "absolute", top: 0, bottom: 0, left: toPct(gateA.start) + "%", width: toPct(gateA.width) + "%", background: "var(--system-error)", opacity: 0.12, borderLeft: "2px solid var(--system-error)", borderRight: "2px solid var(--system-error)", zIndex: 2, pointerEvents: "none" }}/>
+                <div style={{ position: "absolute", top: 4, left: `calc(${toPct(gateA.start)}% + 4px)`, font: "700 10px/1 var(--font-kr)", color: "var(--system-error)", zIndex: 3, pointerEvents: "none" }}>Gate A</div>
+                <div style={{ position: "absolute", left: 0, right: 0, top: (75 - (gateA.threshold / 100) * 43) + "%", borderTop: "1px dashed var(--system-error)", zIndex: 2, pointerEvents: "none" }}/>
               </>
             )}
             {bOn && (
               <>
-                <div style={{ position: "absolute", top: 0, bottom: 0, left: toPct(gateB.start) + "%", width: toPct(gateB.width) + "%", background: "var(--brand-primary)", opacity: 0.12, borderLeft: "2px solid var(--brand-primary)", borderRight: "2px solid var(--brand-primary)" }}/>
-                <div style={{ position: "absolute", top: 4, left: `calc(${toPct(gateB.start)}% + 4px)`, font: "700 10px/1 var(--font-kr)", color: "var(--brand-primary)" }}>Gate B</div>
-                <div style={{ position: "absolute", left: 0, right: 0, top: (75 - (gateB.threshold / 100) * 43) + "%", borderTop: "1px dashed var(--brand-primary)" }}/>
+                <div style={{ position: "absolute", top: 0, bottom: 0, left: toPct(gateB.start) + "%", width: toPct(gateB.width) + "%", background: "var(--brand-primary)", opacity: 0.12, borderLeft: "2px solid var(--brand-primary)", borderRight: "2px solid var(--brand-primary)", zIndex: 2, pointerEvents: "none" }}/>
+                <div style={{ position: "absolute", top: 4, left: `calc(${toPct(gateB.start)}% + 4px)`, font: "700 10px/1 var(--font-kr)", color: "var(--brand-primary)", zIndex: 3, pointerEvents: "none" }}>Gate B</div>
+                <div style={{ position: "absolute", left: 0, right: 0, top: (75 - (gateB.threshold / 100) * 43) + "%", borderTop: "1px dashed var(--brand-primary)", zIndex: 2, pointerEvents: "none" }}/>
               </>
             )}
-            <svg viewBox="0 0 800 320" preserveAspectRatio="none" width="100%" height="100%" style={{ position: "absolute", top: 0, left: 0 }}>
-              <line x1="0" y1="262" x2="800" y2="262" stroke="var(--border-low)" strokeWidth="1"/>
-              <path d="M0 262 L120 262 L140 232 L156 40 L172 280 L188 262 L380 262 L400 228 L416 90 L432 274 L448 262 L800 262" stroke="var(--brand-primary)" strokeWidth="1.5" fill="none"/>
-            </svg>
             {!aOn && !bOn && (
-              <div style={{ position: "absolute", top: 14, right: 14, font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", textAlign: "right" }}>
+              <div style={{ position: "absolute", top: 14, right: 14, font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", textAlign: "right", zIndex: 3 }}>
                 Gate를 활성화하고<br/>Start · Width 값을 입력하세요.
               </div>
             )}
