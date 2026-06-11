@@ -44,12 +44,12 @@ const TITLE_BY_SCREEN = {
   realtime:  "ERUT - Ultrasonic Monitoring System  ·  MCuF-001 · 실시간 스캔 · 3개 대상 · 세션 #047",
   manage:    "ERUT - Ultrasonic Monitoring System  ·  검사 대상 관리",
   settings:  "ERUT - Ultrasonic Monitoring System  ·  장비 연결 설정",
-  report:    "ERUT - Ultrasonic Monitoring System  ·  보고서 생성 · SES-2026-047",
+  // v18.0: report 스크린 라우팅 폐기 — 모달 전환 (제목은 잔여 라우팅 호환용 dead code, 실제 사용 없음)
   history:   "ERUT - Ultrasonic Monitoring System  ·  검사 이력 관리",
 };
 
-// Screens where the device is "connected" (status bar green LEDs)
-const CONNECTED_SCREENS = new Set(["main", "device", "commission", "realtime", "manage", "settings", "report", "history"]);
+// Screens where the device is "connected" (status bar green LEDs) — v18.0: "report" 제거
+const CONNECTED_SCREENS = new Set(["main", "device", "commission", "realtime", "manage", "settings", "history"]);
 
 function App() {
   const [screen, setScreen]                   = useState("project");
@@ -93,6 +93,9 @@ function App() {
     if (screen !== "manage") setManageInitialMode("edit");
   }, [screen]);
 
+  // v18.0: 보고서 출력 모달 — [2] DeviceDetail 채널 패널 "보고서 출력" / [7] InspectionHistory "보고서 출력" / [파일] 메뉴
+  const [reportDialog, setReportDialog] = useState(null);   // null | { targetId, initialChannel }
+
   // 토스트 (gear 아이콘 등 미구현 항목 안내용 — 메인 기획 보류)
   const [toast, setToast] = useState(null);
   useEffect(() => {
@@ -127,7 +130,8 @@ function App() {
     { label: "최근 프로젝트" },
     // v9.25: 검사 이력 메뉴 추가 (Ctrl+D)
     { label: "검사 이력", shortcut: "Ctrl+D", onClick: () => goto("history") },
-    { label: "보고서 출력", shortcut: "Ctrl+P", onClick: () => goto("report") },
+    // v18.0: [파일] 보고서 출력 → 채널 측정 보고서 모달 (selectedTarget 기준 prefill, 첫 채널 초기 선택)
+    { label: "보고서 출력", shortcut: "Ctrl+P", onClick: () => setReportDialog({ targetId: selectedTarget || "PIPE-A-204", initialChannel: null }) },
     { divider: true },
     { label: "종료", shortcut: "Alt+F4" },
   ];
@@ -188,7 +192,8 @@ function App() {
       if (e.key === "F6") { e.preventDefault(); tryStartMeasurement(); }
       // v9.25: Ctrl+D → 검사 이력 / Ctrl+P → 보고서
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") { e.preventDefault(); goto("history"); }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") { e.preventDefault(); goto("report"); }
+      // v18.0: Ctrl+P → 보고서 출력 모달 (screen 라우팅 폐기)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") { e.preventDefault(); setReportDialog({ targetId: selectedTarget || "PIPE-A-204", initialChannel: null }); }
       if (screen === "realtime") {
         // v9.25: F7 측정 중지 시 [7] 검사 이력으로 자동 진입
         if (e.key === "F7") { e.preventDefault(); setMeasureState("stopped"); goto("history"); }
@@ -323,6 +328,8 @@ function App() {
             onAddTarget={() => { setManageInitialMode("new"); goto("manage"); }}
             onEditTarget={(name) => { setSelectedTarget(name); setManageInitialMode("edit"); goto("manage"); }}
             onAddSensor={() => { setCommissionMode("new"); goto("commission"); }}
+            /* v18.0: 보고서 출력 — 현 검사 대상 + 선택 채널 prefill로 모달 표시 */
+            onOpenReport={(channel) => setReportDialog({ targetId: selectedTarget || "PIPE-A-204", initialChannel: channel })}
           />
         )}
         {/* v14.0: ChannelCommissioning이 new/edit 두 모드 모두 처리 — [3] GateSetup·CalibrationWizard new 모드 폐기 */}
@@ -382,18 +389,12 @@ function App() {
             onStop={() => goto("history")}
           />
         )}
-        {/* v9.24: [18] 보고서 자동 생성 */}
-        {screen === "report" && (
-          <window.ReportGenerator
-            sessionId="SES-2026-047"
-            onBack={() => goto("history")}
-          />
-        )}
-        {/* v9.25: [7] 검사 이력 관리 */}
+        {/* v18.0: [18] 보고서는 풀스크린 → 모달로 전환. screen === "report" 라우팅 제거 (ReportGenerator는 deprecated 보존) */}
+        {/* v9.25: [7] 검사 이력 관리 — v18.0: 보고서 진입을 모달로 변경 */}
         {screen === "history" && (
           <window.InspectionHistory
             onBack={() => goto("main")}
-            onSelectReport={(sid) => goto("report")}
+            onSelectReport={(sid) => setReportDialog({ targetId: selectedTarget || "PIPE-A-204", initialChannel: null })}
           />
         )}
 
@@ -408,6 +409,16 @@ function App() {
         {/* v10.0: 환경 설정 모달 (메뉴바 [설정] + 툴바 gear 공통 진입) */}
         {showSettings && (
           <window.SettingsModal onClose={() => setShowSettings(false)}/>
+        )}
+
+        {/* v18.0: 채널 측정 보고서 출력 모달 — [2] 채널 패널 / [7] 보고서 출력 / [파일] 메뉴 공통 진입 */}
+        {reportDialog && (
+          <window.ReportExportDialog
+            targetId={reportDialog.targetId}
+            initialChannel={reportDialog.initialChannel}
+            onClose={() => setReportDialog(null)}
+            onExport={(payload) => { console.log("PDF export:", payload); setReportDialog(null); setToast("PDF 출력 완료 (" + payload.channels.length + " 장)"); }}
+          />
         )}
 
         {/* v12.0: 측정 시작 차단 다이얼로그 (F6 / 툴바 play 공통) — default 일괄 재교정 */}

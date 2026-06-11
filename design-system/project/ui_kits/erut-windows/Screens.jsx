@@ -257,6 +257,15 @@ window.MOCK = {
     { id: "CH 45", daysRemaining:  1, lastDate: "2025-12-12", cycleDays: 182 },
     { id: "CH 52", daysRemaining:  0, lastDate: "2025-12-13", cycleDays: 180 },  // 전역 기본
   ],
+  // v18.0: 검사 대상별 적용 표준 (보고서 출력 시 자동 반영). [6] 검사 대상 등록 시 입력
+  targetStandards: {
+    "PIPE-A-204":  "KS B 0817",       // 펄스반사식 초음파 탐상 시험 방법 통칙
+    "TANK-B-101":  "KS B 0817",
+    "VESSEL-C-301":"KS B 0894",       // 강용접부 초음파 탐상 시험 방법
+    "FLANGE-D-08": "KS B 0817",
+    "DOME-E-12":   "KS B 0817",
+    "WELD-F-22":   "ASME Sec. V Art.5", // 미국 ASME Section V
+  },
 };
 // 공통 접근자 — DeviceDetail / index.html F6 차단 다이얼로그 / DiagCalibHistory 모두 이걸 참조
 window.MOCK.needsCalibrationChannels = [...window.MOCK.uncalibratedChannels, ...window.MOCK.expiredChannels];
@@ -665,8 +674,9 @@ window.MainScreen = function MainScreen({ onAddDevice, onOpenDevice, onChangePro
 };
 
 // =================== Screen · [2] DEVICE DETAIL ===================
-window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, onStartMeasure, onEditChannel, onAddTarget, onEditTarget, onAddSensor }) {
+window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, onStartMeasure, onEditChannel, onAddTarget, onEditTarget, onAddSensor, onOpenReport }) {
   // v14.0: onOpenGate → onEditChannel — Gate/교정 분리 폐기, commission(edit 모드) 단일 진입점
+  // v18.0: onOpenReport 신규 — 우측 채널 패널 "보고서 출력" 버튼 → ReportExportDialog 모달
   const target = window.MOCK.targets.find(t => t.id === targetId) || window.MOCK.targets[0];
   const sensorMap = Object.fromEntries(window.MOCK.sensors.map(s => [s.id, s]));
   const [selected, setSelected] = $s(focusChannel || "ch01");
@@ -995,6 +1005,16 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
               </button>
             );
           })()}
+          {/* v18.0: 보고서 출력 — 현 채널 측정 데이터 PDF (선택 채널 prefill, 다중 선택 가능) */}
+          <button
+            className="erut-btn erut-btn--default erut-btn--m"
+            style={{ width: "100%", marginTop: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+            onClick={() => onOpenReport && onOpenReport(selected)}
+            title="이 채널 측정 데이터를 PDF로 출력 (같은 검사 대상 내 다른 채널 추가 선택 가능)"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="14 3 14 9 20 9"/></svg>
+            보고서 출력
+          </button>
           <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%", marginTop: 8 }} onClick={() => onStartMeasure && onStartMeasure(selected)}>[11] 실시간 전체 화면 ↗</button>
         </div>
       </div>
@@ -2060,6 +2080,239 @@ window.SettingsModal = function SettingsModal({ onClose }) {
     </div>
   );
 };
+
+// =================== v18.0 보고서 출력 다이얼로그 (채널 측정 보고서 — 현장 데이터 dump) ===================
+// 합의: 결함 판정 미포함. 채널별 A4 1장. 탐촉자 스펙 + 교정 이력 + A-scan + 적용 표준.
+// 진입: [2] DeviceDetail 채널 패널 "보고서 출력" 버튼 (단일) / 메뉴바 [파일] → "보고서 출력..." (다중)
+window.ReportExportDialog = function ReportExportDialog({ targetId, initialChannel, onClose, onExport }) {
+  const target = window.MOCK.targets.find(t => t.id === targetId) || window.MOCK.targets[0];
+  const standard = (window.MOCK.targetStandards && window.MOCK.targetStandards[target.id]) || "KS B 0817";
+  const allChannels = window.MOCK.sensors.filter(s => {
+    // 대상별 채널 분포 — PIPE: ch01~ch24, TANK: ch25~ch48, VESSEL: ch49~ch64
+    const n = parseInt(s.id.replace("ch", ""), 10);
+    if (target.id === "PIPE-A-204")   return n >= 1  && n <= 24;
+    if (target.id === "TANK-B-101")   return n >= 25 && n <= 48;
+    if (target.id === "VESSEL-C-301") return n >= 49 && n <= 64;
+    return false;
+  });
+  const [selected, setSelected] = $s(initialChannel ? [initialChannel] : (allChannels[0] ? [allChannels[0].id] : []));
+  const [previewCh, setPreviewCh] = $s(initialChannel || (allChannels[0] && allChannels[0].id));
+  const [includeSign, setIncludeSign] = $s(true);
+
+  const toggleCh = (chId) => {
+    setSelected(selected.includes(chId) ? selected.filter(c => c !== chId) : [...selected, chId]);
+    setPreviewCh(chId);
+  };
+  const allSelected = selected.length === allChannels.length;
+  const selectAll = () => setSelected(allSelected ? [] : allChannels.map(c => c.id));
+
+  const previewSensor = allChannels.find(s => s.id === previewCh) || allChannels[0];
+
+  const footer = (
+    <>
+      <button className="erut-btn erut-btn--default erut-btn--m" onClick={onClose}>취소</button>
+      <button
+        className="erut-btn erut-btn--emphasis erut-btn--m"
+        disabled={selected.length === 0}
+        onClick={() => onExport && onExport({ targetId: target.id, channels: selected, includeSign, standard })}
+      >PDF 출력 ({selected.length} 장)</button>
+    </>
+  );
+
+  return (
+    <window.Modal title={`보고서 출력 — ${target.name}`} onClose={onClose} footer={footer} width={1200}>
+      <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 20, minHeight: 580 }}>
+        {/* 좌측 — 채널 선택 + 옵션 */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, minHeight: 0 }}>
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>출력 채널 선택</div>
+              <button onClick={selectAll} style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--brand-primary)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                {allSelected ? "전체 해제" : "전체 선택"}
+              </button>
+            </div>
+            <div style={{ border: "1px solid var(--border-medium)", background: "var(--surface-base)", maxHeight: 320, overflow: "auto" }}>
+              {allChannels.map(s => {
+                const isOn = selected.includes(s.id);
+                const isPreview = s.id === previewCh;
+                return (
+                  <div
+                    key={s.id}
+                    onClick={() => toggleCh(s.id)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      padding: "8px 12px",
+                      borderBottom: "1px solid var(--border-low)",
+                      background: isPreview ? "linear-gradient(rgba(34,133,239,0.08),rgba(34,133,239,0.08)), var(--surface-base)" : "var(--surface-base)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span className={"erut-cb__box" + (isOn ? " is-on" : "")}/>
+                    <span style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{s.id.toUpperCase()}</span>
+                    <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginLeft: "auto" }}>θ {s.theta}° · Z {s.z} mm</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 옵션 */}
+          <div>
+            <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 6 }}>출력 옵션</div>
+            <div style={{ border: "1px solid var(--border-medium)", background: "var(--surface-base)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>적용 표준</span>
+                <span style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>{standard}</span>
+              </div>
+              <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>* [6] 검사 대상 등록 시 입력값. 변경은 검사 대상 편집에서.</div>
+              <div style={{ height: 1, background: "var(--border-low)" }}/>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }} onClick={() => setIncludeSign(!includeSign)}>
+                <span className={"erut-cb__box" + (includeSign ? " is-on" : "")}/>
+                <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>서명란 포함</span>
+              </label>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>방향</span>
+                <span style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>세로 (A4)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 우측 — A4 미리보기 */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 0 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>미리보기 — {previewSensor && previewSensor.id.toUpperCase()}</div>
+            <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>1 / {selected.length || 1}</div>
+          </div>
+          <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "flex-start", overflow: "auto" }}>
+            <div style={{ width: 420 }}>
+              <ReportA4Preview target={target} sensor={previewSensor} standard={standard} includeSign={includeSign}/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </window.Modal>
+  );
+};
+
+// A4 미리보기 단일 페이지 — 채널 측정 보고서 (v18.0)
+function ReportA4Preview({ target, sensor, standard, includeSign }) {
+  if (!sensor) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  const lastCal = (window.MOCK.lastCalibrationDate && window.MOCK.lastCalibrationDate[sensor.id]) || "—";
+  const cycleDays = (window.MOCK.channelCycleDays && window.MOCK.channelCycleDays[sensor.id])
+    || (window.MOCK.calibrationPolicy && window.MOCK.calibrationPolicy.defaultCycleDays) || 180;
+  return (
+    <div className="erut-report-a4">
+      <div className="erut-report-a4__header">
+        <div className="erut-report-a4__title">초음파 측정 데이터 보고서</div>
+        <div className="erut-report-a4__subtitle">
+          {target.name} · {sensor.id.toUpperCase()} · {today}
+        </div>
+      </div>
+      <div className="erut-report-a4__section">
+        <div className="erut-report-a4__section-title">1. 적용 표준 / 검사 대상</div>
+        <table className="erut-report-a4__table">
+          <tbody>
+            <tr><td>적용 표준</td><td>{standard}</td></tr>
+            <tr><td>검사 대상</td><td>{target.name} · {target.desc}</td></tr>
+            <tr><td>측정 위치</td><td>θ {sensor.theta}° · Z {sensor.z} mm</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div className="erut-report-a4__section">
+        <div className="erut-report-a4__section-title">2. 탐촉자 스펙</div>
+        <table className="erut-report-a4__table">
+          <tbody>
+            <tr><td>모델 / S/N</td><td>PXT-2024-{sensor.id.replace("ch","").padStart(3,"0")}</td></tr>
+            <tr><td>주파수</td><td>5 MHz</td></tr>
+            <tr><td>직경 / 종류</td><td>10 mm · 직선</td></tr>
+            <tr><td>Wedge 각도</td><td>90° (수직)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div className="erut-report-a4__section">
+        <div className="erut-report-a4__section-title">3. 교정 이력</div>
+        <table className="erut-report-a4__table">
+          <tbody>
+            <tr><td>교정일</td><td>{lastCal}</td></tr>
+            <tr><td>교정 주기</td><td>{cycleDays} 일</td></tr>
+            <tr><td>교정 시험편</td><td>IIW V1 (표준시험편)</td></tr>
+            <tr><td>음속 / 영점</td><td>5,920 m/s · 0.42 μs</td></tr>
+            <tr><td>Gain / Gate</td><td>28 dB · A 2.5~10.5 μs / 80 %</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div className="erut-report-a4__section">
+        <div className="erut-report-a4__section-title">4. 측정 결과 (A-scan)</div>
+        <div className="erut-report-a4__ascan">
+          <ReportAscanThumb sensor={sensor}/>
+        </div>
+        <table className="erut-report-a4__table" style={{ marginTop: 6 }}>
+          <tbody>
+            <tr>
+              <td>Amp</td><td>{sensor.amp} % FSH</td>
+            </tr>
+            <tr>
+              <td>ToF</td><td>{sensor.tof} μs</td>
+            </tr>
+            <tr>
+              <td>환산 두께</td><td>{sensor.thickness} mm</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      {includeSign && (
+        <div className="erut-report-a4__footer">
+          <div>
+            <div style={{ color: "var(--content-low)", marginBottom: 2 }}>검사자</div>
+            <div className="erut-report-a4__sign">서명</div>
+          </div>
+          <div>
+            <div style={{ color: "var(--content-low)", marginBottom: 2 }}>일자 · 시간</div>
+            <div className="erut-report-a4__sign">{today}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// A-scan 작은 미리보기 (Gate overlay 포함)
+function ReportAscanThumb({ sensor }) {
+  // 단순 시뮬: 메인 펄스 + Gate 위치의 echo
+  const w = 360, h = 110;
+  const noise = Array.from({ length: 80 }, (_, i) => {
+    const x = (i / 79) * w;
+    const baseline = h - 18;
+    // main pulse spike at x=20
+    if (i < 6) return [x, baseline - Math.exp(-i * 0.5) * 50 * (i % 2 === 0 ? 1 : -1)];
+    // Gate echo around 30~50% — amp 기반
+    const gateCenter = 35;
+    if (i > gateCenter - 4 && i < gateCenter + 4) {
+      const offset = i - gateCenter;
+      return [x, baseline - Math.exp(-offset * offset * 0.3) * (sensor.amp || 24) * 0.8 * (offset % 2 === 0 ? 1 : -1)];
+    }
+    return [x, baseline + (Math.sin(i * 0.7) * 2)];
+  });
+  const path = noise.map(([x, y], i) => (i === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1)).join(" ");
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height="100%" preserveAspectRatio="none">
+      {/* Gate 영역 (A) */}
+      <rect x={w * 0.35} y={6} width={w * 0.15} height={h - 14} fill="rgba(34,133,239,0.08)" stroke="var(--brand-primary)" strokeWidth="0.5" strokeDasharray="2,2"/>
+      {/* Threshold line */}
+      <line x1={w * 0.35} y1={h * 0.5} x2={w * 0.5} y2={h * 0.5} stroke="var(--system-caution)" strokeWidth="0.8" strokeDasharray="3,2"/>
+      {/* baseline */}
+      <line x1="0" y1={h - 18} x2={w} y2={h - 18} stroke="var(--border-low)" strokeWidth="0.5"/>
+      {/* signal */}
+      <path d={path} fill="none" stroke="var(--content-high)" strokeWidth="1"/>
+      {/* axis labels */}
+      <text x="2" y={h - 4} fill="var(--content-low)" fontSize="7" fontFamily="var(--font-kr)">0 μs</text>
+      <text x={w - 28} y={h - 4} fill="var(--content-low)" fontSize="7" fontFamily="var(--font-kr)">20 μs</text>
+      <text x={w * 0.37} y="14" fill="var(--brand-primary)" fontSize="7" fontFamily="var(--font-kr)" fontWeight="700">Gate A</text>
+    </svg>
+  );
+}
 
 function SettingsRow({ label, hint, children }) {
   return (
@@ -4511,6 +4764,9 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
 // =================== Screen · [18] REPORT GENERATOR (v9.24 신규) ===================
 // 메인 HTML SLIDE 17 [18] 보고서 자동 생성 페이지 구현
 // 진입: 메뉴바 [파일] > 보고서 출력 (Ctrl+P) — index.html
+// v18.0 DEPRECATED: 결함 판정 보고서 폐기 — 현장 데이터 dump (window.ReportExportDialog)로 전환.
+// 코드는 archive/ERUT_ServiceFlow_FixedProbe_v17.2.html에 보존. office 후처리 보고서 요구 재발생 시 복원.
+// 현재는 라우팅에서 빠져있어 실제 표시되지 않음 (index.html screen === "report" 제거됨).
 window.ReportGenerator = function ReportGenerator({ sessionId = "SES-2026-047", onBack }) {
   const [judgment, setJudgment] = $s("조건부 합격");
   const [note, setNote] = $s("Critical 결함 1건 보수 후 동일 좌표 재측정 필요. 보수 후 30일 이내 재검사 권장.");
