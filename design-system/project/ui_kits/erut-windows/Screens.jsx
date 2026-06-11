@@ -257,6 +257,28 @@ window.MOCK = {
     { id: "CH 45", daysRemaining:  1, lastDate: "2025-12-12", cycleDays: 182 },
     { id: "CH 52", daysRemaining:  0, lastDate: "2025-12-13", cycleDays: 180 },  // 전역 기본
   ],
+  // v19.0: 미니 PC 자산 정보 — alias + UUID + 자동 수집 메타. [8] PC 정보 카테고리 / [18] 보고서 / [7] 이력 / [3] 통신 로그 / 상태바 옵션
+  pcInfo: {
+    alias: "현장 검사 PC #1",                              // 사용자 입력 (변경 가능)
+    uuid: "a7f3c2e8-9b4d-4c1f-8e5a-2d6b9f8c1a3e",          // 첫 실행 1회 자동 생성 (readonly)
+    hostname: "DESKTOP-ERUT-001",                          // Environment.MachineName
+    os: "Windows 11 Pro · 23H2 (Build 22631.3593)",        // Environment.OSVersion
+    erutVersion: "v1.4.2 · build 20260520.1138",           // 앱 자체
+    ipLan: "192.168.1.50",                                 // NetworkInterface
+    macAddress: "A4:5E:60:3F:7C:91",                       // NetworkInterface
+    macInterface: "eth0 · realtek",                        // 인터페이스명
+    firstRegistered: "2026-04-22 09:18",                   // 첫 실행 timestamp
+    showAliasInStatusBar: false,                           // 상태바 alias 표시 옵션 (기본 OFF)
+  },
+  // v19.0: 검사 이력 세션별 측정 PC alias (다중 PC 운영 시 추적성)
+  sessionPcAlias: {
+    "SES-2026-047": "현장 검사 PC #1",
+    "SES-2026-046": "현장 검사 PC #2",
+    "SES-2026-045": "현장 검사 PC #1",
+    "SES-2026-044": "현장 검사 PC #2",
+    "SES-2026-043": "현장 검사 PC #1",
+    "SES-2026-042": "Office PC",
+  },
   // v18.0: 검사 대상별 적용 표준 (보고서 출력 시 자동 반영). [6] 검사 대상 등록 시 입력
   targetStandards: {
     "PIPE-A-204":  "KS B 0817",       // 펄스반사식 초음파 탐상 시험 방법 통칙
@@ -2027,14 +2049,15 @@ function DiagMeasErrorLog() {
 
 // =================== Modal · [8] 환경 설정 (v10.0 신규 — 메뉴바 [설정] + 툴바 gear 공통 진입) ===================
 window.SettingsModal = function SettingsModal({ onClose }) {
-  // v16.0: 'calibration' 카테고리 신설 (5개) — 신설 강조로 기본 활성
-  const [cat, setCat] = $s("calibration"); // general / shortcuts / autosave / report / calibration
+  // v19.0: 'pc' 카테고리 신설 (6개) — 신설 강조로 기본 활성
+  const [cat, setCat] = $s("pc"); // general / shortcuts / autosave / report / calibration / pc
   const cats = [
     { id: "general",     label: "일반" },
     { id: "shortcuts",   label: "단축키" },
     { id: "autosave",    label: "자동 저장" },
     { id: "report",      label: "보고서 기본값" },
     { id: "calibration", label: "교정 정책" },
+    { id: "pc",          label: "PC 정보" },
   ];
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
@@ -2067,6 +2090,7 @@ window.SettingsModal = function SettingsModal({ onClose }) {
             {cat === "autosave"    && <SettingsAutosave/>}
             {cat === "report"      && <SettingsReport/>}
             {cat === "calibration" && <SettingsCalibration/>}
+            {cat === "pc"          && <SettingsPcInfo/>}
           </div>
         </div>
         {/* 푸터 — 좌측: 초기화 / 우측: 취소·적용 */}
@@ -2253,11 +2277,13 @@ function ReportA4Preview({ target, sensor, standard, includeSign, deviceId }) {
       </div>
       <div className="erut-report-a4__section">
         <div className="erut-report-a4__section-title">1. 적용 표준 / 검사 대상</div>
+        {/* v19.0: 측정 PC 행 추가 (ASNT 추적성) */}
         <table className="erut-report-a4__table">
           <tbody>
             <tr><td>적용 표준</td><td>{standard}</td></tr>
             <tr><td>검사 대상</td><td>{targetLabel}</td></tr>
             <tr><td>채널 ID</td><td>{sensor.id.toUpperCase()} ({deviceId || "MCuF-001"})</td></tr>
+            <tr><td>측정 PC</td><td>{(window.MOCK.pcInfo && window.MOCK.pcInfo.alias) || "—"} ({(window.MOCK.pcInfo && window.MOCK.pcInfo.uuid || "").slice(0, 8) + "…"})</td></tr>
           </tbody>
         </table>
       </div>
@@ -2559,6 +2585,54 @@ function SettingsCalibration() {
             <span className={"erut-toggle__track" + (badge ? " is-on" : "")}><span className="erut-toggle__thumb"></span></span>
             <span className="erut-toggle__label erut-toggle__label--sm">{badge ? "활성" : "비활성"}</span>
           </label>
+        </SettingsRow>
+      </div>
+    </>
+  );
+}
+
+// v19.0: PC 정보 카테고리 — 미니 PC 자산 관리 (alias 입력 + UUID readonly + 자동 메타 + 상태바 표시 옵션)
+function SettingsPcInfo() {
+  const pc = (window.MOCK && window.MOCK.pcInfo) || {};
+  const [alias, setAlias] = $s(pc.alias || "");
+  const [showInStatusBar, setShowInStatusBar] = $s(pc.showAliasInStatusBar === true);
+  const copyUuid = () => {
+    if (navigator.clipboard && pc.uuid) navigator.clipboard.writeText(pc.uuid);
+  };
+  return (
+    <>
+      <SettingsSectionHeader title="PC 정보" desc="미니 PC를 탐촉자·MC 보드와 동일하게 자산 관리. 사용자는 별칭(alias)만 입력, UUID와 자동 메타는 시스템이 수집. 다중 PC 운영·MQTT 라우팅·보고서 추적성·장애 진단의 기반."/>
+      <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: "16px 24px", alignItems: "start" }}>
+        <SettingsRow label="PC 별칭 (alias)" hint="언제든 변경 가능. 보고서·검사 이력·진단 로그에 자동 반영. 한글 가능.">
+          <input className="erut-field" value={alias} onChange={(e) => setAlias(e.target.value)} style={{ width: 320 }}/>
+        </SettingsRow>
+
+        <SettingsRow label="UUID" hint="첫 실행 시 1회 자동 생성. OS 재설치 / PC 교체 시 새로 생성됨. 사용자 수정 불가 (서버 식별자).">
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <input className="erut-field" value={pc.uuid || ""} readOnly style={{ width: 340, fontFamily: "'Consolas', monospace", fontSize: 11, background: "var(--surface-subtle-1)", color: "var(--content-medium)" }}/>
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={copyUuid} title="UUID 복사" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="9" y="9" width="13" height="13" rx="1"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              복사
+            </button>
+          </div>
+        </SettingsRow>
+
+        <SettingsRow label="상태바에 alias 표시" hint='기본 OFF. ON 시 상태바 우측에 "PC: {alias}" 표시 — 다중 PC 운영 환경에서 즉시 식별 가능.'>
+          <label className="erut-toggle" onClick={() => setShowInStatusBar(v => !v)}>
+            <span className={"erut-toggle__track" + (showInStatusBar ? " is-on" : "")}><span className="erut-toggle__thumb"></span></span>
+            <span className="erut-toggle__label erut-toggle__label--sm">{showInStatusBar ? "활성" : "비활성"}</span>
+          </label>
+        </SettingsRow>
+
+        <SettingsRow label="자동 수집 메타" hint="앱 시작 시마다 자동 갱신. 사용자 수정 불가. 보안 위험 시 MAC 주소 항목은 [숨김] 가능.">
+          <div style={{ background: "var(--surface-subtle-1)", border: "1px solid var(--border-low)", padding: "12px 14px", display: "grid", gridTemplateColumns: "120px 1fr", gap: "6px 12px", font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em" }}>
+            <div style={{ color: "var(--content-low)", fontWeight: 700 }}>호스트명</div>     <div style={{ color: "var(--content-high)" }}>{pc.hostname || "—"}</div>
+            <div style={{ color: "var(--content-low)", fontWeight: 700 }}>OS</div>          <div style={{ color: "var(--content-high)" }}>{pc.os || "—"}</div>
+            <div style={{ color: "var(--content-low)", fontWeight: 700 }}>ERUT 버전</div>   <div style={{ color: "var(--content-high)" }}>{pc.erutVersion || "—"}</div>
+            <div style={{ color: "var(--content-low)", fontWeight: 700 }}>IP 주소 (LAN)</div><div style={{ color: "var(--content-high)" }}>{pc.ipLan || "—"}</div>
+            <div style={{ color: "var(--content-low)", fontWeight: 700 }}>MAC 주소</div>    <div style={{ color: "var(--content-high)", fontFamily: "'Consolas', monospace" }}>{pc.macAddress || "—"} <span style={{ color: "var(--content-low)", fontWeight: 400, marginLeft: 6 }}>({pc.macInterface || "—"})</span></div>
+            <div style={{ color: "var(--content-low)", fontWeight: 700 }}>최초 등록일</div>  <div style={{ color: "var(--content-high)" }}>{pc.firstRegistered || "—"}</div>
+          </div>
         </SettingsRow>
       </div>
     </>
@@ -4822,7 +4896,8 @@ window.InspectionHistory = function InspectionHistory({ onBack, onSelectReport }
     return next;
   });
 
-  const cols = "50px 140px 1fr 1fr 1fr 80px 100px 130px 100px";
+  // v19.0: 측정 PC 컬럼 추가 (검사자 다음, 140px 고정)
+  const cols = "50px 140px 1fr 1fr 140px 1fr 80px 100px 130px 100px";
   const cellHead = { padding: "12px 10px", font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" };
   const cellRow  = { padding: "14px 10px", font: "400 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" };
 
@@ -4860,6 +4935,7 @@ window.InspectionHistory = function InspectionHistory({ onBack, onSelectReport }
           <div style={cellHead}>세션 ID</div>
           <div style={cellHead}>검사 대상</div>
           <div style={cellHead}>검사자</div>
+          <div style={cellHead}>측정 PC</div>
           <div style={cellHead}>시작 시각</div>
           <div style={cellHead}>결함</div>
           <div style={cellHead}>크기</div>
@@ -4889,6 +4965,7 @@ window.InspectionHistory = function InspectionHistory({ onBack, onSelectReport }
               <div style={{ ...cellRow, fontFamily: "'Consolas', monospace", color: isSel ? "var(--brand-primary)" : "var(--content-high)", fontWeight: isSel ? 700 : 400 }}>{s.id}</div>
               <div style={cellRow}>{s.target}</div>
               <div style={cellRow}>{s.inspector}</div>
+              <div style={cellRow}>{(window.MOCK.sessionPcAlias && window.MOCK.sessionPcAlias[s.id]) || "—"}</div>
               <div style={cellRow}>{s.date}</div>
               <div style={cellRow}><span style={{ color: s.defectColor, fontWeight: 700 }}>{s.defects}</span></div>
               <div style={cellRow}>{s.size}</div>
