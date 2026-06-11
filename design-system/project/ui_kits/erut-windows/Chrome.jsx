@@ -63,11 +63,28 @@ window.Toolbar = function Toolbar({ items, activeKey, onPick, hint }) {
 
 // ----------- STATUS BAR ------------
 // v16.0: calibrationAlert 신설 — 교정 임박/만료 채널 N개를 statusbar 우측에 노출.
-// { count, tone: "caution" (7일 이내) | "error" (만료), onClick: () => 알림 다이얼로그 }
-window.StatusBar = function StatusBar({ deviceConnected = false, mqttConnected = false, prf = "---", temp = "---", version = "v0.0.0.0", calibrationAlert = null }) {
+// v17.1: 워딩 정리 (사용자 합의 — 각 상태 대상 명확화)
+//   - 장비 연결됨 → MC보드 연결됨 (MC보드 ↔ 미니 PC 커넥션)
+//   - 측정 pill 신설 — MC보드 단위 start/stop 상태 (success/content-low LED)
+//   - MQTT 연결됨 — 미니 PC ↔ 서버 통신 (그대로)
+// 다중 MC보드 시: 분수 표시 (3/3 모두 = 단순 라벨, 일부 = N/M)
+window.StatusBar = function StatusBar({
+  // v17.1: device 통합 props — mcConnected/mcTotal/measuringCount 집계
+  mcConnected = 0, mcTotal = 0, measuringCount = 0,
+  mqttConnected = false, prf = "---", temp = "---", version = "v0.0.0.0", calibrationAlert = null,
+  // (legacy) deviceConnected — 기존 호출처 호환. true = (1, 1), false = (0, 1)
+  deviceConnected,
+}) {
+  // legacy 호환: deviceConnected만 전달된 경우 mcTotal/mcConnected로 변환
+  if (mcTotal === 0 && deviceConnected !== undefined) {
+    mcTotal = 1;
+    mcConnected = deviceConnected ? 1 : 0;
+    measuringCount = deviceConnected ? 1 : 0;
+  }
   return (
     <div className="erut-statusbar">
-      <StatusPill connected={deviceConnected} labelOn="장비 연결됨" labelOff="장비 미연결"/>
+      <McConnectionPill connected={mcConnected} total={mcTotal}/>
+      <MeasurementPill measuring={measuringCount} totalConnected={mcConnected}/>
       <StatusPill connected={mqttConnected} labelOn="MQTT 연결됨" labelOff="MQTT 미연결"/>
       <span className="erut-statusbar__text">PRF : {prf}</span>
       <span className="erut-statusbar__text">Temp : {temp}</span>
@@ -92,7 +109,7 @@ window.StatusBar = function StatusBar({ deviceConnected = false, mqttConnected =
   );
 };
 
-// ----------- STATUS PILL ------------
+// ----------- STATUS PILL (legacy: MQTT 등 단순 binary 상태) ------------
 function StatusPill({ connected, labelOn, labelOff }) {
   return (
     <span className="erut-pill">
@@ -105,3 +122,45 @@ function StatusPill({ connected, labelOn, labelOff }) {
   );
 }
 window.StatusPill = StatusPill;
+
+// ----------- v17.1: MC보드 연결 Pill (분수 집계) ------------
+// 3/3 모두 연결 = "MC보드 연결됨", 일부 = "MC보드 연결됨 N/M", 0/M = "MC보드 미연결"
+function McConnectionPill({ connected, total }) {
+  if (total === 0) return null;
+  const allConn = connected === total;
+  const noneConn = connected === 0;
+  const label = noneConn ? "MC보드 미연결" : allConn ? "MC보드 연결됨" : `MC보드 연결됨 ${connected}/${total}`;
+  return (
+    <span className="erut-pill">
+      <span className={"erut-led " + (noneConn ? "is-red" : "is-green")}>
+        <span className="erut-led__halo"/>
+        <span className="erut-led__dot"/>
+      </span>
+      {label}
+    </span>
+  );
+}
+window.McConnectionPill = McConnectionPill;
+
+// ----------- v17.1: 측정 Pill (MC보드 단위 start/stop) ------------
+// 측정 중 N>0 = "측정 중 N/M" (success 녹), N=0 = "정지" (content-low 회).
+// totalConnected: 연결된 보드 수 (offline 제외). offline 보드는 측정 분모에서 제외.
+function MeasurementPill({ measuring, totalConnected }) {
+  if (totalConnected === 0) return null;
+  const isMeasuring = measuring > 0;
+  const label = !isMeasuring ? "정지" : measuring === totalConnected ? "측정 중" : `측정 중 ${measuring}/${totalConnected}`;
+  // content-low 회색 LED 인라인 처리 (kit.css에 별도 클래스 없음)
+  return (
+    <span className="erut-pill">
+      <span className="erut-led" style={{
+        background: isMeasuring ? "var(--system-success)" : "var(--content-low)",
+        boxShadow: isMeasuring ? "0 0 6px rgba(24,227,57,0.6)" : "none",
+      }}>
+        <span className="erut-led__halo" style={{ background: isMeasuring ? undefined : "transparent" }}/>
+        <span className="erut-led__dot"/>
+      </span>
+      {label}
+    </span>
+  );
+}
+window.MeasurementPill = MeasurementPill;
