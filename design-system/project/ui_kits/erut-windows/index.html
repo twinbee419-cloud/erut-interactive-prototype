@@ -94,7 +94,8 @@ function App() {
   }, [screen]);
 
   // v18.0: 보고서 출력 모달 — [2] DeviceDetail 채널 패널 "보고서 출력" / [7] InspectionHistory "보고서 출력" / [파일] 메뉴
-  const [reportDialog, setReportDialog] = useState(null);   // null | { targetId, initialChannel }
+  // v18.1: targetId → deviceId (MC보드 단위 진입)
+  const [reportDialog, setReportDialog] = useState(null);   // null | { deviceId, initialChannel }
 
   // 토스트 (gear 아이콘 등 미구현 항목 안내용 — 메인 기획 보류)
   const [toast, setToast] = useState(null);
@@ -131,7 +132,7 @@ function App() {
     // v9.25: 검사 이력 메뉴 추가 (Ctrl+D)
     { label: "검사 이력", shortcut: "Ctrl+D", onClick: () => goto("history") },
     // v18.0: [파일] 보고서 출력 → 채널 측정 보고서 모달 (selectedTarget 기준 prefill, 첫 채널 초기 선택)
-    { label: "보고서 출력", shortcut: "Ctrl+P", onClick: () => setReportDialog({ targetId: selectedTarget || "PIPE-A-204", initialChannel: null }) },
+    { label: "보고서 출력", shortcut: "Ctrl+P", onClick: () => setReportDialog({ deviceId: "MCuF-001", initialChannel: null }) },
     { divider: true },
     { label: "종료", shortcut: "Alt+F4" },
   ];
@@ -193,7 +194,7 @@ function App() {
       // v9.25: Ctrl+D → 검사 이력 / Ctrl+P → 보고서
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") { e.preventDefault(); goto("history"); }
       // v18.0: Ctrl+P → 보고서 출력 모달 (screen 라우팅 폐기)
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") { e.preventDefault(); setReportDialog({ targetId: selectedTarget || "PIPE-A-204", initialChannel: null }); }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") { e.preventDefault(); setReportDialog({ deviceId: "MCuF-001", initialChannel: null }); }
       if (screen === "realtime") {
         // v9.25: F7 측정 중지 시 [7] 검사 이력으로 자동 진입
         if (e.key === "F7") { e.preventDefault(); setMeasureState("stopped"); goto("history"); }
@@ -328,8 +329,8 @@ function App() {
             onAddTarget={() => { setManageInitialMode("new"); goto("manage"); }}
             onEditTarget={(name) => { setSelectedTarget(name); setManageInitialMode("edit"); goto("manage"); }}
             onAddSensor={() => { setCommissionMode("new"); goto("commission"); }}
-            /* v18.0: 보고서 출력 — 현 검사 대상 + 선택 채널 prefill로 모달 표시 */
-            onOpenReport={(channel) => setReportDialog({ targetId: selectedTarget || "PIPE-A-204", initialChannel: channel })}
+            /* v18.1: 보고서 출력 — MC보드 단위 진입 + 클릭된 채널 prefill (MC보드 정보 옆 버튼) */
+            onOpenReport={(channel) => setReportDialog({ deviceId: "MCuF-001", initialChannel: channel })}
           />
         )}
         {/* v14.0: ChannelCommissioning이 new/edit 두 모드 모두 처리 — [3] GateSetup·CalibrationWizard new 모드 폐기 */}
@@ -394,7 +395,7 @@ function App() {
         {screen === "history" && (
           <window.InspectionHistory
             onBack={() => goto("main")}
-            onSelectReport={(sid) => setReportDialog({ targetId: selectedTarget || "PIPE-A-204", initialChannel: null })}
+            onSelectReport={(sid) => setReportDialog({ deviceId: "MCuF-001", initialChannel: null })}
           />
         )}
 
@@ -414,7 +415,7 @@ function App() {
         {/* v18.0: 채널 측정 보고서 출력 모달 — [2] 채널 패널 / [7] 보고서 출력 / [파일] 메뉴 공통 진입 */}
         {reportDialog && (
           <window.ReportExportDialog
-            targetId={reportDialog.targetId}
+            deviceId={reportDialog.deviceId}
             initialChannel={reportDialog.initialChannel}
             onClose={() => setReportDialog(null)}
             onExport={(payload) => { console.log("PDF export:", payload); setReportDialog(null); setToast("PDF 출력 완료 (" + payload.channels.length + " 장)"); }}

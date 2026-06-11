@@ -111,86 +111,86 @@ window.MOCK = {
   ],
   // 8 fixed sensors on PIPE-A-204 (Z range 0~6000mm, θ 0~360°)
   sensors: [
-    { id: "ch01", theta:   0, z:  600, state: "ok",   thickness: 9.92, amp: 24, tof: 3.35, age: "1 분 전",
+    { id: "ch01", state: "ok",   thickness: 9.92, amp: 24, tof: 3.35, age: "1 분 전",
       trend: [9.95, 9.94, 9.94, 9.93, 9.93, 9.92, 9.92] },
-    { id: "ch02", theta: 180, z:  600, state: "ok",   thickness: 9.88, amp: 22, tof: 3.34, age: "1 분 전",
+    { id: "ch02", state: "ok",   thickness: 9.88, amp: 22, tof: 3.34, age: "1 분 전",
       trend: [9.90, 9.90, 9.89, 9.89, 9.88, 9.88, 9.88] },
-    { id: "ch03", theta:   0, z: 1800, state: "ok",   thickness: 9.85, amp: 28, tof: 3.33, age: "1 분 전",
+    { id: "ch03", state: "ok",   thickness: 9.85, amp: 28, tof: 3.33, age: "1 분 전",
       trend: [9.88, 9.87, 9.87, 9.86, 9.86, 9.85, 9.85] },
-    { id: "ch04", theta: 180, z: 1800, state: "ok",   thickness: 9.82, amp: 26, tof: 3.32, age: "1 분 전",
+    { id: "ch04", state: "ok",   thickness: 9.82, amp: 26, tof: 3.32, age: "1 분 전",
       trend: [9.85, 9.84, 9.84, 9.83, 9.83, 9.82, 9.82] },
-    { id: "ch05", theta:  90, z: 3300, state: "ok",   thickness: 9.80, amp: 30, tof: 3.31, age: "1 분 전",
+    { id: "ch05", state: "ok",   thickness: 9.80, amp: 30, tof: 3.31, age: "1 분 전",
       trend: [9.83, 9.82, 9.82, 9.81, 9.81, 9.80, 9.80] },
-    { id: "ch06", theta: 270, z: 3300, state: "ok",   thickness: 9.81, amp: 27, tof: 3.31, age: "1 분 전",
+    { id: "ch06", state: "ok",   thickness: 9.81, amp: 27, tof: 3.31, age: "1 분 전",
       trend: [9.84, 9.83, 9.83, 9.82, 9.82, 9.81, 9.81] },
-    { id: "ch07", theta:  45, z: 4560, state: "ok",   thickness: 9.78, amp: 62, tof: 3.30, age: "1 분 전",
+    { id: "ch07", state: "ok",   thickness: 9.78, amp: 62, tof: 3.30, age: "1 분 전",
       trend: [9.85, 9.84, 9.82, 9.81, 9.80, 9.79, 9.78] },
-    { id: "ch08", theta: 180, z: 4560, state: "ok",   thickness: 9.83, amp: 25, tof: 3.32, age: "1 분 전",
+    { id: "ch08", state: "ok",   thickness: 9.83, amp: 25, tof: 3.32, age: "1 분 전",
       trend: [9.86, 9.85, 9.85, 9.84, 9.84, 9.83, 9.83] },
     // v9.14: ch09~ch24 부착 정상 활성화 추가 (CH 24까지 모두 정상 연결)
-    { id: "ch09", theta:  90, z:  600, state: "ok", thickness: 9.91, amp: 23, tof: 3.34, age: "1 분 전", trend: [9.93, 9.93, 9.92, 9.92, 9.91, 9.91, 9.91] },
-    { id: "ch10", theta: 270, z:  600, state: "ok", thickness: 9.90, amp: 24, tof: 3.34, age: "1 분 전", trend: [9.92, 9.91, 9.91, 9.91, 9.90, 9.90, 9.90] },
-    { id: "ch11", theta:  90, z: 1800, state: "ok", thickness: 9.87, amp: 25, tof: 3.33, age: "1 분 전", trend: [9.89, 9.88, 9.88, 9.88, 9.87, 9.87, 9.87] },
-    { id: "ch12", theta: 270, z: 1800, state: "ok", thickness: 9.84, amp: 56, tof: 3.32, age: "1 분 전", trend: [9.88, 9.87, 9.86, 9.85, 9.85, 9.84, 9.84] },
-    { id: "ch13", theta:   0, z: 3300, state: "ok", thickness: 9.82, amp: 26, tof: 3.31, age: "1 분 전", trend: [9.84, 9.83, 9.83, 9.83, 9.82, 9.82, 9.82] },
-    { id: "ch14", theta: 180, z: 3300, state: "ok", thickness: 9.81, amp: 27, tof: 3.31, age: "1 분 전", trend: [9.84, 9.83, 9.82, 9.82, 9.81, 9.81, 9.81] },
-    { id: "ch15", theta:  45, z: 3300, state: "ok", thickness: 9.83, amp: 28, tof: 3.32, age: "1 분 전", trend: [9.85, 9.84, 9.84, 9.83, 9.83, 9.83, 9.83] },
-    { id: "ch16", theta: 225, z: 3300, state: "ok", thickness: 9.80, amp: 24, tof: 3.31, age: "1 분 전", trend: [9.82, 9.82, 9.81, 9.81, 9.81, 9.80, 9.80] },
-    { id: "ch17", theta:   0, z: 4560, state: "ok", thickness: 9.79, amp: 26, tof: 3.30, age: "1 분 전", trend: [9.82, 9.81, 9.81, 9.80, 9.80, 9.79, 9.79] },
-    { id: "ch18", theta:  90, z: 4560, state: "ok", thickness: 9.76, amp: 48, tof: 3.29, age: "1 분 전", trend: [9.81, 9.80, 9.79, 9.78, 9.77, 9.77, 9.76] },
-    { id: "ch19", theta: 135, z: 4560, state: "ok", thickness: 9.82, amp: 29, tof: 3.32, age: "1 분 전", trend: [9.84, 9.84, 9.83, 9.83, 9.82, 9.82, 9.82] },
-    { id: "ch20", theta: 225, z: 4560, state: "ok", thickness: 9.84, amp: 25, tof: 3.32, age: "1 분 전", trend: [9.86, 9.85, 9.85, 9.85, 9.84, 9.84, 9.84] },
-    { id: "ch21", theta:   0, z: 5760, state: "ok", thickness: 9.87, amp: 23, tof: 3.33, age: "1 분 전", trend: [9.89, 9.88, 9.88, 9.88, 9.87, 9.87, 9.87] },
-    { id: "ch22", theta:  45, z: 5760, state: "ok", thickness: 9.85, amp: 27, tof: 3.32, age: "1 분 전", trend: [9.87, 9.86, 9.86, 9.86, 9.85, 9.85, 9.85] },
-    { id: "ch23", theta: 180, z: 5760, state: "ok", thickness: 9.83, amp: 24, tof: 3.32, age: "1 분 전", trend: [9.85, 9.85, 9.84, 9.84, 9.83, 9.83, 9.83] },
-    { id: "ch24", theta: 270, z: 5760, state: "ok", thickness: 9.86, amp: 26, tof: 3.33, age: "1 분 전", trend: [9.88, 9.87, 9.87, 9.87, 9.86, 9.86, 9.86] },
+    { id: "ch09", state: "ok", thickness: 9.91, amp: 23, tof: 3.34, age: "1 분 전", trend: [9.93, 9.93, 9.92, 9.92, 9.91, 9.91, 9.91] },
+    { id: "ch10", state: "ok", thickness: 9.90, amp: 24, tof: 3.34, age: "1 분 전", trend: [9.92, 9.91, 9.91, 9.91, 9.90, 9.90, 9.90] },
+    { id: "ch11", state: "ok", thickness: 9.87, amp: 25, tof: 3.33, age: "1 분 전", trend: [9.89, 9.88, 9.88, 9.88, 9.87, 9.87, 9.87] },
+    { id: "ch12", state: "ok", thickness: 9.84, amp: 56, tof: 3.32, age: "1 분 전", trend: [9.88, 9.87, 9.86, 9.85, 9.85, 9.84, 9.84] },
+    { id: "ch13", state: "ok", thickness: 9.82, amp: 26, tof: 3.31, age: "1 분 전", trend: [9.84, 9.83, 9.83, 9.83, 9.82, 9.82, 9.82] },
+    { id: "ch14", state: "ok", thickness: 9.81, amp: 27, tof: 3.31, age: "1 분 전", trend: [9.84, 9.83, 9.82, 9.82, 9.81, 9.81, 9.81] },
+    { id: "ch15", state: "ok", thickness: 9.83, amp: 28, tof: 3.32, age: "1 분 전", trend: [9.85, 9.84, 9.84, 9.83, 9.83, 9.83, 9.83] },
+    { id: "ch16", state: "ok", thickness: 9.80, amp: 24, tof: 3.31, age: "1 분 전", trend: [9.82, 9.82, 9.81, 9.81, 9.81, 9.80, 9.80] },
+    { id: "ch17", state: "ok", thickness: 9.79, amp: 26, tof: 3.30, age: "1 분 전", trend: [9.82, 9.81, 9.81, 9.80, 9.80, 9.79, 9.79] },
+    { id: "ch18", state: "ok", thickness: 9.76, amp: 48, tof: 3.29, age: "1 분 전", trend: [9.81, 9.80, 9.79, 9.78, 9.77, 9.77, 9.76] },
+    { id: "ch19", state: "ok", thickness: 9.82, amp: 29, tof: 3.32, age: "1 분 전", trend: [9.84, 9.84, 9.83, 9.83, 9.82, 9.82, 9.82] },
+    { id: "ch20", state: "ok", thickness: 9.84, amp: 25, tof: 3.32, age: "1 분 전", trend: [9.86, 9.85, 9.85, 9.85, 9.84, 9.84, 9.84] },
+    { id: "ch21", state: "ok", thickness: 9.87, amp: 23, tof: 3.33, age: "1 분 전", trend: [9.89, 9.88, 9.88, 9.88, 9.87, 9.87, 9.87] },
+    { id: "ch22", state: "ok", thickness: 9.85, amp: 27, tof: 3.32, age: "1 분 전", trend: [9.87, 9.86, 9.86, 9.86, 9.85, 9.85, 9.85] },
+    { id: "ch23", state: "ok", thickness: 9.83, amp: 24, tof: 3.32, age: "1 분 전", trend: [9.85, 9.85, 9.84, 9.84, 9.83, 9.83, 9.83] },
+    { id: "ch24", state: "ok", thickness: 9.86, amp: 26, tof: 3.33, age: "1 분 전", trend: [9.88, 9.87, 9.87, 9.87, 9.86, 9.86, 9.86] },
     // v9.15: TANK-B-101 (ch25-48) — 20 ok + 4 warn (ch28·31·38·45)
-    { id: "ch25", theta:   0, z:  300, state: "ok",   thickness: 5.94, amp: 22, tof: 2.01, age: "1 분 전", trend: [5.96, 5.95, 5.95, 5.95, 5.94, 5.94, 5.94] },
-    { id: "ch26", theta:  60, z:  300, state: "ok",   thickness: 5.92, amp: 24, tof: 2.00, age: "1 분 전", trend: [5.94, 5.94, 5.93, 5.93, 5.92, 5.92, 5.92] },
-    { id: "ch27", theta: 120, z:  300, state: "ok",   thickness: 5.93, amp: 23, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.93, 5.93, 5.93, 5.93] },
-    { id: "ch28", theta: 180, z:  300, state: "warn", thickness: 5.88, amp: 38, tof: 1.99, age: "1 분 전", trend: [5.92, 5.91, 5.90, 5.89, 5.89, 5.88, 5.88] },
-    { id: "ch29", theta: 240, z:  300, state: "ok",   thickness: 5.93, amp: 22, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
-    { id: "ch30", theta: 300, z:  300, state: "ok",   thickness: 5.94, amp: 24, tof: 2.01, age: "1 분 전", trend: [5.96, 5.95, 5.95, 5.95, 5.94, 5.94, 5.94] },
-    { id: "ch31", theta:   0, z:  750, state: "warn", thickness: 5.85, amp: 42, tof: 1.98, age: "1 분 전", trend: [5.89, 5.88, 5.87, 5.86, 5.86, 5.85, 5.85] },
-    { id: "ch32", theta:  60, z:  750, state: "ok",   thickness: 5.91, amp: 23, tof: 2.00, age: "1 분 전", trend: [5.93, 5.92, 5.92, 5.92, 5.91, 5.91, 5.91] },
-    { id: "ch33", theta: 120, z:  750, state: "ok",   thickness: 5.93, amp: 21, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
-    { id: "ch34", theta: 180, z:  750, state: "ok",   thickness: 5.90, amp: 24, tof: 2.00, age: "1 분 전", trend: [5.92, 5.91, 5.91, 5.91, 5.90, 5.90, 5.90] },
-    { id: "ch35", theta: 240, z:  750, state: "ok",   thickness: 5.92, amp: 22, tof: 2.00, age: "1 분 전", trend: [5.94, 5.93, 5.93, 5.93, 5.92, 5.92, 5.92] },
-    { id: "ch36", theta: 300, z:  750, state: "ok",   thickness: 5.93, amp: 23, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
-    { id: "ch37", theta:   0, z: 1200, state: "ok",   thickness: 5.94, amp: 24, tof: 2.01, age: "1 분 전", trend: [5.96, 5.95, 5.95, 5.95, 5.94, 5.94, 5.94] },
-    { id: "ch38", theta:  60, z: 1200, state: "warn", thickness: 5.82, amp: 45, tof: 1.97, age: "1 분 전", trend: [5.86, 5.85, 5.84, 5.83, 5.83, 5.82, 5.82] },
-    { id: "ch39", theta: 120, z: 1200, state: "ok",   thickness: 5.91, amp: 22, tof: 2.00, age: "1 분 전", trend: [5.93, 5.92, 5.92, 5.92, 5.91, 5.91, 5.91] },
-    { id: "ch40", theta: 180, z: 1200, state: "ok",   thickness: 5.92, amp: 23, tof: 2.00, age: "1 분 전", trend: [5.94, 5.93, 5.93, 5.93, 5.92, 5.92, 5.92] },
-    { id: "ch41", theta: 240, z: 1200, state: "ok",   thickness: 5.93, amp: 21, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
-    { id: "ch42", theta: 300, z: 1200, state: "ok",   thickness: 5.93, amp: 22, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
-    { id: "ch43", theta:   0, z: 1500, state: "ok",   thickness: 5.94, amp: 24, tof: 2.01, age: "1 분 전", trend: [5.96, 5.95, 5.95, 5.95, 5.94, 5.94, 5.94] },
-    { id: "ch44", theta:  60, z: 1500, state: "ok",   thickness: 5.92, amp: 23, tof: 2.00, age: "1 분 전", trend: [5.94, 5.93, 5.93, 5.93, 5.92, 5.92, 5.92] },
-    { id: "ch45", theta: 120, z: 1500, state: "warn", thickness: 5.84, amp: 40, tof: 1.97, age: "1 분 전", trend: [5.88, 5.87, 5.86, 5.85, 5.85, 5.84, 5.84] },
-    { id: "ch46", theta: 180, z: 1500, state: "ok",   thickness: 5.91, amp: 22, tof: 2.00, age: "1 분 전", trend: [5.93, 5.92, 5.92, 5.92, 5.91, 5.91, 5.91] },
-    { id: "ch47", theta: 240, z: 1500, state: "ok",   thickness: 5.93, amp: 24, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
-    { id: "ch48", theta: 300, z: 1500, state: "ok",   thickness: 5.92, amp: 23, tof: 2.00, age: "1 분 전", trend: [5.94, 5.93, 5.93, 5.93, 5.92, 5.92, 5.92] },
+    { id: "ch25", state: "ok",   thickness: 5.94, amp: 22, tof: 2.01, age: "1 분 전", trend: [5.96, 5.95, 5.95, 5.95, 5.94, 5.94, 5.94] },
+    { id: "ch26", state: "ok",   thickness: 5.92, amp: 24, tof: 2.00, age: "1 분 전", trend: [5.94, 5.94, 5.93, 5.93, 5.92, 5.92, 5.92] },
+    { id: "ch27", state: "ok",   thickness: 5.93, amp: 23, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.93, 5.93, 5.93, 5.93] },
+    { id: "ch28", state: "warn", thickness: 5.88, amp: 38, tof: 1.99, age: "1 분 전", trend: [5.92, 5.91, 5.90, 5.89, 5.89, 5.88, 5.88] },
+    { id: "ch29", state: "ok",   thickness: 5.93, amp: 22, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
+    { id: "ch30", state: "ok",   thickness: 5.94, amp: 24, tof: 2.01, age: "1 분 전", trend: [5.96, 5.95, 5.95, 5.95, 5.94, 5.94, 5.94] },
+    { id: "ch31", state: "warn", thickness: 5.85, amp: 42, tof: 1.98, age: "1 분 전", trend: [5.89, 5.88, 5.87, 5.86, 5.86, 5.85, 5.85] },
+    { id: "ch32", state: "ok",   thickness: 5.91, amp: 23, tof: 2.00, age: "1 분 전", trend: [5.93, 5.92, 5.92, 5.92, 5.91, 5.91, 5.91] },
+    { id: "ch33", state: "ok",   thickness: 5.93, amp: 21, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
+    { id: "ch34", state: "ok",   thickness: 5.90, amp: 24, tof: 2.00, age: "1 분 전", trend: [5.92, 5.91, 5.91, 5.91, 5.90, 5.90, 5.90] },
+    { id: "ch35", state: "ok",   thickness: 5.92, amp: 22, tof: 2.00, age: "1 분 전", trend: [5.94, 5.93, 5.93, 5.93, 5.92, 5.92, 5.92] },
+    { id: "ch36", state: "ok",   thickness: 5.93, amp: 23, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
+    { id: "ch37", state: "ok",   thickness: 5.94, amp: 24, tof: 2.01, age: "1 분 전", trend: [5.96, 5.95, 5.95, 5.95, 5.94, 5.94, 5.94] },
+    { id: "ch38", state: "warn", thickness: 5.82, amp: 45, tof: 1.97, age: "1 분 전", trend: [5.86, 5.85, 5.84, 5.83, 5.83, 5.82, 5.82] },
+    { id: "ch39", state: "ok",   thickness: 5.91, amp: 22, tof: 2.00, age: "1 분 전", trend: [5.93, 5.92, 5.92, 5.92, 5.91, 5.91, 5.91] },
+    { id: "ch40", state: "ok",   thickness: 5.92, amp: 23, tof: 2.00, age: "1 분 전", trend: [5.94, 5.93, 5.93, 5.93, 5.92, 5.92, 5.92] },
+    { id: "ch41", state: "ok",   thickness: 5.93, amp: 21, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
+    { id: "ch42", state: "ok",   thickness: 5.93, amp: 22, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
+    { id: "ch43", state: "ok",   thickness: 5.94, amp: 24, tof: 2.01, age: "1 분 전", trend: [5.96, 5.95, 5.95, 5.95, 5.94, 5.94, 5.94] },
+    { id: "ch44", state: "ok",   thickness: 5.92, amp: 23, tof: 2.00, age: "1 분 전", trend: [5.94, 5.93, 5.93, 5.93, 5.92, 5.92, 5.92] },
+    { id: "ch45", state: "warn", thickness: 5.84, amp: 40, tof: 1.97, age: "1 분 전", trend: [5.88, 5.87, 5.86, 5.85, 5.85, 5.84, 5.84] },
+    { id: "ch46", state: "ok",   thickness: 5.91, amp: 22, tof: 2.00, age: "1 분 전", trend: [5.93, 5.92, 5.92, 5.92, 5.91, 5.91, 5.91] },
+    { id: "ch47", state: "ok",   thickness: 5.93, amp: 24, tof: 2.01, age: "1 분 전", trend: [5.95, 5.94, 5.94, 5.94, 5.93, 5.93, 5.93] },
+    { id: "ch48", state: "ok",   thickness: 5.92, amp: 23, tof: 2.00, age: "1 분 전", trend: [5.94, 5.93, 5.93, 5.93, 5.92, 5.92, 5.92] },
     // v9.15: VESSEL-C-301 (ch49-64) — 12 ok + 2 warn (ch50·55) + 2 err (ch49·62)
-    { id: "ch49", theta:   0, z:  100, state: "err",  thickness: 0,    amp: 0,  tof: 0,    age: "—",      trend: [11.95, 11.94, 11.93, 0, 0, 0, 0] },
-    { id: "ch50", theta:  90, z:  100, state: "warn", thickness: 11.78,amp: 48, tof: 3.98, age: "1 분 전", trend: [11.85, 11.84, 11.82, 11.81, 11.80, 11.79, 11.78] },
-    { id: "ch51", theta: 180, z:  100, state: "ok",   thickness: 11.92,amp: 26, tof: 4.02, age: "1 분 전", trend: [11.94, 11.93, 11.93, 11.92, 11.92, 11.92, 11.92] },
-    { id: "ch52", theta: 270, z:  100, state: "ok",   thickness: 11.91,amp: 24, tof: 4.02, age: "1 분 전", trend: [11.93, 11.92, 11.92, 11.92, 11.91, 11.91, 11.91] },
-    { id: "ch53", theta:  45, z:  200, state: "ok",   thickness: 11.93,amp: 25, tof: 4.03, age: "1 분 전", trend: [11.95, 11.94, 11.94, 11.93, 11.93, 11.93, 11.93] },
-    { id: "ch54", theta: 135, z:  200, state: "ok",   thickness: 11.90,amp: 27, tof: 4.01, age: "1 분 전", trend: [11.92, 11.91, 11.91, 11.91, 11.90, 11.90, 11.90] },
-    { id: "ch55", theta: 225, z:  200, state: "warn", thickness: 11.75,amp: 50, tof: 3.97, age: "1 분 전", trend: [11.82, 11.80, 11.79, 11.78, 11.77, 11.76, 11.75] },
-    { id: "ch56", theta: 315, z:  200, state: "ok",   thickness: 11.92,amp: 24, tof: 4.02, age: "1 분 전", trend: [11.94, 11.93, 11.93, 11.93, 11.92, 11.92, 11.92] },
-    { id: "ch57", theta:   0, z:  300, state: "ok",   thickness: 11.93,amp: 26, tof: 4.03, age: "1 분 전", trend: [11.95, 11.94, 11.94, 11.93, 11.93, 11.93, 11.93] },
-    { id: "ch58", theta:  90, z:  300, state: "ok",   thickness: 11.91,amp: 23, tof: 4.02, age: "1 분 전", trend: [11.93, 11.92, 11.92, 11.92, 11.91, 11.91, 11.91] },
-    { id: "ch59", theta: 180, z:  300, state: "ok",   thickness: 11.90,amp: 25, tof: 4.01, age: "1 분 전", trend: [11.92, 11.91, 11.91, 11.91, 11.90, 11.90, 11.90] },
-    { id: "ch60", theta: 270, z:  300, state: "ok",   thickness: 11.92,amp: 24, tof: 4.02, age: "1 분 전", trend: [11.94, 11.93, 11.93, 11.93, 11.92, 11.92, 11.92] },
-    { id: "ch61", theta:  45, z:  400, state: "ok",   thickness: 11.93,amp: 27, tof: 4.03, age: "1 분 전", trend: [11.95, 11.94, 11.94, 11.93, 11.93, 11.93, 11.93] },
-    { id: "ch62", theta: 135, z:  400, state: "err",  thickness: 0,    amp: 0,  tof: 0,    age: "—",      trend: [11.92, 11.91, 11.90, 0, 0, 0, 0] },
-    { id: "ch63", theta: 225, z:  400, state: "ok",   thickness: 11.91,amp: 23, tof: 4.02, age: "1 분 전", trend: [11.93, 11.92, 11.92, 11.92, 11.91, 11.91, 11.91] },
-    { id: "ch64", theta: 315, z:  400, state: "ok",   thickness: 11.92,amp: 25, tof: 4.02, age: "1 분 전", trend: [11.94, 11.93, 11.93, 11.93, 11.92, 11.92, 11.92] },
+    { id: "ch49", state: "err",  thickness: 0,    amp: 0,  tof: 0,    age: "—",      trend: [11.95, 11.94, 11.93, 0, 0, 0, 0] },
+    { id: "ch50", state: "warn", thickness: 11.78,amp: 48, tof: 3.98, age: "1 분 전", trend: [11.85, 11.84, 11.82, 11.81, 11.80, 11.79, 11.78] },
+    { id: "ch51", state: "ok",   thickness: 11.92,amp: 26, tof: 4.02, age: "1 분 전", trend: [11.94, 11.93, 11.93, 11.92, 11.92, 11.92, 11.92] },
+    { id: "ch52", state: "ok",   thickness: 11.91,amp: 24, tof: 4.02, age: "1 분 전", trend: [11.93, 11.92, 11.92, 11.92, 11.91, 11.91, 11.91] },
+    { id: "ch53", state: "ok",   thickness: 11.93,amp: 25, tof: 4.03, age: "1 분 전", trend: [11.95, 11.94, 11.94, 11.93, 11.93, 11.93, 11.93] },
+    { id: "ch54", state: "ok",   thickness: 11.90,amp: 27, tof: 4.01, age: "1 분 전", trend: [11.92, 11.91, 11.91, 11.91, 11.90, 11.90, 11.90] },
+    { id: "ch55", state: "warn", thickness: 11.75,amp: 50, tof: 3.97, age: "1 분 전", trend: [11.82, 11.80, 11.79, 11.78, 11.77, 11.76, 11.75] },
+    { id: "ch56", state: "ok",   thickness: 11.92,amp: 24, tof: 4.02, age: "1 분 전", trend: [11.94, 11.93, 11.93, 11.93, 11.92, 11.92, 11.92] },
+    { id: "ch57", state: "ok",   thickness: 11.93,amp: 26, tof: 4.03, age: "1 분 전", trend: [11.95, 11.94, 11.94, 11.93, 11.93, 11.93, 11.93] },
+    { id: "ch58", state: "ok",   thickness: 11.91,amp: 23, tof: 4.02, age: "1 분 전", trend: [11.93, 11.92, 11.92, 11.92, 11.91, 11.91, 11.91] },
+    { id: "ch59", state: "ok",   thickness: 11.90,amp: 25, tof: 4.01, age: "1 분 전", trend: [11.92, 11.91, 11.91, 11.91, 11.90, 11.90, 11.90] },
+    { id: "ch60", state: "ok",   thickness: 11.92,amp: 24, tof: 4.02, age: "1 분 전", trend: [11.94, 11.93, 11.93, 11.93, 11.92, 11.92, 11.92] },
+    { id: "ch61", state: "ok",   thickness: 11.93,amp: 27, tof: 4.03, age: "1 분 전", trend: [11.95, 11.94, 11.94, 11.93, 11.93, 11.93, 11.93] },
+    { id: "ch62", state: "err",  thickness: 0,    amp: 0,  tof: 0,    age: "—",      trend: [11.92, 11.91, 11.90, 0, 0, 0, 0] },
+    { id: "ch63", state: "ok",   thickness: 11.91,amp: 23, tof: 4.02, age: "1 분 전", trend: [11.93, 11.92, 11.92, 11.92, 11.91, 11.91, 11.91] },
+    { id: "ch64", state: "ok",   thickness: 11.92,amp: 25, tof: 4.02, age: "1 분 전", trend: [11.94, 11.93, 11.93, 11.93, 11.92, 11.92, 11.92] },
   ],
   defects: [
-    { id: 1, type: "Critical", theta:  45, z: 2200, size: "Ø 12mm" },
-    { id: 2, type: "Major",    theta: 170, z: 3600, size: "Ø  8mm" },
-    { id: 3, type: "Minor",    theta: 110, z: 2900, size: "Ø  4mm" },
+    { id: 1, type: "Critical", size: "Ø 12mm" },
+    { id: 2, type: "Major",    size: "Ø  8mm" },
+    { id: 3, type: "Minor",    size: "Ø  4mm" },
   ],
   welds: [
     { id: "W01", z: 1800 },
@@ -850,6 +850,16 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
             </span>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
+            {/* v18.1: 보고서 출력 — MC보드 단위 데이터 액션 (진단/로그 옆) */}
+            <button
+              className="erut-btn erut-btn--default erut-btn--sm"
+              style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
+              onClick={() => onOpenReport && onOpenReport(selected)}
+              title="채널 측정 데이터를 PDF로 출력 — 다중 채널 선택 가능"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="14 3 14 9 20 9"/></svg>
+              보고서 출력
+            </button>
             <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowDiagnostics(true)}>진단 / 로그</button>
           </div>
         </div>
@@ -1005,16 +1015,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
               </button>
             );
           })()}
-          {/* v18.0: 보고서 출력 — 현 채널 측정 데이터 PDF (선택 채널 prefill, 다중 선택 가능) */}
-          <button
-            className="erut-btn erut-btn--default erut-btn--m"
-            style={{ width: "100%", marginTop: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-            onClick={() => onOpenReport && onOpenReport(selected)}
-            title="이 채널 측정 데이터를 PDF로 출력 (같은 검사 대상 내 다른 채널 추가 선택 가능)"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="14 3 14 9 20 9"/></svg>
-            보고서 출력
-          </button>
+          {/* v18.1: 보고서 출력 버튼은 MC보드 정보 옆 '진단/로그' 왼쪽으로 이동 (단위 일관성) */}
           <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%", marginTop: 8 }} onClick={() => onStartMeasure && onStartMeasure(selected)}>[11] 실시간 전체 화면 ↗</button>
         </div>
       </div>
@@ -2083,18 +2084,21 @@ window.SettingsModal = function SettingsModal({ onClose }) {
 
 // =================== v18.0 보고서 출력 다이얼로그 (채널 측정 보고서 — 현장 데이터 dump) ===================
 // 합의: 결함 판정 미포함. 채널별 A4 1장. 탐촉자 스펙 + 교정 이력 + A-scan + 적용 표준.
-// 진입: [2] DeviceDetail 채널 패널 "보고서 출력" 버튼 (단일) / 메뉴바 [파일] → "보고서 출력..." (다중)
-window.ReportExportDialog = function ReportExportDialog({ targetId, initialChannel, onClose, onExport }) {
-  const target = window.MOCK.targets.find(t => t.id === targetId) || window.MOCK.targets[0];
-  const standard = (window.MOCK.targetStandards && window.MOCK.targetStandards[target.id]) || "KS B 0817";
-  const allChannels = window.MOCK.sensors.filter(s => {
-    // 대상별 채널 분포 — PIPE: ch01~ch24, TANK: ch25~ch48, VESSEL: ch49~ch64
-    const n = parseInt(s.id.replace("ch", ""), 10);
-    if (target.id === "PIPE-A-204")   return n >= 1  && n <= 24;
-    if (target.id === "TANK-B-101")   return n >= 25 && n <= 48;
-    if (target.id === "VESSEL-C-301") return n >= 49 && n <= 64;
-    return false;
-  });
+// 진입: [2] DeviceDetail MC보드 정보 옆 "보고서 출력" 버튼 (v18.1) / 메뉴바 [파일] → "보고서 출력..." / Ctrl+P
+// v18.1: 채널 → 검사 대상 매핑 helper, 64채널 전체 표시, 검사 대상명 서브텍스트, 좌/우 chevron + 키보드 ←/→
+window.getChannelTarget = function getChannelTarget(chId) {
+  // MC보드 64채널의 검사 대상 매핑 — mockup용. 실제론 TB_CHANNEL_PROBE.ItemID로 join
+  const n = parseInt(chId.replace("ch", ""), 10);
+  if (n >= 1  && n <= 24) return "PIPE-A-204";
+  if (n >= 25 && n <= 48) return "TANK-B-101";
+  if (n >= 49 && n <= 64) return "VESSEL-C-301";
+  return null;
+};
+
+window.ReportExportDialog = function ReportExportDialog({ deviceId, initialChannel, onClose, onExport }) {
+  const device = (window.MOCK.devices || []).find(d => d.id === deviceId) || (window.MOCK.devices && window.MOCK.devices[0]) || { id: "MCuF-001", totalCh: 64 };
+  // v18.1: MC보드 단위 진입 — 64채널 전체 표시 (검사 대상별 그룹)
+  const allChannels = window.MOCK.sensors;
   const [selected, setSelected] = $s(initialChannel ? [initialChannel] : (allChannels[0] ? [allChannels[0].id] : []));
   const [previewCh, setPreviewCh] = $s(initialChannel || (allChannels[0] && allChannels[0].id));
   const [includeSign, setIncludeSign] = $s(true);
@@ -2107,6 +2111,32 @@ window.ReportExportDialog = function ReportExportDialog({ targetId, initialChann
   const selectAll = () => setSelected(allSelected ? [] : allChannels.map(c => c.id));
 
   const previewSensor = allChannels.find(s => s.id === previewCh) || allChannels[0];
+  const previewTargetId = previewSensor ? window.getChannelTarget(previewSensor.id) : null;
+  const previewTarget = previewTargetId && window.MOCK.targets.find(t => t.id === previewTargetId);
+  const previewStandard = previewTargetId && window.MOCK.targetStandards
+    ? (window.MOCK.targetStandards[previewTargetId] || "표준 미지정")
+    : "표준 미지정";
+
+  // v18.1: 미리보기 chevron — 선택된 채널들 사이만 이동
+  const previewIdx = selected.indexOf(previewCh);
+  const goPrev = () => {
+    if (selected.length === 0) return;
+    const i = previewIdx <= 0 ? selected.length - 1 : previewIdx - 1;
+    setPreviewCh(selected[i]);
+  };
+  const goNext = () => {
+    if (selected.length === 0) return;
+    const i = previewIdx >= selected.length - 1 ? 0 : previewIdx + 1;
+    setPreviewCh(selected[i]);
+  };
+  React.useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "ArrowLeft")  { e.preventDefault(); goPrev(); }
+      if (e.key === "ArrowRight") { e.preventDefault(); goNext(); }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [selected, previewCh]);
 
   const footer = (
     <>
@@ -2114,27 +2144,28 @@ window.ReportExportDialog = function ReportExportDialog({ targetId, initialChann
       <button
         className="erut-btn erut-btn--emphasis erut-btn--m"
         disabled={selected.length === 0}
-        onClick={() => onExport && onExport({ targetId: target.id, channels: selected, includeSign, standard })}
+        onClick={() => onExport && onExport({ deviceId: device.id, channels: selected, includeSign })}
       >PDF 출력 ({selected.length} 장)</button>
     </>
   );
 
   return (
-    <window.Modal title={`보고서 출력 — ${target.name}`} onClose={onClose} footer={footer} width={1200}>
+    <window.Modal title={`보고서 출력 — ${device.id} (${allChannels.length} ch)`} onClose={onClose} footer={footer} width={1200}>
       <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 20, minHeight: 580 }}>
         {/* 좌측 — 채널 선택 + 옵션 */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14, minHeight: 0 }}>
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-              <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>출력 채널 선택</div>
+              <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>출력 채널 선택 ({selected.length} / {allChannels.length})</div>
               <button onClick={selectAll} style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--brand-primary)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                 {allSelected ? "전체 해제" : "전체 선택"}
               </button>
             </div>
-            <div style={{ border: "1px solid var(--border-medium)", background: "var(--surface-base)", maxHeight: 320, overflow: "auto" }}>
+            <div style={{ border: "1px solid var(--border-medium)", background: "var(--surface-base)", maxHeight: 360, overflow: "auto" }}>
               {allChannels.map(s => {
                 const isOn = selected.includes(s.id);
                 const isPreview = s.id === previewCh;
+                const chTarget = window.getChannelTarget(s.id);
                 return (
                   <div
                     key={s.id}
@@ -2149,7 +2180,7 @@ window.ReportExportDialog = function ReportExportDialog({ targetId, initialChann
                   >
                     <span className={"erut-cb__box" + (isOn ? " is-on" : "")}/>
                     <span style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{s.id.toUpperCase()}</span>
-                    <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginLeft: "auto" }}>θ {s.theta}° · Z {s.z} mm</span>
+                    <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginLeft: "auto" }}>{chTarget || "—"}</span>
                   </div>
                 );
               })}
@@ -2162,9 +2193,9 @@ window.ReportExportDialog = function ReportExportDialog({ targetId, initialChann
             <div style={{ border: "1px solid var(--border-medium)", background: "var(--surface-base)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>적용 표준</span>
-                <span style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>{standard}</span>
+                <span style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>채널별 다름</span>
               </div>
-              <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>* [6] 검사 대상 등록 시 입력값. 변경은 검사 대상 편집에서.</div>
+              <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>* 각 채널의 검사 대상에 등록된 표준이 자동 반영. [6] 검사 대상 편집에서 변경.</div>
               <div style={{ height: 1, background: "var(--border-low)" }}/>
               <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }} onClick={() => setIncludeSign(!includeSign)}>
                 <span className={"erut-cb__box" + (includeSign ? " is-on" : "")}/>
@@ -2178,15 +2209,23 @@ window.ReportExportDialog = function ReportExportDialog({ targetId, initialChann
           </div>
         </div>
 
-        {/* 우측 — A4 미리보기 */}
+        {/* 우측 — A4 미리보기 + v18.1 좌/우 chevron */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>미리보기 — {previewSensor && previewSensor.id.toUpperCase()}</div>
-            <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>1 / {selected.length || 1}</div>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <button onClick={goPrev} disabled={selected.length < 2} title="이전 채널 (←)" style={{ background: "none", border: "1px solid var(--border-medium)", padding: "4px 6px", cursor: selected.length < 2 ? "default" : "pointer", display: "inline-flex", alignItems: "center", color: "var(--content-medium)", opacity: selected.length < 2 ? 0.4 : 1 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{previewIdx >= 0 ? previewIdx + 1 : 0} / {selected.length || 0}</span>
+              <button onClick={goNext} disabled={selected.length < 2} title="다음 채널 (→)" style={{ background: "none", border: "1px solid var(--border-medium)", padding: "4px 6px", cursor: selected.length < 2 ? "default" : "pointer", display: "inline-flex", alignItems: "center", color: "var(--content-medium)", opacity: selected.length < 2 ? 0.4 : 1 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
           </div>
           <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "flex-start", overflow: "auto" }}>
             <div style={{ width: 420 }}>
-              <ReportA4Preview target={target} sensor={previewSensor} standard={standard} includeSign={includeSign}/>
+              <ReportA4Preview target={previewTarget} sensor={previewSensor} standard={previewStandard} includeSign={includeSign} deviceId={device.id}/>
             </div>
           </div>
         </div>
@@ -2195,19 +2234,20 @@ window.ReportExportDialog = function ReportExportDialog({ targetId, initialChann
   );
 };
 
-// A4 미리보기 단일 페이지 — 채널 측정 보고서 (v18.0)
-function ReportA4Preview({ target, sensor, standard, includeSign }) {
+// A4 미리보기 단일 페이지 — 채널 측정 보고서 (v18.0 / v18.1: 측정 위치 행 → 채널 ID 행)
+function ReportA4Preview({ target, sensor, standard, includeSign, deviceId }) {
   if (!sensor) return null;
   const today = new Date().toISOString().slice(0, 10);
   const lastCal = (window.MOCK.lastCalibrationDate && window.MOCK.lastCalibrationDate[sensor.id]) || "—";
   const cycleDays = (window.MOCK.channelCycleDays && window.MOCK.channelCycleDays[sensor.id])
     || (window.MOCK.calibrationPolicy && window.MOCK.calibrationPolicy.defaultCycleDays) || 180;
+  const targetLabel = target ? `${target.name} · ${target.desc}` : "검사 대상 미지정";
   return (
     <div className="erut-report-a4">
       <div className="erut-report-a4__header">
         <div className="erut-report-a4__title">초음파 측정 데이터 보고서</div>
         <div className="erut-report-a4__subtitle">
-          {target.name} · {sensor.id.toUpperCase()} · {today}
+          {target ? target.name : "—"} · {sensor.id.toUpperCase()} · {today}
         </div>
       </div>
       <div className="erut-report-a4__section">
@@ -2215,8 +2255,8 @@ function ReportA4Preview({ target, sensor, standard, includeSign }) {
         <table className="erut-report-a4__table">
           <tbody>
             <tr><td>적용 표준</td><td>{standard}</td></tr>
-            <tr><td>검사 대상</td><td>{target.name} · {target.desc}</td></tr>
-            <tr><td>측정 위치</td><td>θ {sensor.theta}° · Z {sensor.z} mm</td></tr>
+            <tr><td>검사 대상</td><td>{targetLabel}</td></tr>
+            <tr><td>채널 ID</td><td>{sensor.id.toUpperCase()} ({deviceId || "MCuF-001"})</td></tr>
           </tbody>
         </table>
       </div>
@@ -3559,8 +3599,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   const [form, setForm]             = $s(isNewMode ? buildEmptyTargetForm() : buildTargetForm(initialTarget));
   const [autoPRF, setAutoPRF]       = $s(true);
   const [prfManual, setPrfManual]   = $s(2000);
-  // v8.5: 채널 배치 마법사 모달
-  const [showChannelWizard, setShowChannelWizard] = $s(false);
+  // v18.1: 채널 배치 마법사 폐기 (A-scan은 좌표 정보 없음)
   // v9.27 Wave B (#6): 프리셋 모달 + 저장 confirm 모달
   const [showPresetModal, setShowPresetModal] = $s(false);
   const [showSaveConfirm, setShowSaveConfirm] = $s(false);
@@ -3729,21 +3768,10 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             {formLabel("코드")}
             <input className="erut-field" value={form.code} onChange={(e) => setField("code", e.target.value)} style={{ width: "100%" }}/>
           </div>
+          {/* v18.1: 채널 배치 마법사 폐기 — A-scan은 좌표 정보 없음. 도면 thumbnail만 유지 */}
           <div>
-            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>도면 thumbnail <span style={{ fontWeight: 400, color: "var(--content-low)" }}>+ 채널 배치</span></div>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button className="erut-btn erut-btn--default erut-btn--sm" style={{ flex: 1 }}>파일 첨부 ↑</button>
-              {/* v8.5 신규: 채널 배치 마법사 진입 버튼 */}
-              <button
-                className="erut-btn erut-btn--emphasis erut-btn--sm"
-                style={{ flex: 1.4, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4 }}
-                title="채널 배치 마법사 열기 (v8.5 신규)"
-                onClick={() => setShowChannelWizard(true)}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-                채널 배치 ↗
-              </button>
-            </div>
+            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>도면 thumbnail</div>
+            <button className="erut-btn erut-btn--default erut-btn--sm" style={{ width: "100%" }}>파일 첨부 ↑</button>
           </div>
 
           {sectionHeader("형상")}
@@ -3847,13 +3875,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
         {/* v9.27 Wave B: 표준 프리셋 영역을 페이지에서 제거 → 모달로 이동 (상단 '프리셋' 버튼 클릭 시 표시) */}
       </div>
 
-      {/* v8.5: 채널 배치 마법사 모달 */}
-      {showChannelWizard && (
-        <window.ChannelPlacementWizard
-          targetName={form.name || "(신규)"}
-          onClose={() => setShowChannelWizard(false)}
-        />
-      )}
+      {/* v18.1: 채널 배치 마법사 모달 폐기 */}
 
       {/* v9.27 Wave B: 프리셋 선택 모달 */}
       {showPresetModal && (
@@ -3972,159 +3994,6 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   );
 };
 
-// =================== v8.5: 채널 배치 마법사 모달 (3-step Stepper) ===================
-window.ChannelPlacementWizard = function ChannelPlacementWizard({ targetName, onClose }) {
-  const [step, setStep] = $s(2); // 1: 검사 대상 확인 · 2: 채널 매핑 · 3: 검증+저장
-  const [theta, setTheta] = $s("45");
-  const [zPos, setZPos]   = $s("600");
-
-  // 배치된 채널 위치 (간단 시각화용)
-  const placedChannels = [
-    { ch: 1, x: 40, y: 180 }, { ch: 2, x: 80, y: 180 }, { ch: 3, x: 120, y: 180 },
-    { ch: 4, x: 160, y: 180, selected: true },
-    { ch: 5, x: 200, y: 180 }, { ch: 6, x: 240, y: 180 }, { ch: 7, x: 280, y: 180 }, { ch: 8, x: 320, y: 180 },
-    { ch: 9, x: 40, y: 120 }, { ch: 10, x: 80, y: 120 }, { ch: 11, x: 120, y: 120 }, { ch: 12, x: 160, y: 120 },
-    { ch: 13, x: 200, y: 120 }, { ch: 14, x: 240, y: 120 }, { ch: 15, x: 280, y: 120 }, { ch: 16, x: 320, y: 120 },
-    { ch: 17, x: 40, y: 60 },  { ch: 18, x: 80, y: 60 },
-  ];
-  const unplacedChannels = [
-    { x: 120, y: 60 }, { x: 160, y: 60 }, { x: 200, y: 60 }, { x: 240, y: 60 }, { x: 280, y: 60 }, { x: 320, y: 60 },
-  ];
-
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: 1100, maxHeight: "90vh", background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
-        {/* v8.8: 헤더 — titlebar 컬러 통일 */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid var(--border-medium)", background: "var(--content-medium)" }}>
-          <div>
-            <div style={{ marginBottom: 4 }}>
-              <span style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>채널 배치 마법사 — {targetName}</span>
-            </div>
-            <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "rgba(255,255,255,0.7)" }}>각 채널의 부착 위치(θ, Z)를 사전 등록 — NDT 표준 Probe Setup 패턴</div>
-          </div>
-          <button onClick={onClose} aria-label="닫기" style={{ background: "transparent", border: "none", color: "var(--content-inverse)", cursor: "pointer", padding: 4, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><window.EIcon.Close size={14}/></button>
-        </div>
-
-        {/* Stepper */}
-        <div className="erut-crumb erut-crumb--step" style={{ margin: "12px 24px 0", borderBottom: "1px solid var(--border-medium)" }}>
-          <div className="erut-crumb__steps">
-            <span className={"erut-crumb__step " + (step > 1 ? "is-done" : step === 1 ? "is-active" : "")}>
-              <span className="num">{step > 1 ? <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3,8 7,12 13,4"/></svg> : "1"}</span>
-              검사 대상 확인 (PIPE-A-204)
-            </span>
-            <span className="erut-crumb__step-sep"/>
-            <span className={"erut-crumb__step " + (step > 2 ? "is-done" : step === 2 ? "is-active" : "")}>
-              <span className="num">{step > 2 ? <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3,8 7,12 13,4"/></svg> : "2"}</span>
-              채널 매핑 (18 / 24)
-            </span>
-            <span className="erut-crumb__step-sep"/>
-            <span className={"erut-crumb__step " + (step === 3 ? "is-active" : "")}>
-              <span className="num">3</span>
-              검증 + 저장
-            </span>
-          </div>
-        </div>
-
-        {/* 본문 (Step 2: 채널 매핑 — 메인 mockup) */}
-        <div style={{ flex: 1, padding: "16px 24px", overflowY: "auto" }}>
-          <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 0 }}>
-            {/* 좌: 2D 전개도 */}
-            <div style={{ padding: "14px 18px", borderRight: "1px solid var(--border-low)", position: "relative" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
-                <span style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>PIPE-A-204 · 2D 전개도</span>
-                <span style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>θ 0–360° × Z 0–1500mm</span>
-              </div>
-              <svg viewBox="0 0 600 240" style={{ width: "100%", height: 220, background: "var(--surface-subtle-1)", border: "1px solid var(--border-low)" }}>
-                <line x1="0" y1="60" x2="600" y2="60" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="3,3"/>
-                <line x1="0" y1="120" x2="600" y2="120" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="3,3"/>
-                <line x1="0" y1="180" x2="600" y2="180" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="3,3"/>
-                <line x1="150" y1="0" x2="150" y2="240" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="3,3"/>
-                <line x1="300" y1="0" x2="300" y2="240" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="3,3"/>
-                <line x1="450" y1="0" x2="450" y2="240" stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="3,3"/>
-                <text x="6" y="14" fontSize="9" fill="var(--content-low)" fontFamily="NanumSquare" fontWeight="700">Z (mm)</text>
-                <text x="566" y="234" fontSize="9" fill="var(--content-low)" fontFamily="NanumSquare" fontWeight="700">θ (°)</text>
-                {/* 배치된 채널 */}
-                <g fill="var(--brand-primary)" stroke="var(--surface-base)" strokeWidth="1">
-                  {placedChannels.map(c => (
-                    <g key={c.ch}>
-                      <circle cx={c.x} cy={c.y} r="6" stroke={c.selected ? "var(--system-error)" : undefined} strokeWidth={c.selected ? "2" : undefined}/>
-                      <text x={c.x} y={c.y + 15} fontSize="7" fill={c.selected ? "var(--system-error)" : "var(--content-medium)"} fontFamily="NanumSquare" fontWeight="700" textAnchor="middle">{String(c.ch).padStart(2, "0")}{c.selected && "★"}</text>
-                    </g>
-                  ))}
-                </g>
-                {/* 미배치 채널 (점선) */}
-                <g fill="none" stroke="var(--content-low)" strokeWidth="1" strokeDasharray="2,2">
-                  {unplacedChannels.map((c, i) => <circle key={i} cx={c.x} cy={c.y} r="5"/>)}
-                </g>
-              </svg>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8, font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em" }}>
-                <div style={{ display: "flex", gap: 12 }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--brand-primary)" }}><span style={{ width: 8, height: 8, background: "var(--brand-primary)", borderRadius: "50%" }}/>배치됨 18</span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--content-low)" }}><span style={{ width: 8, height: 8, border: "1px solid var(--content-low)", borderRadius: "50%" }}/>미배치 6</span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-error)" }}>★ 선택</span>
-                </div>
-                <span style={{ fontWeight: 700, color: "var(--content-emphasis)" }}>진행 18 / 24 ch</span>
-              </div>
-            </div>
-
-            {/* 우: 좌표 입력 패널 */}
-            <div style={{ padding: "14px 18px" }}>
-              <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 10 }}>선택 채널 좌표</div>
-              <div style={{ background: "linear-gradient(rgba(34,133,239,0.08),rgba(34,133,239,0.08)), var(--surface-subtle-2)", border: "1px solid var(--border-emphasis)", padding: "8px 12px", marginBottom: 12 }}>
-                <div style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>CH 04 · PIPE-A-204</div>
-                <div style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 2 }}>탐촉자 SN: PXT-2024-104 · 5 MHz</div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
-                <div>
-                  <div style={{ font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>θ (둘레, 도)</div>
-                  <input className="erut-field" value={theta} onChange={(e) => setTheta(e.target.value)} style={{ width: "100%", height: 30, fontSize: 12 }}/>
-                </div>
-                <div>
-                  <div style={{ font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>Z (길이, mm)</div>
-                  <input className="erut-field" value={zPos} onChange={(e) => setZPos(e.target.value)} style={{ width: "100%", height: 30, fontSize: 12 }}/>
-                </div>
-              </div>
-              <div style={{ background: "var(--surface-subtle-1)", border: "1px solid var(--border-low)", padding: "8px 10px", marginBottom: 12, font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
-                <strong style={{ fontWeight: 700 }}>기준점</strong>: θ=0° 용접선 교차점 · Z=0 바닥 플랜지
-                <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ marginLeft: 6, fontSize: 9, padding: "0 5px", height: 18 }}>변경 ↗</button>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ width: "100%" }}>좌표 저장 + 다음 채널 →</button>
-                <button className="erut-btn erut-btn--default erut-btn--sm" style={{ width: "100%" }}>일괄 배치 (가로/세로 N mm 간격)</button>
-                <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ width: "100%" }}>CSV 가져오기 (기존 설치 재사용)</button>
-              </div>
-            </div>
-          </div>
-
-          {/* 입력 방법 안내 */}
-          <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-            {[
-              { num: "①", title: "숫자 직접 입력", desc: "현장 줄자 측정한 (θ, Z) 좌표를 입력. 정확도 ±2mm." },
-              { num: "②", title: "전개도 클릭 배치", desc: "채널 선택 후 좌측 전개도 클릭으로 빠른 배치. 정확도 ±5mm." },
-              { num: "③", title: "일괄 / CSV", desc: "패턴 일괄 배치 또는 CSV import로 채널 일거에 등록." },
-            ].map(m => (
-              <div key={m.num} style={{ padding: "10px 14px", background: "var(--surface-base)", border: "1px solid var(--border-medium)", borderLeft: "3px solid var(--brand-primary)" }}>
-                <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", marginBottom: 4 }}>방법 {m.num} {m.title}</div>
-                <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{m.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 하단 액션 */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 24px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
-          <button className="erut-btn erut-btn--subtle erut-btn--sm" disabled={step === 1} onClick={() => setStep(s => Math.max(1, s - 1))}>← 이전 단계</button>
-          <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>검사체별 1회 설정 → 모든 검사 세션에서 자동 적용</div>
-          {step < 3 ? (
-            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => setStep(s => Math.min(3, s + 1))}>다음 단계 →</button>
-          ) : (
-            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onClose}>저장 + 닫기</button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // =================== Screen · [3] GATE SETUP ===================
 // Layout matches ServiceFlow_FixedProbe SLIDE 8 [3] 탐촉자 Gate 설정 (v3.1).
