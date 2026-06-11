@@ -8,7 +8,8 @@
   .led{ position:relative; width:14px; height:14px; border-radius:50% }
   .led.red::before{ content:""; position:absolute; inset:0; border-radius:50%; background: radial-gradient(rgba(255,0,94,0) 0%, rgba(255,0,94,0.26) 54%, rgba(255,0,94,0) 100%) }
   .led.red::after{ content:""; position:absolute; left:4px; top:4px; width:6px; height:6px; border-radius:50%; background:#FF005E }
-  /* v17.1: gray LED (측정 정지 — content-low, no halo) */
+  /* v17.2: gray LED (측정 정지 — content-low). halo 약하게 (MC/MQTT pill과 동일 형태) */
+  .led.gray::before{ content:""; position:absolute; inset:0; border-radius:50%; background: radial-gradient(rgba(107,124,155,0) 0%, rgba(107,124,155,0.20) 54%, rgba(107,124,155,0) 100%) }
   .led.gray::after{ content:""; position:absolute; left:4px; top:4px; width:6px; height:6px; border-radius:50%; background:#6B7C9B }
   .stext{ font:700 12px/1 var(--font-kr); color:#6B7C9B; letter-spacing:.02em }
   .grip{ margin-left:auto; color:#6B7C9B }

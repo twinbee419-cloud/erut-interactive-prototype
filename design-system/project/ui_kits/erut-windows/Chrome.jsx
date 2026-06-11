@@ -143,20 +143,17 @@ function McConnectionPill({ connected, total }) {
 window.McConnectionPill = McConnectionPill;
 
 // ----------- v17.1: 측정 Pill (MC보드 단위 start/stop) ------------
-// 측정 중 N>0 = "측정 중 N/M" (success 녹), N=0 = "정지" (content-low 회).
+// 측정 중 N>0 = "측정 중 N/M" (is-green), N=0 = "정지" (is-gray).
 // totalConnected: 연결된 보드 수 (offline 제외). offline 보드는 측정 분모에서 제외.
+// v17.2: inline style 제거 — kit.css의 .erut-led.is-green / .is-gray 클래스 사용 (MC보드·MQTT pill과 동일 형태)
 function MeasurementPill({ measuring, totalConnected }) {
   if (totalConnected === 0) return null;
   const isMeasuring = measuring > 0;
   const label = !isMeasuring ? "정지" : measuring === totalConnected ? "측정 중" : `측정 중 ${measuring}/${totalConnected}`;
-  // content-low 회색 LED 인라인 처리 (kit.css에 별도 클래스 없음)
   return (
     <span className="erut-pill">
-      <span className="erut-led" style={{
-        background: isMeasuring ? "var(--system-success)" : "var(--content-low)",
-        boxShadow: isMeasuring ? "0 0 6px rgba(24,227,57,0.6)" : "none",
-      }}>
-        <span className="erut-led__halo" style={{ background: isMeasuring ? undefined : "transparent" }}/>
+      <span className={"erut-led " + (isMeasuring ? "is-green" : "is-gray")}>
+        <span className="erut-led__halo"/>
         <span className="erut-led__dot"/>
       </span>
       {label}

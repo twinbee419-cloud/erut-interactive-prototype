@@ -124,6 +124,9 @@
 .erut-led.is-red   .erut-led__dot { background: var(--system-error); }
 .erut-led.is-green .erut-led__halo{ background: radial-gradient(rgba(24,227,57,0) 0%, rgba(24,227,57,0.26) 54%, rgba(24,227,57,0) 100%); }
 .erut-led.is-green .erut-led__dot { background: var(--system-success); }
+/* v17.2: gray LED — 측정 정지(content-low). halo 약하게(의도된 상태, 강한 알림 X) */
+.erut-led.is-gray  .erut-led__halo{ background: radial-gradient(rgba(107,124,155,0) 0%, rgba(107,124,155,0.20) 54%, rgba(107,124,155,0) 100%); }
+.erut-led.is-gray  .erut-led__dot { background: var(--content-low); }
 
 /* ---------- Buttons ---------- */
 .erut-btn{
