@@ -827,10 +827,11 @@
 
 /* ---------- v18.0 보고서 A4 미리보기 — 채널 측정 보고서 (현장 데이터 dump) ---------- */
 /* A4 세로 비율 (210 × 297mm) — 프레임 너비 기준 비율 유지 */
+/* v18.3: 컨텐츠 밀도 조정 — padding/margin/ascan/font 축소하여 A4 한 페이지 안에 fit (이전 ~648px → ~545px) */
 .erut-report-a4{
   background: var(--content-inverse);
   border: 1px solid var(--border-medium);
-  padding: 28px 32px;
+  padding: 18px 24px;
   aspect-ratio: 210 / 297;
   width: 100%;
   display: flex; flex-direction: column;
@@ -841,39 +842,39 @@
 }
 .erut-report-a4__header{
   text-align: center;
-  padding-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 2px solid var(--content-medium);
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
-.erut-report-a4__title{ font: 700 16px/1.2 var(--font-kr); letter-spacing: .03em; color: var(--content-high); }
-.erut-report-a4__subtitle{ font: 400 10px/1.4 var(--font-kr); letter-spacing: .02em; color: var(--content-low); margin-top: 3px; }
-.erut-report-a4__section{ margin-bottom: 12px; }
+.erut-report-a4__title{ font: 700 14px/1.2 var(--font-kr); letter-spacing: .03em; color: var(--content-high); }
+.erut-report-a4__subtitle{ font: 400 9px/1.4 var(--font-kr); letter-spacing: .02em; color: var(--content-low); margin-top: 2px; }
+.erut-report-a4__section{ margin-bottom: 8px; }
 .erut-report-a4__section-title{
-  font: 700 10px/1.2 var(--font-kr); letter-spacing: .08em;
+  font: 700 9px/1.2 var(--font-kr); letter-spacing: .08em;
   color: var(--brand-primary); text-transform: uppercase;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
-.erut-report-a4__table{ width: 100%; font: 400 10px/1.5 var(--font-kr); letter-spacing: .02em; border-collapse: collapse; }
-.erut-report-a4__table td{ padding: 3px 6px; border-bottom: 1px dotted var(--border-low); }
-.erut-report-a4__table td:first-child{ width: 78px; color: var(--content-low); font-weight: 700; }
+.erut-report-a4__table{ width: 100%; font: 400 9px/1.4 var(--font-kr); letter-spacing: .02em; border-collapse: collapse; }
+.erut-report-a4__table td{ padding: 2px 6px; border-bottom: 1px dotted var(--border-low); }
+.erut-report-a4__table td:first-child{ width: 72px; color: var(--content-low); font-weight: 700; }
 .erut-report-a4__ascan{
   background: var(--surface-base);
   border: 1px solid var(--border-medium);
-  padding: 8px;
-  height: 130px;
+  padding: 6px;
+  height: 100px;
 }
 .erut-report-a4__footer{
   margin-top: auto;
   display: grid; grid-template-columns: 1fr 1fr;
   gap: 24px;
-  padding-top: 12px;
+  padding-top: 8px;
   border-top: 1px solid var(--border-low);
-  font: 400 10px/1.5 var(--font-kr); letter-spacing: .02em;
+  font: 400 9px/1.5 var(--font-kr); letter-spacing: .02em;
   color: var(--content-medium);
 }
 .erut-report-a4__sign{
   border-top: 1px solid var(--content-medium);
-  margin-top: 24px; padding-top: 4px;
-  font: 700 10px/1 var(--font-kr); letter-spacing: .02em;
+  margin-top: 16px; padding-top: 3px;
+  font: 700 9px/1 var(--font-kr); letter-spacing: .02em;
   color: var(--content-low); text-align: center;
 }
