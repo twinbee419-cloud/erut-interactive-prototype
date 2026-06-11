@@ -1091,10 +1091,66 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const aOn = gateA.active && gateA.width > 0;
   const bOn = gateB.active && gateB.width > 0;
 
+  // v16.1: A-scan Gate 드래그 인터랙션 — 폐기된 [3] GateSetup의 로직 이식.
+  // 차트 영역 내 move / resize-l / resize-r / threshold 4 모드. 양방향 sync (드래그 ↔ input field).
+  const chartRef = React.useRef(null);
+  const [drag, setDrag] = $s(null);
+  // drag = { gate, mode, startX, initStart, initWidth, initThreshold }
+  function startDrag(gate, mode, e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const g = gate === "A" ? gateA : gateB;
+    setDrag({ gate, mode, startX: e.clientX, initStart: g.start, initWidth: g.width, initThreshold: g.threshold });
+  }
+  React.useEffect(() => {
+    if (!drag) return;
+    const onMove = (e) => {
+      const chart = chartRef.current;
+      if (!chart) return;
+      const rect = chart.getBoundingClientRect();
+      const setter = drag.gate === "A" ? setGateA : setGateB;
+      if (drag.mode === "threshold") {
+        const yPct = ((e.clientY - rect.top) / rect.height) * 100;
+        // 역변환: top = 75 - (thr/100)*43 → thr = (75 - top) / 43 * 100
+        let newThr = Math.round(((75 - yPct) / 43) * 100);
+        newThr = Math.max(0, Math.min(100, newThr));
+        setter(g => ({ ...g, threshold: newThr }));
+        return;
+      }
+      const dxUs = ((e.clientX - drag.startX) / rect.width) * 50;
+      const snap = (us) => Math.round(us * 10) / 10; // 0.1 μs snap
+      if (drag.mode === "move") {
+        let newStart = snap(drag.initStart + dxUs);
+        newStart = Math.max(0, Math.min(50 - drag.initWidth, newStart));
+        setter(g => ({ ...g, start: newStart }));
+      } else if (drag.mode === "resize-l") {
+        const rightEdge = drag.initStart + drag.initWidth;
+        let newStart = snap(drag.initStart + dxUs);
+        newStart = Math.max(0, Math.min(rightEdge - 0.5, newStart));
+        const newWidth = snap(rightEdge - newStart);
+        setter(g => ({ ...g, start: newStart, width: newWidth }));
+      } else if (drag.mode === "resize-r") {
+        let newWidth = snap(drag.initWidth + dxUs);
+        newWidth = Math.max(0.5, Math.min(50 - drag.initStart, newWidth));
+        setter(g => ({ ...g, width: newWidth }));
+      }
+    };
+    const onUp = () => setDrag(null);
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+  }, [drag]);
+  // threshold 라인 top 위치 (% 단위) — 양 Gate에서 재사용
+  const aThrTop = (75 - (gateA.threshold / 100) * 43) + "%";
+  const bThrTop = (75 - (gateB.threshold / 100) * 43) + "%";
+
   // ───── 진행 체크리스트 (자동 계산) ─────
+  // v16.1: Wedge 측정 항목 제거 — Wedge 각도는 측정 불가, 좌측 채널 정보 input(wedgeAngle)으로 처리
   const checklist = [
     { key: "info",   label: "채널 정보 입력",  done: !!(channel && serial && target) },
-    { key: "wedge",  label: "Wedge 측정",       done: wedge.value != null },
     { key: "vel",    label: "음속 측정",        done: velocity.value != null },
     { key: "zero",   label: "영점 측정",        done: zero.value != null },
     { key: "gain",   label: "Gain 설정",        done: gain.value != null },
@@ -1375,29 +1431,51 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
             <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>A-SCAN 미리보기</span>
             <span style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>0 – 50 μs · Gate / 교정값 실시간 반영</span>
           </div>
-          <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", height: 320, position: "relative" }}>
-            {/* v14.2: SVG를 먼저 그리고 Gate overlay를 위에 올려 가시성 보장 (이전엔 SVG가 Gate 박스 위에 올라가 stacking 상 가림) */}
+          {/* v16.1: chartRef + 드래그 인터랙션. SVG는 pointerEvents:'none' (배경), Gate overlay·핸들·threshold 라인은 mouseDown */}
+          <div ref={chartRef} style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", height: 320, position: "relative", userSelect: drag ? "none" : "auto" }}>
             <svg viewBox="0 0 800 320" preserveAspectRatio="none" width="100%" height="100%" style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none" }}>
               <line x1="0" y1="262" x2="800" y2="262" stroke="var(--border-low)" strokeWidth="1"/>
               <path d="M0 262 L120 262 L140 232 L156 40 L172 280 L188 262 L380 262 L400 228 L416 90 L432 274 L448 262 L800 262" stroke="var(--brand-primary)" strokeWidth="1.5" fill="none"/>
             </svg>
             {aOn && (
               <>
-                <div style={{ position: "absolute", top: 0, bottom: 0, left: toPct(gateA.start) + "%", width: toPct(gateA.width) + "%", background: "var(--system-error)", opacity: 0.12, borderLeft: "2px solid var(--system-error)", borderRight: "2px solid var(--system-error)", zIndex: 2, pointerEvents: "none" }}/>
+                {/* Gate A 영역 (move) */}
+                <div onMouseDown={(e) => startDrag("A", "move", e)}
+                     style={{ position: "absolute", top: 0, bottom: 0, left: toPct(gateA.start) + "%", width: toPct(gateA.width) + "%", background: "var(--system-error)", opacity: 0.12, borderLeft: "2px solid var(--system-error)", borderRight: "2px solid var(--system-error)", zIndex: 2, cursor: "move" }}/>
+                {/* 좌측 resize 핸들 */}
+                <div onMouseDown={(e) => startDrag("A", "resize-l", e)}
+                     style={{ position: "absolute", top: "calc(50% - 14px)", left: `calc(${toPct(gateA.start)}% - 5px)`, width: 10, height: 28, background: "var(--surface-base)", border: "2px solid rgba(255, 0, 94, 0.5)", cursor: "ew-resize", zIndex: 4 }}/>
+                {/* 우측 resize 핸들 */}
+                <div onMouseDown={(e) => startDrag("A", "resize-r", e)}
+                     style={{ position: "absolute", top: "calc(50% - 14px)", left: `calc(${toPct(gateA.start) + toPct(gateA.width)}% - 5px)`, width: 10, height: 28, background: "var(--surface-base)", border: "2px solid rgba(255, 0, 94, 0.5)", cursor: "ew-resize", zIndex: 4 }}/>
                 <div style={{ position: "absolute", top: 4, left: `calc(${toPct(gateA.start)}% + 4px)`, font: "700 10px/1 var(--font-kr)", color: "var(--system-error)", zIndex: 3, pointerEvents: "none" }}>Gate A</div>
-                <div style={{ position: "absolute", left: 0, right: 0, top: (75 - (gateA.threshold / 100) * 43) + "%", borderTop: "1px dashed var(--system-error)", zIndex: 2, pointerEvents: "none" }}/>
+                {/* Threshold (drag-able 12px hit 영역, 가운데 dashed) */}
+                <div onMouseDown={(e) => startDrag("A", "threshold", e)}
+                     style={{ position: "absolute", left: 0, right: 0, top: `calc(${aThrTop} - 6px)`, height: 12, cursor: "ns-resize", zIndex: 3 }}>
+                  <div style={{ position: "absolute", left: 0, right: 0, top: 5, borderTop: "2px dashed var(--system-error)" }}/>
+                </div>
+                <div style={{ position: "absolute", right: 12, top: `calc(${aThrTop} - 14px)`, font: "700 10px/1 var(--font-kr)", color: "var(--system-error)", background: "var(--surface-base)", padding: "2px 4px", pointerEvents: "none", zIndex: 3 }}>A · {gateA.threshold}%</div>
               </>
             )}
             {bOn && (
               <>
-                <div style={{ position: "absolute", top: 0, bottom: 0, left: toPct(gateB.start) + "%", width: toPct(gateB.width) + "%", background: "var(--brand-primary)", opacity: 0.12, borderLeft: "2px solid var(--brand-primary)", borderRight: "2px solid var(--brand-primary)", zIndex: 2, pointerEvents: "none" }}/>
+                <div onMouseDown={(e) => startDrag("B", "move", e)}
+                     style={{ position: "absolute", top: 0, bottom: 0, left: toPct(gateB.start) + "%", width: toPct(gateB.width) + "%", background: "var(--brand-primary)", opacity: 0.12, borderLeft: "2px solid var(--brand-primary)", borderRight: "2px solid var(--brand-primary)", zIndex: 2, cursor: "move" }}/>
+                <div onMouseDown={(e) => startDrag("B", "resize-l", e)}
+                     style={{ position: "absolute", top: "calc(50% - 14px)", left: `calc(${toPct(gateB.start)}% - 5px)`, width: 10, height: 28, background: "var(--surface-base)", border: "2px solid rgba(34, 133, 239, 0.5)", cursor: "ew-resize", zIndex: 4 }}/>
+                <div onMouseDown={(e) => startDrag("B", "resize-r", e)}
+                     style={{ position: "absolute", top: "calc(50% - 14px)", left: `calc(${toPct(gateB.start) + toPct(gateB.width)}% - 5px)`, width: 10, height: 28, background: "var(--surface-base)", border: "2px solid rgba(34, 133, 239, 0.5)", cursor: "ew-resize", zIndex: 4 }}/>
                 <div style={{ position: "absolute", top: 4, left: `calc(${toPct(gateB.start)}% + 4px)`, font: "700 10px/1 var(--font-kr)", color: "var(--brand-primary)", zIndex: 3, pointerEvents: "none" }}>Gate B</div>
-                <div style={{ position: "absolute", left: 0, right: 0, top: (75 - (gateB.threshold / 100) * 43) + "%", borderTop: "1px dashed var(--brand-primary)", zIndex: 2, pointerEvents: "none" }}/>
+                <div onMouseDown={(e) => startDrag("B", "threshold", e)}
+                     style={{ position: "absolute", left: 0, right: 0, top: `calc(${bThrTop} - 6px)`, height: 12, cursor: "ns-resize", zIndex: 3 }}>
+                  <div style={{ position: "absolute", left: 0, right: 0, top: 5, borderTop: "2px dashed var(--brand-primary)" }}/>
+                </div>
+                <div style={{ position: "absolute", right: 12, top: `calc(${bThrTop} - 14px)`, font: "700 10px/1 var(--font-kr)", color: "var(--brand-primary)", background: "var(--surface-base)", padding: "2px 4px", pointerEvents: "none", zIndex: 3 }}>B · {gateB.threshold}%</div>
               </>
             )}
             {!aOn && !bOn && (
               <div style={{ position: "absolute", top: 14, right: 14, font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", textAlign: "right", zIndex: 3 }}>
-                Gate를 활성화하고<br/>Start · Width 값을 입력하세요.
+                Gate를 활성화하고<br/>마우스로 영역·핸들·Threshold를 드래그하세요.<br/>정밀 값은 우측 input field 사용.
               </div>
             )}
           </div>
@@ -1435,8 +1513,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                 음속 = 2 × 두께(mm) × 1000 / ToF(μs). 표준시험편 선택 시 두께 자동 채움 · 비교시험편은 절차서 두께 입력.
               </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <CalibCell label="Wedge 각도"   state={wedge}    onMeasure={measureWedge}/>
+            {/* v16.1: Wedge 카드 제거 — 측정 불가, 좌측 channel 정보 input 사용. 1×3 grid (음속·영점·Gain) */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
               <CalibCell label="음속"         state={velocity} onMeasure={measureVel}  disabled={!canMeasureWithRef} hint={velHint}/>
               <CalibCell label="영점 (Zero)"  state={zero}     onMeasure={measureZero} disabled={!canMeasureWithRef}/>
               <CalibCell label="Gain"         state={gain}     isGain={true}/>
