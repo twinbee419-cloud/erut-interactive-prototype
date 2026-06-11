@@ -1585,15 +1585,15 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
 };
 
 // =================== v8.8: 진단 / 로그 모달 (좌측 탭 메뉴 + 우측 콘텐츠) ===================
+// v17.0: 5탭 → 4탭. 하드웨어 진단(유지) + 통신(신규) + 교정 이력(유지) + 측정 에러(에러+측정 통합).
+//        이벤트 기반 → 수치 기반 raw data 전환. 인라인 펼침 + '상세 →' 버튼 폐기.
 window.DiagnosticsModal = function DiagnosticsModal({ onClose }) {
-  const [tab, setTab] = $s("hw"); // hw / err / conn / meas / calib
-  // v8.8: 에러 로그를 2번째 위치로 이동
+  const [tab, setTab] = $s("hw"); // hw / comm / calib / err
   const tabs = [
     { id: "hw",    label: "하드웨어 진단" },
-    { id: "err",   label: "에러 로그", badge: 2 },
-    { id: "conn",  label: "연결 로그" },
-    { id: "meas",  label: "측정 로그" },
+    { id: "comm",  label: "통신 로그" },
     { id: "calib", label: "교정 이력" },
+    { id: "err",   label: "측정 에러", badge: 2 },
   ];
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
@@ -1624,11 +1624,10 @@ window.DiagnosticsModal = function DiagnosticsModal({ onClose }) {
           </div>
           {/* 우측 콘텐츠 (탭별) */}
           <div style={{ padding: "18px 24px", overflowY: "auto" }}>
-            {tab === "hw" && <DiagHardware/>}
-            {tab === "err" && <DiagErrorLog/>}
-            {tab === "conn" && <DiagConnectionLog/>}
-            {tab === "meas" && <DiagMeasurementLog/>}
+            {tab === "hw"    && <DiagHardware/>}
+            {tab === "comm"  && <DiagCommLog/>}
             {tab === "calib" && <DiagCalibHistory/>}
+            {tab === "err"   && <DiagMeasErrorLog/>}
           </div>
         </div>
         {/* v8.8: footer — 닫기 단일 버튼 (다른 모달과 일관성) */}
@@ -1831,12 +1830,13 @@ window.CalibrationExpiryAlertDialog = function CalibrationExpiryAlertDialog({ ch
   );
 };
 
-// v11.0: 진단/로그 모달 공통 — 필터바 + 시계열 테이블 + CSV export
-// 3개 탭(에러·연결·측정)이 columns/rows/filters props만 다르게 재사용. 행 클릭 시 인라인 펼침(확장 row)으로 depth 유지.
-// 에러 코드 체계 상세: dev_handoff/Error_Code_Spec_v1.0.md
+// v17.0: 진단/로그 모달 공통 — 필터바 + 시계열 테이블 + CSV export
+// 3개 탭(통신·교정 이력·측정 에러)이 columns/rows/filters props만 다르게 재사용.
+// v17.0: 인라인 펼침 + '상세 →' 버튼 폐기. 수치 기반 raw data만 표시.
+// 에러 코드 체계 상세: dev_handoff/Error_Code_Spec_v1.0.md (v2.0 정합)
 function DiagLogFilterBar({ period, setPeriod, kind, setKind, kindOptions, search, setSearch, searchPlaceholder }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "160px 180px 1fr", gap: 8, marginBottom: 10 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "160px 200px 1fr", gap: 8, marginBottom: 10 }}>
       <select className="erut-field" value={period} onChange={(e) => setPeriod(e.target.value)} style={{ width: "100%" }}>
         <option value="today">오늘</option><option value="7d">최근 7일</option><option value="30d">최근 30일</option><option value="custom">사용자 정의...</option>
       </select>
@@ -1848,9 +1848,8 @@ function DiagLogFilterBar({ period, setPeriod, kind, setKind, kindOptions, searc
   );
 }
 
-function DiagLogTable({ columns, rows, renderExpanded, getKey }) {
-  const [expanded, setExpanded] = $s(null);
-  const canExpand = !!renderExpanded;
+// v17.0: 인라인 펼침 제거 → 단순 시계열 테이블만
+function DiagLogTable({ columns, rows, getKey }) {
   return (
     <table style={{ width: "100%", borderCollapse: "collapse", font: "400 12px/1.4 var(--font-kr)" }}>
       <thead>
@@ -1863,25 +1862,14 @@ function DiagLogTable({ columns, rows, renderExpanded, getKey }) {
       <tbody>
         {rows.map((r, i) => {
           const key = getKey ? getKey(r) : i;
-          const isExpanded = expanded === key;
           return (
-            <React.Fragment key={key}>
-              <tr
-                style={{ borderBottom: "1px solid var(--border-low)", cursor: canExpand ? "pointer" : "default" }}
-                onClick={canExpand ? () => setExpanded(isExpanded ? null : key) : undefined}
-              >
-                {columns.map(c => (
-                  <td key={c.key} style={{ padding: "8px 6px", textAlign: c.align || "left", ...(c.cellStyle || {}) }}>
-                    {c.render ? c.render(r, { isExpanded }) : r[c.key]}
-                  </td>
-                ))}
-              </tr>
-              {canExpand && isExpanded && (
-                <tr style={{ borderBottom: "1px solid var(--border-low)", background: "var(--surface-subtle-2)" }}>
-                  <td colSpan={columns.length} style={{ padding: "12px 18px" }}>{renderExpanded(r)}</td>
-                </tr>
-              )}
-            </React.Fragment>
+            <tr key={key} style={{ borderBottom: "1px solid var(--border-low)" }}>
+              {columns.map(c => (
+                <td key={c.key} style={{ padding: "8px 6px", textAlign: c.align || "left", ...(c.cellStyle || {}) }}>
+                  {c.render ? c.render(r) : r[c.key]}
+                </td>
+              ))}
+            </tr>
           );
         })}
       </tbody>
@@ -1889,215 +1877,127 @@ function DiagLogTable({ columns, rows, renderExpanded, getKey }) {
   );
 }
 
-// ─────────────────────── 탭 #1: 에러 로그 ───────────────────────
-function DiagErrorLog() {
+// ─────────────────────── 탭 #1: 통신 로그 (v17.0 신규 — 3구간 통합) ───────────────────────
+function DiagCommLog() {
   const [period, setPeriod] = $s("7d");
   const [kind, setKind] = $s("all");
   const [search, setSearch] = $s("");
 
-  // mock — Error_Code_Spec_v1.0.md 카탈로그 기반
+  // mock — Error_Code_Spec_v2.0 카탈로그 정합 (E5xx/E6xx/E7xx)
   const allRows = [
-    { id: 1, ts: "06-09 10:42:18", sev: "critical", code: "E101", channel: 22, summary: "ADC saturation (입력 신호 over-range)", resolved: false,
-      detail: "Channel 22 ADC input exceeded 95% FSH for 5 consecutive packets at 2026-06-09 10:42:18.412 (PRF 2000 Hz).",
-      reco: "Gain 6 dB 감소 또는 Gate A Threshold 상향. 결함 검출 한계 동시 점검.",
-      session: "SES-2026-047", chLink: "CH 22 (A-scan 보기)" },
-    { id: 2, ts: "06-09 10:15:02", sev: "warning", code: "E203", channel: 49, summary: "부착력 저하 감지 (커플런트 재도포 권장)", resolved: true,
-      detail: "Channel 49 신호 SNR 8 dB → 4 dB로 저하. 자석 부착력 측정값 58% (임계 60%).",
-      reco: "검사 일시 중단 → 자석 부착 확인 + 커플런트 재도포 → 재측정.",
-      session: "SES-2026-047", chLink: "CH 49" },
-    { id: 3, ts: "06-09 09:58:31", sev: "info", code: "E301", channel: null, summary: "자동 저장 일시 지연 (디스크 I/O 12ms · 임계 8ms 초과)", resolved: true,
-      detail: "30초 자동 저장 사이클 중 1회 12ms 지연. 데이터 유실 없음.",
-      reco: "디스크 부하 확인. 백그라운드 작업 중단 권장.",
-      session: "SES-2026-047", chLink: null },
-    { id: 4, ts: "06-08 17:21:09", sev: "critical", code: "E001", channel: null, summary: "MC보드 — 펄서 출력 전압 이상 (240V 측정 / 300V 기대)", resolved: true,
-      detail: "MC보드 PCB 진단 신호: 펄서 출력 240V (기대 300V ±5%). 측정 5분 후 자체 회복.",
-      reco: "재현 시 MC보드 재기동. 반복 시 하드웨어 점검 요청.",
-      session: "SES-2026-046", chLink: null },
+    { id: 1, ts: "06-09 10:42:18.412", link: "probe-mc", latency: 3.2,  packetLoss: 0.0,  dataRate: 2048, status: "ok" },
+    { id: 2, ts: "06-09 10:42:18.456", link: "mc-pc",    latency: 12,   packetLoss: 0.2,  dataRate: 2043, status: "ok" },
+    { id: 3, ts: "06-09 10:42:18.789", link: "pc-mqtt",  latency: 38,   packetLoss: 0.0,  dataRate: 2048, status: "ok" },
+    { id: 4, ts: "06-08 14:12:03.220", link: "mc-pc",    latency: 5200, packetLoss: 12.4, dataRate: 1792, status: "warn" },
+    { id: 5, ts: "06-08 09:32:11.052", link: "pc-mqtt",  latency: null, packetLoss: 100,  dataRate: 0,    status: "error" },
   ];
 
-  const sevTone = (s) => s === "critical" ? "var(--system-error)" : s === "warning" ? "var(--system-caution)" : "var(--system-info)";
-  const sevLabel = (s) => s === "critical" ? "Critical" : s === "warning" ? "Warning" : "Info";
+  const linkLabel = (l) => l === "probe-mc" ? "탐촉자 ↔ MC" : l === "mc-pc" ? "MC ↔ 미니 PC" : "미니 PC ↔ 서버 MQTT";
+  const statusColor = (s) => s === "ok" ? "var(--system-success)" : s === "warn" ? "var(--system-caution)" : "var(--system-error)";
+  const statusLabel = (s) => s === "ok" ? "정상" : s === "warn" ? "Timeout · 재연결" : "연결 끊김";
 
-  // 간이 필터 (period는 mockup에서 적용 생략, kind·search만 동작)
   const filtered = allRows.filter(r => {
-    if (kind !== "all" && r.sev !== kind) return false;
-    if (search && !(r.code + " " + r.summary + " CH" + (r.channel || "")).toLowerCase().includes(search.toLowerCase())) return false;
+    if (kind !== "all" && r.link !== kind) return false;
+    if (search && !(r.ts + " " + linkLabel(r.link)).toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
+  const numCol = (key, label, width) => ({ key, label, width, align: "right", render: (r) => {
+    const v = r[key];
+    if (v == null || v === "—") return <span style={{ color: "var(--system-error)", fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>—</span>;
+    const isWarn = (key === "latency" && v > 1000) || (key === "packetLoss" && v > 1);
+    const isErr = r.status === "error";
+    return <span style={{ color: isErr ? "var(--system-error)" : isWarn ? "var(--system-caution)" : "var(--content-medium)", fontVariantNumeric: "tabular-nums", fontWeight: (isWarn || isErr) ? 700 : 400 }}>{typeof v === "number" ? v.toLocaleString() : v}</span>;
+  }});
+
   const columns = [
-    { key: "ts", label: "시각", width: 130, cellStyle: { color: "var(--content-medium)", fontVariantNumeric: "tabular-nums" } },
-    { key: "sev", label: "심각도", width: 70, render: (r) => (
-      <span style={{ background: sevTone(r.sev), color: "var(--on-primary)", padding: "2px 6px", font: "700 10px/1 var(--font-kr)" }}>{sevLabel(r.sev)}</span>
-    )},
-    { key: "code", label: "코드", width: 70, cellStyle: { color: "var(--content-emphasis)", fontWeight: 700 } },
-    { key: "summary", label: "채널·메시지", render: (r) => (
-      <span style={{ color: "var(--content-high)" }}>
-        {r.channel && <strong style={{ fontWeight: 700 }}>CH {r.channel}</strong>}{r.channel && " — "}{r.summary}
-      </span>
-    )},
-    { key: "resolved", label: "상태", width: 80, render: (r) => (
-      <span style={{ color: r.resolved ? "var(--system-success)" : "var(--system-caution)", fontWeight: 700 }}>{r.resolved ? "해결" : "미해결"}</span>
-    )},
-    { key: "action", label: "", width: 80, align: "right", render: (r, { isExpanded }) => (
-      <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ padding: "2px 8px", fontSize: 11 }} onClick={(e) => e.stopPropagation()}>상세 {isExpanded ? "▾" : "▸"}</button>
-    )},
+    { key: "ts", label: "시각", width: 150, cellStyle: { color: "var(--content-medium)", fontVariantNumeric: "tabular-nums" } },
+    { key: "link", label: "구간", width: 170, render: (r) => <span style={{ color: "var(--content-high)", fontWeight: 700 }}>{linkLabel(r.link)}</span> },
+    numCol("latency", "지연 (ms)", 100),
+    numCol("packetLoss", "패킷 손실 (%)", 110),
+    numCol("dataRate", "데이터율 (msg/s)", 140),
+    { key: "status", label: "상태", render: (r) => <span style={{ color: statusColor(r.status), fontWeight: 700 }}>{statusLabel(r.status)}</span> },
   ];
 
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
-        <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>에러 로그 <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>({filtered.length}건)</span></h3>
-        <div style={{ display: "flex", gap: 6 }}>
-          <button className="erut-btn erut-btn--subtle erut-btn--sm">선택 삭제</button>
-          <button className="erut-btn erut-btn--default erut-btn--sm">CSV 내보내기 ↓</button>
-        </div>
+        <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>통신 로그 <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>({filtered.length}건)</span></h3>
+        <button className="erut-btn erut-btn--default erut-btn--sm">CSV 내보내기 ↓</button>
       </div>
       <DiagLogFilterBar
         period={period} setPeriod={setPeriod}
         kind={kind} setKind={setKind}
-        kindOptions={[{ value: "all", label: "전체 심각도" }, { value: "critical", label: "Critical만" }, { value: "warning", label: "Warning만" }, { value: "info", label: "Info만" }]}
+        kindOptions={[
+          { value: "all", label: "전체 구간" },
+          { value: "probe-mc", label: "탐촉자 ↔ MC" },
+          { value: "mc-pc", label: "MC ↔ 미니 PC" },
+          { value: "pc-mqtt", label: "미니 PC ↔ 서버 MQTT" },
+        ]}
         search={search} setSearch={setSearch}
-        searchPlaceholder="메시지·코드·채널로 검색"
-      />
-      <DiagLogTable
-        columns={columns}
-        rows={filtered}
-        getKey={(r) => r.id}
-        renderExpanded={(r) => (
-          <>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 24px", font: "400 11px/1.5 var(--font-kr)", color: "var(--content-medium)" }}>
-              <div><span style={{ color: "var(--content-low)" }}>상세 메시지</span> <strong style={{ color: "var(--content-high)" }}>{r.detail}</strong></div>
-              <div><span style={{ color: "var(--content-low)" }}>권장 조치</span> <strong style={{ color: "var(--content-high)" }}>{r.reco}</strong></div>
-              {r.session && <div><span style={{ color: "var(--content-low)" }}>관련 세션</span> <strong style={{ color: "var(--content-emphasis)", textDecoration: "underline", cursor: "pointer" }}>{r.session} ↗</strong></div>}
-              {r.chLink && <div><span style={{ color: "var(--content-low)" }}>관련 채널</span> <strong style={{ color: "var(--content-emphasis)", textDecoration: "underline", cursor: "pointer" }}>{r.chLink} ↗</strong></div>}
-            </div>
-            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-              <button className="erut-btn erut-btn--default erut-btn--sm">{r.resolved ? "미해결로 되돌리기" : "해결됨으로 표시"}</button>
-              <button className="erut-btn erut-btn--subtle erut-btn--sm">무시</button>
-            </div>
-          </>
-        )}
-      />
-    </>
-  );
-}
-
-// ─────────────────────── 탭 #2: 연결 로그 ───────────────────────
-function DiagConnectionLog() {
-  const [period, setPeriod] = $s("7d");
-  const [kind, setKind] = $s("all");
-  const [search, setSearch] = $s("");
-
-  const allRows = [
-    { id: 1, ts: "06-09 09:01:12", event: "연결 성공", ip: "192.168.1.100:8080", ms: 4, result: "정상", tone: "success" },
-    { id: 2, ts: "06-08 18:32:45", event: "해제 (사용자)", ip: "192.168.1.100:8080", ms: null, result: "세션 종료", tone: "medium" },
-    { id: 3, ts: "06-08 14:12:03", event: "Timeout · 재연결", ip: "192.168.1.100:8080", ms: 5200, result: "3회 재시도 후 복구", tone: "caution" },
-    { id: 4, ts: "06-07 10:55:31", event: "IP 변경 감지", ip: "192.168.1.100 → .101", ms: null, result: "자동 재연결 성공", tone: "success" },
-    { id: 5, ts: "06-05 11:08:24", event: "펌웨어 업데이트", ip: "192.168.1.100:8080", ms: null, result: "v2.1.3 → v2.1.4", tone: "success" },
-  ];
-  const toneColor = (t) => t === "success" ? "var(--system-success)" : t === "caution" ? "var(--system-caution)" : "var(--content-medium)";
-
-  const filtered = allRows.filter(r => {
-    if (kind !== "all") {
-      const match = (kind === "connect" && r.event.includes("연결")) || (kind === "timeout" && r.event.includes("Timeout"))
-                 || (kind === "ip" && r.event.includes("IP")) || (kind === "fw" && r.event.includes("펌웨어"));
-      if (!match) return false;
-    }
-    if (search && !(r.event + " " + r.ip).toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
-
-  const columns = [
-    { key: "ts", label: "시각", width: 130, cellStyle: { color: "var(--content-medium)", fontVariantNumeric: "tabular-nums" } },
-    { key: "event", label: "이벤트", width: 160, cellStyle: { color: "var(--content-high)", fontWeight: 700 } },
-    { key: "ip", label: "IP", width: 180, cellStyle: { color: "var(--content-medium)", fontVariantNumeric: "tabular-nums" } },
-    { key: "ms", label: "응답 (ms)", width: 110, render: (r) => (
-      <span style={{ color: r.ms > 1000 ? "var(--system-caution)" : "var(--content-medium)", fontVariantNumeric: "tabular-nums", fontWeight: r.ms > 1000 ? 700 : 400 }}>
-        {r.ms == null ? "—" : r.ms.toLocaleString()}
-      </span>
-    )},
-    { key: "result", label: "결과", render: (r) => (
-      <span style={{ color: toneColor(r.tone), fontWeight: 700 }}>{r.result}</span>
-    )},
-  ];
-
-  return (
-    <>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
-        <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>연결 로그 <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>({filtered.length}건)</span></h3>
-        <div style={{ display: "flex", gap: 6 }}>
-          <button className="erut-btn erut-btn--default erut-btn--sm">CSV 내보내기 ↓</button>
-        </div>
-      </div>
-      <DiagLogFilterBar
-        period={period} setPeriod={setPeriod}
-        kind={kind} setKind={setKind}
-        kindOptions={[{ value: "all", label: "전체 이벤트" }, { value: "connect", label: "연결 / 해제" }, { value: "timeout", label: "Timeout" }, { value: "ip", label: "IP 변경" }, { value: "fw", label: "펌웨어 업데이트" }]}
-        search={search} setSearch={setSearch}
-        searchPlaceholder="IP·메시지로 검색"
+        searchPlaceholder="구간·채널·코드로 검색"
       />
       <DiagLogTable columns={columns} rows={filtered} getKey={(r) => r.id}/>
     </>
   );
 }
 
-// ─────────────────────── 탭 #3: 측정 로그 ───────────────────────
-function DiagMeasurementLog() {
+// ─────────────────────── 탭 #2 (이전: 측정 에러) ───────────────────────
+// v17.0: 비고 컬럼 제거 — page state 아닌 자유 텍스트는 폐기. 에러 코드만 표시.
+function DiagMeasErrorLog() {
   const [period, setPeriod] = $s("7d");
   const [kind, setKind] = $s("all");
   const [search, setSearch] = $s("");
 
+  // mock — Error_Code_Spec_v2.0 (E1xx 측정)
   const allRows = [
-    { id: 1, ts: "06-09 10:00:00", event: "세션 시작", sessionId: "SES-2026-047", chCount: 64, size: null, result: "정상 (F6)", tone: "success" },
-    { id: 2, ts: "06-09 10:30:00", event: "자동 저장",  sessionId: "SES-2026-047", chCount: 64, size: "38.2 MB", result: "정상", tone: "success" },
-    { id: 3, ts: "06-09 10:42:18", event: "일시정지 (Space)", sessionId: "SES-2026-047", chCount: 64, size: null, result: "에러 E101 동시 발생", tone: "caution" },
-    { id: 4, ts: "06-09 10:45:02", event: "재개 (Space)",  sessionId: "SES-2026-047", chCount: 64, size: null, result: "정상", tone: "success" },
-    { id: 5, ts: "06-08 16:45:12", event: "세션 종료", sessionId: "SES-2026-046", chCount: 64, size: "412 MB", result: "정상 (F7)", tone: "success" },
+    { id: 1, ts: "06-09 10:42:18.412", channel: 22, amp: 98.4, tof: 3.32, thickness: 9.84, code: "E101", codeMsg: "ADC saturation", ampTone: "error" },
+    { id: 2, ts: "06-09 10:15:02.108", channel: 49, amp: 8.2,  tof: null, thickness: null, code: "E115", codeMsg: "신호 검출 실패 (부착력 저하)", ampTone: "caution" },
+    { id: 3, ts: "06-09 09:58:31.022", channel: 62, amp: 0.0,  tof: null, thickness: null, code: "E120", codeMsg: "채널 미연결", ampTone: "error" },
+    { id: 4, ts: "06-08 17:21:09.654", channel: 4,  amp: 94.0, tof: 5.80, thickness: 17.4, code: "E108", codeMsg: "Amp Threshold 초과 (Critical)", ampTone: "caution" },
   ];
-  const toneColor = (t) => t === "success" ? "var(--system-success)" : t === "caution" ? "var(--system-caution)" : "var(--content-medium)";
 
   const filtered = allRows.filter(r => {
     if (kind !== "all") {
-      const match = (kind === "se" && (r.event.includes("시작") || r.event.includes("종료")))
-                 || (kind === "pause" && (r.event.includes("일시정지") || r.event.includes("재개")))
-                 || (kind === "save" && r.event.includes("저장"))
-                 || (kind === "err" && r.result.includes("에러"));
-      if (!match) return false;
+      const range = kind === "1-24" ? [1, 24] : kind === "25-48" ? [25, 48] : kind === "49-64" ? [49, 64] : null;
+      if (range && (r.channel < range[0] || r.channel > range[1])) return false;
     }
-    if (search && !(r.event + " " + r.sessionId).toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !(r.code + " CH " + r.channel + " " + r.codeMsg).toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
+  const numCell = (v, tone, suf) => {
+    if (v == null) return <span style={{ color: "var(--system-error)", fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>—</span>;
+    const color = tone === "error" ? "var(--system-error)" : tone === "caution" ? "var(--system-caution)" : "var(--content-medium)";
+    return <span style={{ color, fontVariantNumeric: "tabular-nums", fontWeight: tone ? 700 : 400 }}>{v}{suf || ""}</span>;
+  };
+
   const columns = [
-    { key: "ts", label: "시각", width: 130, cellStyle: { color: "var(--content-medium)", fontVariantNumeric: "tabular-nums" } },
-    { key: "event", label: "이벤트", width: 140, cellStyle: { color: "var(--content-high)", fontWeight: 700 } },
-    { key: "sessionId", label: "세션ID", width: 130, render: (r) => (
-      <span style={{ color: "var(--content-emphasis)", textDecoration: "underline", cursor: "pointer", fontVariantNumeric: "tabular-nums" }}>{r.sessionId}</span>
-    )},
-    { key: "chCount", label: "채널 수", width: 70, cellStyle: { color: "var(--content-medium)", fontVariantNumeric: "tabular-nums" } },
-    { key: "size", label: "데이터 크기", width: 100, render: (r) => (
-      <span style={{ color: "var(--content-medium)", fontVariantNumeric: "tabular-nums" }}>{r.size || "—"}</span>
-    )},
-    { key: "result", label: "결과", render: (r) => (
-      <span style={{ color: toneColor(r.tone), fontWeight: 700 }}>{r.result}</span>
-    )},
+    { key: "ts", label: "시각", width: 150, cellStyle: { color: "var(--content-medium)", fontVariantNumeric: "tabular-nums" } },
+    { key: "channel", label: "채널", width: 80, render: (r) => <span style={{ color: "var(--content-high)", fontWeight: 700 }}>CH {String(r.channel).padStart(2, "0")}</span> },
+    { key: "amp", label: "Amp (% FSH)", width: 110, align: "right", render: (r) => numCell(r.amp, r.ampTone) },
+    { key: "tof", label: "ToF (μs)", width: 100, align: "right", render: (r) => numCell(r.tof, r.tof == null ? "error" : null) },
+    { key: "thickness", label: "두께 (mm)", width: 100, align: "right", render: (r) => numCell(r.thickness, r.thickness == null ? "error" : null) },
+    { key: "code", label: "에러 코드", render: (r) => <span style={{ color: "var(--content-emphasis)", fontWeight: 700 }}>{r.code} — {r.codeMsg}</span> },
   ];
 
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
-        <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>측정 로그 <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>({filtered.length}건)</span></h3>
-        <div style={{ display: "flex", gap: 6 }}>
-          <button className="erut-btn erut-btn--default erut-btn--sm">CSV 내보내기 ↓</button>
-        </div>
+        <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>측정 에러 <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>({filtered.length}건)</span></h3>
+        <button className="erut-btn erut-btn--default erut-btn--sm">CSV 내보내기 ↓</button>
       </div>
       <DiagLogFilterBar
         period={period} setPeriod={setPeriod}
         kind={kind} setKind={setKind}
-        kindOptions={[{ value: "all", label: "전체 이벤트" }, { value: "se", label: "세션 시작 / 종료" }, { value: "pause", label: "일시정지 / 재개" }, { value: "save", label: "자동 저장" }, { value: "err", label: "전송 오류" }]}
+        kindOptions={[
+          { value: "all", label: "전체 채널" },
+          { value: "1-24", label: "CH 01–24" },
+          { value: "25-48", label: "CH 25–48" },
+          { value: "49-64", label: "CH 49–64" },
+        ]}
         search={search} setSearch={setSearch}
-        searchPlaceholder="세션ID·이벤트로 검색"
+        searchPlaceholder="채널·에러 코드로 검색"
       />
       <DiagLogTable columns={columns} rows={filtered} getKey={(r) => r.id}/>
     </>
