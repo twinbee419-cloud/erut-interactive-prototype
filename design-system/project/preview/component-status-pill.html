@@ -10,16 +10,24 @@
   .led.red .dot{ background:#FF005E }
   .led.green .halo{ background: radial-gradient(rgba(24,227,57,0) 0%, rgba(24,227,57,0.26) 54%, rgba(24,227,57,0) 100%) }
   .led.green .dot{ background:#18E339 }
+  /* v17.1: gray LED (측정 정지 — content-low) */
+  .led.gray .halo{ background:transparent }
+  .led.gray .dot{ background:#6B7C9B }
 </style>
 <div style="display:flex; flex-direction:column; gap:14px">
   <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
-    <span class="pill"><span class="led red"><span class="halo"></span><span class="dot"></span></span>장비 미연결</span>
-    <span class="pill"><span class="led green"><span class="halo"></span><span class="dot"></span></span>장비 연결됨</span>
+    <span class="pill"><span class="led red"><span class="halo"></span><span class="dot"></span></span>MC보드 미연결</span>
+    <span class="pill"><span class="led green"><span class="halo"></span><span class="dot"></span></span>MC보드 연결됨</span>
+    <span class="pill"><span class="led green"><span class="halo"></span><span class="dot"></span></span>MC보드 연결됨 2/3</span>
+    <span class="pill"><span class="led green"><span class="halo"></span><span class="dot"></span></span>측정 중</span>
+    <span class="pill"><span class="led green"><span class="halo"></span><span class="dot"></span></span>측정 중 1/2</span>
+    <span class="pill"><span class="led gray"><span class="halo"></span><span class="dot"></span></span>정지</span>
     <span class="pill"><span class="led red"><span class="halo"></span><span class="dot"></span></span>MQTT 미연결</span>
     <span class="pill"><span class="led green"><span class="halo"></span><span class="dot"></span></span>MQTT 연결됨</span>
   </div>
   <div style="font:700 12px/1.4 var(--font-kr); color:var(--content-low); letter-spacing:.02em">
-    Inset shadow + radial halo + hard center dot. Red = disconnected, Green = connected.
+    Inset shadow + radial halo + hard center dot. Red = disconnected (system-error), Green = connected/measuring (system-success), Gray = stopped (content-low, no halo).<br/>
+    v17.1: 워딩 정합 (장비 → MC보드 · MC↔미니PC). 측정 pill 신설 (MC보드 단위 start/stop). 다중 MC보드 시 분수 표시 (N/M, offline 제외).
   </div>
 </div>
 </body></html>

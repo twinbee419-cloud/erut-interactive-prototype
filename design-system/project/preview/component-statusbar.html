@@ -8,11 +8,15 @@
   .led{ position:relative; width:14px; height:14px; border-radius:50% }
   .led.red::before{ content:""; position:absolute; inset:0; border-radius:50%; background: radial-gradient(rgba(255,0,94,0) 0%, rgba(255,0,94,0.26) 54%, rgba(255,0,94,0) 100%) }
   .led.red::after{ content:""; position:absolute; left:4px; top:4px; width:6px; height:6px; border-radius:50%; background:#FF005E }
+  /* v17.1: gray LED (측정 정지 — content-low, no halo) */
+  .led.gray::after{ content:""; position:absolute; left:4px; top:4px; width:6px; height:6px; border-radius:50%; background:#6B7C9B }
   .stext{ font:700 12px/1 var(--font-kr); color:#6B7C9B; letter-spacing:.02em }
   .grip{ margin-left:auto; color:#6B7C9B }
 </style>
+<!-- v17.1: 워딩 정리 — MC보드 미연결 + 측정 정지 + MQTT 미연결 (3 pill) -->
 <div class="sbar">
-  <span class="pill"><span class="led red"></span>장비 미연결</span>
+  <span class="pill"><span class="led red"></span>MC보드 미연결</span>
+  <span class="pill"><span class="led gray"></span>정지</span>
   <span class="pill"><span class="led red"></span>MQTT 미연결</span>
   <span class="stext">PRF : ---</span>
   <span class="stext">Temp : ---</span>
@@ -22,6 +26,6 @@
   </svg>
 </div>
 <div style="margin-top:10px; font:700 12px/1.4 var(--font-kr); color:var(--content-low); letter-spacing:.02em">
-  46px · status pills on left, telemetry mid, version + resize grip on right.
+  46px · 3 status pills on left (MC보드/측정/MQTT — v17.1), telemetry mid, version + resize grip on right.
 </div>
 </body></html>

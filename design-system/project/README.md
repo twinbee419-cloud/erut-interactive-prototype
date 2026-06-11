@@ -90,8 +90,9 @@ Copy examples to imitate:
   최근 프로젝트
   종료
 
-장비 미연결                 ← status pill (red dot)
-MQTT 미연결
+MC보드 미연결               ← status pill (red dot, MC ↔ 미니 PC 커넥션)
+정지                        ← measurement pill (gray dot, content-low)
+MQTT 미연결                 ← status pill (red dot, 미니 PC ↔ 서버)
 PRF : ---     Temp : ---                       v0.0.0.0
 ```
 
