@@ -6,7 +6,7 @@
 |---|---|
 | **버전** | 1.1 (v18.1 사용자 피드백 반영) |
 | **작성일** | 2026-06-11 (1.0) / 2026-06-11 (1.1) |
-| **v1.1 변경** | (1) 진입을 MC보드 정보 옆으로 이동 (단위 일관성) (2) "측정 위치(θ, Z)" 행 제거 — A-scan에 좌표 정보 없음 (3) 좌/우 chevron + 키보드 ←/→ (4) 64채널 전체 표시 + 검사 대상명 서브텍스트. 채널 배치 마법사 전면 폐기. |
+| **v1.1 변경** | (1) 진입을 MC보드 정보 옆으로 이동 (단위 일관성) (2) "측정 위치(θ, Z)" 행 제거 — A-scan에 좌표 정보 없음 (3) 좌/우 chevron + 키보드 ←/→ (4) 64채널 전체 표시 + 검사 대상명 서브텍스트. 채널 배치 마법사 전면 폐기. **(5) 다중 채널 출력 시 채널별 개별 PDF + ZIP 압축으로 저장 (NDT 채널 단위 추적성)**. |
 | **작성** | 기획팀 + NDT 도메인 검토 (Claude) |
 | **적용 위치** | `SLIDE 17 [18] 채널 측정 보고서 출력` |
 | **관련 산출물** | `ERUT_ServiceFlow_FixedProbe.html` v18.0+ |
@@ -129,33 +129,68 @@ __________                  __________
 
 **결정**: PdfSharp + MigraDoc (PdfSharp의 layout helper). 한글 폰트는 NanumSquare를 PDF에 임베드 (라이선스 ✓).
 
-### 3-2. 페이지 생성 의사코드
+### 3-2. 출력 방식 — 채널 수에 따라 분기 (v1.1)
+
+**원칙 — 채널 1개 = PDF 파일 1개**. 다중 채널은 개별 PDF + ZIP 압축으로 저장 (단일 PDF 묶음 방식 폐기).
+
+| 선택 채널 수 | 출력 형식 | 비고 |
+|---|---|---|
+| **1 채널** | 단일 PDF 파일 | 그대로 저장 다이얼로그 |
+| **2 채널 이상** | **개별 PDF N개 → ZIP 압축 1개** | 채널별 분리 보관·공유·일부 재출력 용이. NDT 채널 단위 추적성 ↑ |
+
+**ZIP 라이브러리**: `System.IO.Compression.ZipArchive` (.NET 표준, 추가 의존성 없음).
+
+### 3-3. 페이지 생성 의사코드 (v1.1 — 채널별 분리 + ZIP 압축)
 
 ```csharp
 public byte[] GenerateChannelReport(
     Guid projectId, Guid itemId, List<string> channelIds,
     bool includeSign)
 {
-    var doc = new PdfDocument();
-    foreach (var chId in channelIds)
+    // 단일 채널 — PDF 1개 그대로 반환
+    if (channelIds.Count == 1)
     {
-        var page = doc.AddPage();
-        page.Size = PdfSharp.PageSize.A4;
-        page.Orientation = PdfSharp.PageOrientation.Portrait;
-
-        var gfx = XGraphics.FromPdfPage(page);
-        DrawHeader(gfx, projectId, itemId, chId);
-        DrawSection1_Standard(gfx, itemId, chId);
-        DrawSection2_Probe(gfx, chId);
-        DrawSection3_Calibration(gfx, chId);
-        DrawSection4_Ascan(gfx, chId);  // ★ AScanRaw 디시리얼라이즈 후 path 그리기
-        if (includeSign) DrawFooter_Sign(gfx);
+        return GenerateSinglePdf(projectId, itemId, channelIds[0], includeSign);
     }
-    return SaveToBytes(doc);
+
+    // 다중 채널 — 채널별 PDF 생성 후 ZIP 묶음
+    using var zipStream = new MemoryStream();
+    using (var zip = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true))
+    {
+        foreach (var chId in channelIds)
+        {
+            var pdfBytes = GenerateSinglePdf(projectId, itemId, chId, includeSign);
+            var fileName = BuildSinglePdfFileName(projectId, itemId, chId);
+            var entry = zip.CreateEntry(fileName, CompressionLevel.Optimal);
+            using var entryStream = entry.Open();
+            entryStream.Write(pdfBytes, 0, pdfBytes.Length);
+        }
+    }
+    return zipStream.ToArray();
+}
+
+private byte[] GenerateSinglePdf(Guid projectId, Guid itemId, string chId, bool includeSign)
+{
+    var doc = new PdfDocument();
+    var page = doc.AddPage();
+    page.Size = PdfSharp.PageSize.A4;
+    page.Orientation = PdfSharp.PageOrientation.Portrait;
+
+    var gfx = XGraphics.FromPdfPage(page);
+    DrawHeader(gfx, projectId, itemId, chId);
+    DrawSection1_Standard(gfx, itemId, chId);
+    DrawSection2_Probe(gfx, chId);
+    DrawSection3_Calibration(gfx, chId);
+    DrawSection4_Ascan(gfx, chId);  // ★ AScanRaw 디시리얼라이즈 후 path 그리기
+    if (includeSign) DrawFooter_Sign(gfx);
+
+    using var ms = new MemoryStream();
+    doc.Save(ms);
+    return ms.ToArray();
 }
 ```
 
-### 3-3. A-scan 렌더링
+### 3-4. A-scan 렌더링
 
 A-scan 데이터(`double[] AScanRaw`)를 PdfSharp `XGraphics.DrawLines`로 polyline 그림.
 
@@ -177,22 +212,44 @@ void DrawSection4_Ascan(XGraphics gfx, string chId)
 }
 ```
 
-### 3-4. 한글 폰트 임베드
+### 3-5. 한글 폰트 임베드
 
 - NanumSquare R/B/acR/acB 4종 (`design-system/project/fonts/`)
 - PdfSharp `XFont`에 임베드: `XFont.Subset` 모드로 크기 ↓
 
-### 3-5. 파일명 규칙
+### 3-6. 파일명 규칙 (v1.1 — ZIP 압축 반영)
 
-기본 파일명 (저장 다이얼로그 default):
+**단일 채널 (PDF 1개)**:
 ```
-{프로젝트코드}_{검사대상명}_{채널들요약}_{YYYY-MM-DD}.pdf
+{프로젝트코드}_{검사대상명}_{채널ID}_{YYYY-MM-DD}.pdf
+
+예시: SK-ULSN_PIPE-A-204_CH07_2026-06-11.pdf
+```
+
+**다중 채널 (ZIP 1개 + 내부 PDF N개)**:
+```
+ZIP 파일명: {프로젝트코드}_{MC보드ID}_보고서_{N}ch_{YYYY-MM-DD}.zip
+ZIP 내부 각 PDF: {검사대상명}_{채널ID}.pdf
 
 예시:
-- 단일:  SK-ULSN_PIPE-A-204_CH07_2026-06-11.pdf
-- 다중:  SK-ULSN_PIPE-A-204_8ch_2026-06-11.pdf
-- 전체:  SK-ULSN_PIPE-A-204_all_2026-06-11.pdf
+ZIP — SK-ULSN_MCuF-001_보고서_8ch_2026-06-11.zip
+  ├── PIPE-A-204_CH07.pdf
+  ├── PIPE-A-204_CH08.pdf
+  ├── PIPE-A-204_CH09.pdf
+  ├── TANK-B-101_CH25.pdf
+  ├── TANK-B-101_CH26.pdf
+  ├── VESSEL-C-301_CH49.pdf
+  ├── VESSEL-C-301_CH50.pdf
+  └── VESSEL-C-301_CH51.pdf
 ```
+
+**ZIP 사용 근거 (NDT 워크플로우 정합)**:
+- 채널별 분리 보관 → 일부 채널만 재출력 / 공유 / 보관 용이
+- 검사 대상별 폴더 구조와 자연스럽게 매핑
+- 단일 PDF 묶음 방식보다 채널 단위 추적성 ↑
+- 검사 이력 관리 시 채널별 파일 인덱싱 가능
+
+저장 다이얼로그 기본 확장자는 채널 수에 따라 자동 변경 (`*.pdf` / `*.zip`).
 
 ---
 
@@ -293,12 +350,13 @@ ALTER TABLE TB_INSPECTION_ITEM ADD COLUMN ApplicableStandard TEXT;
 | T2 | "PDF 출력 (1 장)" 클릭 | 1페이지 A4 PDF 생성. 파일명 `{...}_CH07_{date}.pdf` |
 | T3 | 모달 옵션 "서명란 포함" 해제 후 출력 | 푸터 없는 PDF |
 
-### 다중 채널 출력
+### 다중 채널 출력 (v1.1 — ZIP 압축)
 
 | # | 입력 | 예상 결과 |
 |---|---|---|
-| T4 | CH07 → 모달에서 CH08·CH11 추가 선택 → 출력 | 3페이지 PDF, 각 채널 1페이지 |
-| T5 | "전체 선택" 클릭 → 24채널 선택 → 출력 | 24페이지 PDF. 파일명 `{...}_all_{date}.pdf` |
+| T4 | CH07 → 모달에서 CH08·CH11 추가 선택 → 출력 | **ZIP 파일 1개** (`{...}_MCuF-001_보고서_3ch_{date}.zip`). 내부 3개 PDF 각각 1페이지 |
+| T5 | "전체 선택" 클릭 → 64채널 선택 → 출력 | **ZIP 파일 1개** (`{...}_MCuF-001_보고서_64ch_{date}.zip`). 내부 64개 PDF, 검사 대상별 PDF 명명 |
+| T5-1 | 다중 채널 출력 후 ZIP 압축 해제 | 채널별 개별 PDF 파일 N개 확인. 각 PDF는 단일 채널 형식 (1페이지) |
 
 ### 진입 경로
 
