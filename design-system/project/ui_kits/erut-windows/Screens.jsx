@@ -223,7 +223,7 @@ window.MOCK = {
     if ([41, 42, 47, 48].includes(num)) return { ch: num, sn: "", status: "empty" };
     return { ch: num, sn: "PXT-2024-" + String(num).padStart(3, "0"), status: "ok" };
   }),
-  // v12.0: 교정 필요 채널 (uncalibrated: 신규 추가 후 미진행 + expired: 180일 초과 만료) — DeviceDetail breathe 셀과 동일 소스
+  // v12.0: 교정 필요 채널 (uncalibrated: 신규 추가 후 미진행 + expired: 주기 초과 만료) — DeviceDetail breathe 셀과 동일 소스
   uncalibratedChannels: ["ch20", "ch33"],
   expiredChannels:      ["ch04", "ch09", "ch12"],
   // v13.0: 마지막 교정일 — 재교정 마법사 좌측 채널 카드에 표시. uncalibrated 채널은 null
@@ -234,6 +234,29 @@ window.MOCK = {
     ch20: null,          // 미교정 (신규 추가 후 미진행)
     ch33: null,          // 미교정
   },
+  // v16.0: 채널별 교정 주기 override — undefined 채널은 전역 기본값(calibrationPolicy.defaultCycleDays) 사용
+  channelCycleDays: {
+    ch04: 90,  // 주기 90일 (절차서 override) — 가장 짧음
+    // 나머지 채널은 전역 기본 180일 따름
+  },
+  // v16.0: 교정 정책 (전역 설정) — [8] 설정 모달에서 변경. 알림 다이얼로그·상태바 배지가 이 값을 참조
+  calibrationPolicy: {
+    defaultCycleDays:    180,    // 전역 기본 교정 주기 (일). 채널별 override가 없으면 이 값 사용
+    alert7DaysBefore:    true,   // D-7 알림 시점
+    alert1DayBefore:     true,   // D-1 알림 시점
+    alertOnDueDay:       true,   // D-0 (당일) 알림 시점
+    startupAlertDialog:  true,   // 앱 시작 시 알림 다이얼로그 표시
+    statusBarBadge:      true,   // 상태바 "교정 임박 N" 배지 표시
+  },
+  // v16.0: 알림 발생 이력 — 채널×시점별 중복 표시 방지. 키: `${chId}_${marker}` (marker: "d7" / "d1" / "d0")
+  // mockup 차원에선 빈 객체 (실제 백엔드 연동 시 마지막 표시 timestamp 저장)
+  calibrationAlertHistory: {},
+  // v16.0: 알림 다이얼로그 mockup 표시용 — 만료 임박 채널 (실제: 매일 자정 + 앱 시작 시 daysUntilExpiry 계산)
+  imminentChannels: [
+    { id: "CH 18", daysRemaining:  7, lastDate: "2026-05-04", cycleDays:  45 },  // 채널별 45일 주기 가정
+    { id: "CH 45", daysRemaining:  1, lastDate: "2025-12-12", cycleDays: 182 },
+    { id: "CH 52", daysRemaining:  0, lastDate: "2025-12-13", cycleDays: 180 },  // 전역 기본
+  ],
 };
 // 공통 접근자 — DeviceDetail / index.html F6 차단 다이얼로그 / DiagCalibHistory 모두 이걸 참조
 window.MOCK.needsCalibrationChannels = [...window.MOCK.uncalibratedChannels, ...window.MOCK.expiredChannels];
@@ -854,7 +877,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
                   className="erut-btn erut-btn--default erut-btn--sm"
                   style={{ color: "var(--system-caution)", borderColor: "var(--system-caution)" }}
                   onClick={() => { setRecalibChannels(needsCalibChannels.map(c => c.id)); setShowRecalibration(true); }}
-                  title={`만료(180일 초과) 또는 미진행 ${needsCalibChannels.length}채널 일괄 재교정`}
+                  title={`교정 주기 초과 또는 미진행 ${needsCalibChannels.length}채널 일괄 재교정`}
                 >
                   일괄 재교정
                 </button>
@@ -1010,6 +1033,12 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const [probeType, setProbeType] = $s(pre.probeType || "");
   // v15.3: Wedge 각도 — 사용자 입력 각도 (90° = 수직 / 90° 미만 = 경사각). 측정값(wedge state)과 별개
   const [wedgeAngle, setWedgeAngle] = $s(pre.wedgeAngle != null ? pre.wedgeAngle : 90);
+  // v16.0: 교정 주기 (일) — 전역 기본값 적용 vs 채널별 override.
+  // useGlobalCycle = true → [8] 설정의 기본 주기(default 180) 따름 / false → channelCycleDays 직접 입력
+  const globalCycle = (window.MOCK && window.MOCK.calibrationPolicy && window.MOCK.calibrationPolicy.defaultCycleDays) || 180;
+  const [useGlobalCycle, setUseGlobalCycle] = $s(pre.useGlobalCycle !== false);
+  const [channelCycleDays, setChannelCycleDays] = $s(pre.channelCycleDays != null ? pre.channelCycleDays : globalCycle);
+  const effectiveCycle = useGlobalCycle ? globalCycle : channelCycleDays;
 
   // ───── 교정 측정 state — edit 모드 시 기존 교정값 prefill ─────
   const [wedge, setWedge]     = $s(pre.wedge    || { value: null, unit: "°" });
@@ -1224,14 +1253,17 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                 const lastDate = dates[chId];
                 const today = new Date("2026-06-10");
                 const daysAgo = lastDate ? Math.floor((today - new Date(lastDate)) / 86400000) : null;
-                const expired = daysAgo != null && daysAgo > 180;
+                // v16.0: 채널별 주기 (override) 우선, 없으면 전역 기본값
+                const cycle = effectiveCycle;
+                const expired = daysAgo != null && daysAgo > cycle;
                 const tone = lastDate == null ? "var(--system-error)" : expired ? "var(--system-caution)" : "var(--system-success)";
                 return (
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em" }}>
                     <div><span style={{ color: "var(--content-low)" }}>마지막 교정</span> <strong style={{ color: "var(--content-high)", fontWeight: 700 }}>{lastDate || "— (미교정)"}</strong></div>
+                    <div><span style={{ color: "var(--content-low)" }}>교정 주기</span> <strong style={{ color: "var(--content-high)", fontWeight: 700 }}>{cycle}일{useGlobalCycle ? " (전역 기본)" : " (채널별)"}</strong></div>
                     {daysAgo != null && <div><span style={{ color: "var(--content-low)" }}>경과</span> <strong style={{ color: tone, fontWeight: 700 }}>{daysAgo}일 전</strong></div>}
                     {daysAgo != null && (
-                      <div><span style={{ color: "var(--content-low)" }}>만료까지</span> <strong style={{ color: tone, fontWeight: 700 }}>{expired ? `만료 ${daysAgo - 180}일 초과` : `${180 - daysAgo}일 남음`}</strong></div>
+                      <div><span style={{ color: "var(--content-low)" }}>만료까지</span> <strong style={{ color: tone, fontWeight: 700 }}>{expired ? `주기 ${daysAgo - cycle}일 초과` : `${cycle - daysAgo}일 남음`}</strong></div>
                     )}
                     {lastDate == null && <div style={{ color: "var(--system-error)", fontWeight: 700 }}>미교정 — 교정 후 측정 가능</div>}
                   </div>
@@ -1289,6 +1321,16 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                   <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>Wedge 각도 (°) <span style={{ color: "var(--system-error)" }}>*</span></div>
                   <input className="erut-field" type="number" min="0" max="90" step="0.1" value={wedgeAngle} onChange={(e) => setWedgeAngle(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
                   <div style={{ font: "400 9px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>수직 = 90° (두께 측정) / 경사각 = 90° 미만 (용접부·결함 탐지, 예: 70° · 60° · 45°)</div>
+                </div>
+                {/* v16.0: 교정 주기 — 전역 기본값(180일) 또는 채널별 override */}
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>교정 주기 (일)</div>
+                  <label onClick={() => setUseGlobalCycle(v => !v)} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 6 }}>
+                    <span className="erut-cb"><span className={"erut-cb__box" + (useGlobalCycle ? " is-on" : "")}></span></span>
+                    전역 기본값 적용 ({globalCycle}일)
+                  </label>
+                  <input className={"erut-field" + (useGlobalCycle ? " is-disabled" : "")} type="number" min="1" step="1" value={useGlobalCycle ? globalCycle : channelCycleDays} onChange={(e) => setChannelCycleDays(parseInt(e.target.value, 10) || 0)} disabled={useGlobalCycle} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                  <div style={{ font: "400 9px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>체크 해제 시 채널별 직접 입력. 절차서·검사체 환경에 따라 가변 (예: 90일·365일).</div>
                 </div>
               </div>
             </div>
@@ -1588,7 +1630,7 @@ function DiagCalibHistory() {
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
         <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>교정 이력</h3>
-        <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>6개월(180일) 경과 시 측정 신뢰성 의심 — 재교정 권장</span>
+        <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>교정 주기 초과 시 측정 신뢰성 의심 — 재교정 권장 (주기는 [8] 설정 → 교정 정책에서 지정)</span>
       </div>
       <table style={{ width: "100%", borderCollapse: "collapse", font: "400 12px/1.4 var(--font-kr)" }}>
         <thead>
@@ -1630,7 +1672,7 @@ window.CalibrationStartDialog = function CalibrationStartDialog({ uncalibratedId
         </div>
         <div style={{ padding: "18px 22px", display: "flex", flexDirection: "column", gap: 14 }}>
           <p style={{ font: "400 13px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>
-            <strong style={{ fontWeight: 700, color: "var(--system-caution)" }}>{total}개</strong> 채널이 교정되지 않았거나 만료(180일 초과)되었습니다.<br/>
+            <strong style={{ fontWeight: 700, color: "var(--system-caution)" }}>{total}개</strong> 채널이 교정되지 않았거나 교정 주기를 초과했습니다.<br/>
             교정되지 않은 채널의 측정 데이터는 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>신뢰성을 보장할 수 없습니다</strong>.
           </p>
           <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 6, font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em" }}>
@@ -1643,7 +1685,7 @@ window.CalibrationStartDialog = function CalibrationStartDialog({ uncalibratedId
             )}
             {expiredIds?.length > 0 && (
               <div>
-                <span style={{ color: "var(--content-low)" }}>만료 (180일 초과)</span>{" "}
+                <span style={{ color: "var(--content-low)" }}>교정 주기 초과</span>{" "}
                 <strong style={{ color: "var(--content-high)" }}>{expiredIds.length}개</strong>
                 <span style={{ color: "var(--content-medium)", marginLeft: 8 }}>· {expiredIds.map(c => c.toUpperCase().replace("CH", "CH ")).join(" · ")}</span>
               </div>
@@ -1655,6 +1697,55 @@ window.CalibrationStartDialog = function CalibrationStartDialog({ uncalibratedId
           <div style={{ display: "flex", gap: 8 }}>
             <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onContinueAnyway}>그대로 측정 시작</button>
             <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onRecalibrateAll} autoFocus>일괄 재교정 ({total}ch)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// v16.0: 교정 만료 임박 알림 다이얼로그 — 앱 시작 시 자동 표시 + 상태바 배지 클릭 시 표시.
+// 각 알림 시점(D-7·D-1·D-0)에 채널당 1회 표시 (중복 방지). 만료된 채널은 F6 차단 다이얼로그가 별도 담당.
+// props: channels[{ id, daysRemaining, lastDate, cycleDays }], onRecalibrateAll, onOpenSettings, onClose
+window.CalibrationExpiryAlertDialog = function CalibrationExpiryAlertDialog({ channels, onRecalibrateAll, onOpenSettings, onClose }) {
+  const count = channels?.length || 0;
+  if (count === 0) return null;
+  const fmtRemain = (d) => d <= 0 ? "당일 (D-Day)" : `${d}일 남음`;
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: 620, background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderBottom: "1px solid var(--border-medium)", background: "var(--system-caution)" }}>
+          <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>탐촉자 교정 — 임박 알림</div>
+          <button onClick={onClose} aria-label="닫기" style={{ background: "transparent", border: "none", color: "var(--content-inverse)", cursor: "pointer", padding: 4, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><window.EIcon.Close size={14}/></button>
+        </div>
+        <div style={{ padding: "18px 22px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <p style={{ font: "400 13px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>
+            <strong style={{ fontWeight: 700, color: "var(--system-caution)" }}>{count}개</strong> 채널의 교정 주기 만료가 임박했습니다.<br/>
+            측정 신뢰성 유지를 위해 만료 전 재교정을 권장합니다.
+          </p>
+          <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 6, font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "60px 1fr auto", gap: 8, alignItems: "center", paddingBottom: 6, borderBottom: "1px solid var(--border-low)", font: "700 11px/1 var(--font-kr)", color: "var(--content-low)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              <span>채널</span>
+              <span>마지막 교정 / 주기</span>
+              <span>만료까지</span>
+            </div>
+            {channels.map(c => (
+              <div key={c.id} style={{ display: "grid", gridTemplateColumns: "60px 1fr auto", gap: 8, alignItems: "center" }}>
+                <span style={{ color: "var(--content-high)", fontWeight: 700 }}>{c.id}</span>
+                <span style={{ color: "var(--content-medium)" }}>{c.lastDate} · 주기 {c.cycleDays}일</span>
+                <strong style={{ color: "var(--system-caution)", fontWeight: 700 }}>{fmtRemain(c.daysRemaining)}</strong>
+              </div>
+            ))}
+          </div>
+          <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+            알림 시점은 <strong style={{ color: "var(--content-high)" }}>[8] 설정 모달 → 교정 정책</strong>에서 변경할 수 있습니다 (7일 전·1일 전·당일 다중 선택).
+          </div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
+          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose}>나중에 확인</button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onOpenSettings}>교정 정책 설정 →</button>
+            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onRecalibrateAll} autoFocus>일괄 재교정 ({count}ch)</button>
           </div>
         </div>
       </div>
@@ -1937,12 +2028,14 @@ function DiagMeasurementLog() {
 
 // =================== Modal · [8] 환경 설정 (v10.0 신규 — 메뉴바 [설정] + 툴바 gear 공통 진입) ===================
 window.SettingsModal = function SettingsModal({ onClose }) {
-  const [cat, setCat] = $s("general"); // general / shortcuts / autosave / report
+  // v16.0: 'calibration' 카테고리 신설 (5개) — 신설 강조로 기본 활성
+  const [cat, setCat] = $s("calibration"); // general / shortcuts / autosave / report / calibration
   const cats = [
-    { id: "general",   label: "일반" },
-    { id: "shortcuts", label: "단축키" },
-    { id: "autosave",  label: "자동 저장" },
-    { id: "report",    label: "보고서 기본값" },
+    { id: "general",     label: "일반" },
+    { id: "shortcuts",   label: "단축키" },
+    { id: "autosave",    label: "자동 저장" },
+    { id: "report",      label: "보고서 기본값" },
+    { id: "calibration", label: "교정 정책" },
   ];
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
@@ -1970,10 +2063,11 @@ window.SettingsModal = function SettingsModal({ onClose }) {
             ))}
           </div>
           <div style={{ padding: "18px 24px", overflowY: "auto" }}>
-            {cat === "general"   && <SettingsGeneral/>}
-            {cat === "shortcuts" && <SettingsShortcuts/>}
-            {cat === "autosave"  && <SettingsAutosave/>}
-            {cat === "report"    && <SettingsReport/>}
+            {cat === "general"     && <SettingsGeneral/>}
+            {cat === "shortcuts"   && <SettingsShortcuts/>}
+            {cat === "autosave"    && <SettingsAutosave/>}
+            {cat === "report"      && <SettingsReport/>}
+            {cat === "calibration" && <SettingsCalibration/>}
           </div>
         </div>
         {/* 푸터 — 좌측: 초기화 / 우측: 취소·적용 */}
@@ -2141,6 +2235,58 @@ function SettingsReport() {
             <option value="api">API 510</option>
             <option value="nace">NACE MR0175</option>
           </select>
+        </SettingsRow>
+      </div>
+    </>
+  );
+}
+
+// v16.0 신설: 교정 정책 카테고리. 기본 교정 주기·만료 전 알림 시점·앱 시작 시 알림·상태바 배지 4개 설정 항목.
+function SettingsCalibration() {
+  const g = (window.MOCK && window.MOCK.calibrationPolicy) || {};
+  const [cycle, setCycle]      = $s(g.defaultCycleDays != null ? g.defaultCycleDays : 180);
+  const [alert7, setAlert7]    = $s(g.alert7DaysBefore !== false);
+  const [alert1, setAlert1]    = $s(g.alert1DayBefore  !== false);
+  const [alertD, setAlertD]    = $s(g.alertOnDueDay    !== false);
+  const [startupAlert, setStartupAlert] = $s(g.startupAlertDialog !== false);
+  const [badge, setBadge]               = $s(g.statusBarBadge    !== false);
+  return (
+    <>
+      <SettingsSectionHeader title="교정 정책" desc="탐촉자 교정 주기와 만료 전 알림 동작을 설정합니다. 절차서·검사체별로 가변. 채널 단위 override는 [4-3-1] 탐촉자 설정에서 가능."/>
+      <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: "16px 24px", alignItems: "start" }}>
+        <SettingsRow label="기본 교정 주기" hint="전역 기본값. 채널별로 다른 주기를 적용하려면 [4-3-1] 탐촉자 설정에서 override.">
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input className="erut-field" type="number" min="1" step="1" value={cycle} onChange={(e) => setCycle(parseInt(e.target.value, 10) || 0)} style={{ width: 100 }}/>
+            <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--content-medium)" }}>일</span>
+          </div>
+        </SettingsRow>
+        <SettingsRow label="만료 전 알림 시점" hint="각 시점에 한 번씩 표시 — 채널당 최대 3회. 만료 후에는 F6 측정 시작 자체가 차단됩니다.">
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label onClick={() => setAlert7(v => !v)} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>
+              <span className="erut-cb"><span className={"erut-cb__box" + (alert7 ? " is-on" : "")}></span></span>
+              7일 전 알림
+            </label>
+            <label onClick={() => setAlert1(v => !v)} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>
+              <span className="erut-cb"><span className={"erut-cb__box" + (alert1 ? " is-on" : "")}></span></span>
+              1일 전 알림
+            </label>
+            <label onClick={() => setAlertD(v => !v)} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>
+              <span className="erut-cb"><span className={"erut-cb__box" + (alertD ? " is-on" : "")}></span></span>
+              당일 (D-Day) 알림
+            </label>
+          </div>
+        </SettingsRow>
+        <SettingsRow label="앱 시작 시 알림" hint="앱 시작 시 알림 시점에 도달한 채널이 있으면 다이얼로그 표시. OFF 시 상태바 배지로만 알림.">
+          <label className="erut-toggle" onClick={() => setStartupAlert(v => !v)}>
+            <span className={"erut-toggle__track" + (startupAlert ? " is-on" : "")}><span className="erut-toggle__thumb"></span></span>
+            <span className="erut-toggle__label erut-toggle__label--sm">{startupAlert ? "활성" : "비활성"}</span>
+          </label>
+        </SettingsRow>
+        <SettingsRow label="상태바 알림 배지" hint='상태바 우측에 "교정 임박 N" 배지를 항상 표시. 7일 이내 또는 만료 채널이 있을 때 노출.'>
+          <label className="erut-toggle" onClick={() => setBadge(v => !v)}>
+            <span className={"erut-toggle__track" + (badge ? " is-on" : "")}><span className="erut-toggle__thumb"></span></span>
+            <span className="erut-toggle__label erut-toggle__label--sm">{badge ? "활성" : "비활성"}</span>
+          </label>
         </SettingsRow>
       </div>
     </>
@@ -4099,7 +4245,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
   const [showRecalibration, setShowRecalibration] = $s(false);
   // v9.18 (NDT 1.9): 결함 검증 재측정 — 추후 삭제 가능성
   const [showVerification, setShowVerification] = $s(false);
-  // mock — 6개월(180일) 이상 경과 채널 (실제 백엔드 연동 시 sensor.lastCalibration 기준)
+  // mock — 교정 주기 초과 채널 (v16.0: 채널별 주기 override / 전역 기본값 모두 반영. 실제 백엔드 연동 시 sensor.lastCalibration + channel.calibrationCycle 기준)
   const expiredChannels = ["ch04", "ch09", "ch12"];
 
   // 측정 시작(F6) 트리거 — 교정 만료 채널 있으면 1.4 다이얼로그 우선

@@ -62,7 +62,9 @@ window.Toolbar = function Toolbar({ items, activeKey, onPick, hint }) {
 };
 
 // ----------- STATUS BAR ------------
-window.StatusBar = function StatusBar({ deviceConnected = false, mqttConnected = false, prf = "---", temp = "---", version = "v0.0.0.0" }) {
+// v16.0: calibrationAlert 신설 — 교정 임박/만료 채널 N개를 statusbar 우측에 노출.
+// { count, tone: "caution" (7일 이내) | "error" (만료), onClick: () => 알림 다이얼로그 }
+window.StatusBar = function StatusBar({ deviceConnected = false, mqttConnected = false, prf = "---", temp = "---", version = "v0.0.0.0", calibrationAlert = null }) {
   return (
     <div className="erut-statusbar">
       <StatusPill connected={deviceConnected} labelOn="장비 연결됨" labelOff="장비 미연결"/>
@@ -70,6 +72,20 @@ window.StatusBar = function StatusBar({ deviceConnected = false, mqttConnected =
       <span className="erut-statusbar__text">PRF : {prf}</span>
       <span className="erut-statusbar__text">Temp : {temp}</span>
       <span style={{flex:1}}/>
+      {calibrationAlert && calibrationAlert.count > 0 && (
+        <span onClick={calibrationAlert.onClick} title="클릭 — 교정 임박/만료 채널 상세 보기" style={{
+          display: "inline-flex", alignItems: "center", gap: 5, cursor: "pointer",
+          color: calibrationAlert.tone === "error" ? "var(--system-error)" : "var(--system-caution)",
+          font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em",
+          padding: "0 10px", borderLeft: "1px solid var(--border-medium)"
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.7 21a2 2 0 0 1-3.4 0"/>
+          </svg>
+          {calibrationAlert.tone === "error" ? `교정 만료 ${calibrationAlert.count}` : `교정 임박 ${calibrationAlert.count}`}
+        </span>
+      )}
       <span className="erut-statusbar__text">{version}</span>
       <span className="erut-statusbar__grip"><I.ResizeCorner/></span>
     </div>
