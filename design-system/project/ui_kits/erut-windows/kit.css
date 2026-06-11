@@ -530,14 +530,15 @@
   border-color: rgba(107,124,155,1.00);
 }
 
-/* ---------- v9.30: 교정 필요 셀 (미교정 + 만료) — major 컬러 breathe ----------
-   추가만 되고 교정 미진행 + 주기 초과로 재교정 필요한 채널 표시.
+/* ---------- v15.2: 교정 필요 셀 — content-low(회색-블루) breathe ----------
+   "F6 측정 시작 차단 = 사용 불가(disabled)" 의미 매핑. 신호 약함(caution dot)과 색축 분리.
+   액션 버튼은 caution 유지(어포던스) → 셀=상태(회색), 버튼=주의(오렌지) 분리.
    defect 색상이 동시에 있을 경우 needs-calibration이 우선 (animation override). */
 .erut-ch-cell.is-needs-calibration{
-  --calib-fill-low:    rgba(255,146,0,0.10);
-  --calib-fill-high:   rgba(255,146,0,0.38);
-  --calib-border-low:  rgba(255,146,0,0.45);
-  --calib-border-high: rgba(255,146,0,1.00);
+  --calib-fill-low:    rgba(107,124,155,0.10);
+  --calib-fill-high:   rgba(107,124,155,0.32);
+  --calib-border-low:  rgba(107,124,155,0.45);
+  --calib-border-high: rgba(107,124,155,1.00);
   animation: erut-calib-breathe 1.6s ease-in-out infinite;
 }
 @keyframes erut-calib-breathe {
