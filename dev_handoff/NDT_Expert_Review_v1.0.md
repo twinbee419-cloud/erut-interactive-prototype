@@ -4,7 +4,7 @@
 |---|---|
 | **문서 버전** | v1.6 |
 | **작성일** | 2026-05-28 |
-| **검토 대상 버전** | ERUT_ServiceFlow_Analysis v8.10 (18 슬라이드) |
+| **검토 대상 버전** | ERUT_ServiceFlow_Analysis v8.10 (18 슬라이드) — 이후 v15.3에서 `ERUT_ServiceFlow_FixedProbe.html`로 rename |
 | **검토 관점** | NDT(비파괴 초음파 검사) 도메인 전문가 |
 | **검토 기준** | KS B 0817 / ASNT SNT-TC-1A / ASME B31.3 · V Article 4 / API 510 |
 
@@ -20,7 +20,7 @@ ERUT는 자석 부착 로봇 + UT 보드 + 64ch 탐촉자 기반의 **고정형 
 
 ## 분석 범위
 
-- 대상 파일: `ERUT_ServiceFlow_Analysis.html` (18 슬라이드 ≈4100줄) + 프로토타입 `design-system/project/ui_kits/erut-windows/Screens.jsx`
+- 대상 파일: `ERUT_ServiceFlow_FixedProbe.html` (18 슬라이드 ≈4100줄, v15.3에서 `ERUT_ServiceFlow_Analysis.html`에서 rename) + 프로토타입 `design-system/project/ui_kits/erut-windows/Screens.jsx`
 - NDT 표준 매핑: 장비 구성·교정·DAC/TCG·참조 블록·검사 파라미터·측정·결함 검출·판정·이력·보고서
 - 종합 점수: **83/100** — 표준 호환성·차별성·워크플로우 완전성은 우수, DAC/TCG·판정 기준·재교정 알림이 약점
 
@@ -380,7 +380,7 @@ depth 증가 또는 같은 작업을 위해 여러 페이지를 오가는 패턴
 
 ## 핵심 파일 참조
 
-- 메인 SSOT: `ERUT_ServiceFlow_Analysis.html`
+- 메인 SSOT: `ERUT_ServiceFlow_FixedProbe.html` (v15.3 rename, 이전: `ERUT_ServiceFlow_Analysis.html`)
 - 프로토타입: `design-system/project/ui_kits/erut-windows/Screens.jsx`
 - 도메인 지식: `CLAUDE.md` (NDT 도메인 핵심 지식 섹션)
 - PRF 자동 계산 사양: `dev_handoff/PRF_Auto_Calculation_Spec_v1.0.md`

@@ -78,7 +78,7 @@ function App() {
     if (screen !== "settings") setSettingsInitialSubView(null);
   }, [screen]);
 
-  // v14.0: commission 화면 진입 모드 — "new" (센서 추가) / "edit" ([2]에서 이 채널 설정 편집)
+  // v14.0: commission 화면 진입 모드 — "new" (탐촉자 추가) / "edit" ([2]에서 이 채널 설정 편집)
   const [commissionMode, setCommissionMode] = useState("new");
   useEffect(() => {
     if (screen !== "commission") setCommissionMode("new");

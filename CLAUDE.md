@@ -142,8 +142,8 @@ design-system/
 ```bash
 # 1. 변경 직전 — 현재 작업 파일을 archive로 복사 (CSS 경로 자동 치환)
 sed 's|href="design-system/|href="../design-system/|g' \
-    ERUT_ServiceFlow_Analysis.html \
-    > archive/ERUT_ServiceFlow_Analysis_v{현재버전}.html
+    ERUT_ServiceFlow_FixedProbe.html \
+    > archive/ERUT_ServiceFlow_FixedProbe_v{현재버전}.html
 
 # 2. 작업 파일을 새 버전으로 수정
 # 3. archive/CHANGELOG.md에 새 버전 항목 2~3줄 추가

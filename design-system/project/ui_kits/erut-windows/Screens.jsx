@@ -603,7 +603,7 @@ window.MainScreen = function MainScreen({ onAddDevice, onOpenDevice, onChangePro
         <div style={{ display: "flex", gap: 0, marginTop: 8 }}>
           <button style={{ padding: "10px 24px", font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", background: "var(--surface-base)", border: "1px solid var(--border-medium)", borderBottom: "1px solid var(--surface-base)", marginBottom: -1, cursor: "pointer" }}>고정형 장비</button>
           <button style={{ padding: "10px 24px", font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", background: "transparent", border: "none", cursor: "not-allowed", display: "inline-flex", alignItems: "center", gap: 6 }}>
-            이동형 장비
+            스캔형 장비
             <span style={{ padding: "2px 6px", font: "700 10px/1 var(--font-kr)", color: "var(--content-low)", border: "1px solid var(--border-medium)", background: "var(--surface-subtle-2)" }}>준비 중</span>
           </button>
         </div>
@@ -844,7 +844,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
             <h3 style={{ font: "700 15px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>64CH 채널 상태</h3>
             <span style={{ font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>더블 클릭 → 우측 패널 A-scan 확대</span>
           </div>
-          {/* v12.0: '+ 센서 추가' 좌측 — 교정 필요 채널 일괄 재교정 진입 (N > 0 시에만 노출) */}
+          {/* v12.0: '+ 탐촉자 추가' 좌측 — 교정 필요 채널 일괄 재교정 진입 (N > 0 시에만 노출) */}
           <div style={{ display: "flex", gap: 8 }}>
             {(() => {
               const needsCalibChannels = cells.filter(c => c.calibrationStatus === "uncalibrated" || c.calibrationStatus === "expired");
@@ -860,7 +860,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
                 </button>
               );
             })()}
-            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => onAddSensor && onAddSensor()}>+ 센서 추가</button>
+            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => onAddSensor && onAddSensor()}>+ 탐촉자 추가</button>
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "flex-start", gap: 10, marginBottom: 8, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
@@ -976,7 +976,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
         </div>
       </div>
 
-      {/* v9.35 Wave E+F: 센서 추가 + 교정을 한 화면으로 통합 → 풀스크린 [4-3-1] ChannelCommissioning 페이지로 라우팅 */}
+      {/* v9.35 Wave E+F: 탐촉자 추가 + 교정을 한 화면으로 통합 → 풀스크린 [4-3-1] ChannelCommissioning 페이지로 라우팅 */}
 
       {/* v14.0: 일괄 재교정 마법사 — 다채널 wizard. 단일 채널 교정은 commission(edit 모드)로 통합되어 별도 trigger 폐기 */}
       {showRecalibration && (
@@ -1008,6 +1008,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const [serial, setSerial]   = $s(pre.serial || "");
   const [target, setTarget]   = $s(pre.target || "");
   const [probeType, setProbeType] = $s(pre.probeType || "");
+  // v15.3: Wedge 각도 — 사용자 입력 각도 (90° = 수직 / 90° 미만 = 경사각). 측정값(wedge state)과 별개
+  const [wedgeAngle, setWedgeAngle] = $s(pre.wedgeAngle != null ? pre.wedgeAngle : 90);
 
   // ───── 교정 측정 state — edit 모드 시 기존 교정값 prefill ─────
   const [wedge, setWedge]     = $s(pre.wedge    || { value: null, unit: "°" });
@@ -1015,14 +1017,15 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const [zero, setZero]       = $s(pre.zero     || { value: null, unit: "μs" });
   const [gain, setGain]       = $s(pre.gain     || { value: 28,   unit: "dB" });
 
-  // v15.0: 참조 블록 — 영점·음속 측정의 기준 시편. 표준 블록 선택 시 두께 자동 prefill.
+  // v15.0: 교정 시험편 — 영점·음속 측정의 기준 시편. 표준시험편 선택 시 두께 자동 prefill.
+  // v15.3: optgroup 분류 — 표준시험편(국제 코드 공인) / 비교시험편(자체 제작 · 검사체 동일 재질 + 인공 결함)
   // 식: 음속(m/s) = 2 × 두께(mm) × 1000 / ToF(μs) — 왕복 시간 보정
   const STANDARD_BLOCKS = {
-    "iiw-v1": { label: "IIW V1 (25 mm · 탄소강)",   thickness: 25.0 },
-    "iiw-v2": { label: "IIW V2 (12.5 mm · 탄소강)", thickness: 12.5 },
-    "stb-a1": { label: "STB-A1 (25 mm · 탄소강)",   thickness: 25.0 },
-    "stb-a2": { label: "STB-A2 (12.5 mm · 탄소강)", thickness: 12.5 },
-    "custom": { label: "사용자 정의",                thickness: null },
+    "iiw-v1": { label: "IIW V1 (25 mm · 탄소강)",   thickness: 25.0, category: "standard" },
+    "iiw-v2": { label: "IIW V2 (12.5 mm · 탄소강)", thickness: 12.5, category: "standard" },
+    "stb-a1": { label: "STB-A1 (25 mm · 탄소강)",   thickness: 25.0, category: "standard" },
+    "stb-a2": { label: "STB-A2 (12.5 mm · 탄소강)", thickness: 12.5, category: "standard" },
+    "custom": { label: "사용자 정의 (검사체 동일 재질 · 인공 결함)", thickness: null, category: "custom" },
   };
   const VEL_STANDARDS = { "탄소강": 5920, "SS 304": 5790, "SS 316L": 5740, "알루미늄": 6320, "티타늄": 6070, "구리": 4660, "Inconel": 5820, "황동": 4430, "주철": 4600 };
   const [refBlock, setRefBlockRaw] = $s(pre.refBlock || "iiw-v1");
@@ -1120,7 +1123,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
               className={"erut-btn erut-btn--sm " + (disabled ? "erut-btn--disabled" : "erut-btn--default")}
               disabled={disabled}
               onClick={onMeasure}
-              title={disabled ? "참조 블록 두께를 먼저 입력하세요" : undefined}
+              title={disabled ? "교정 시험편 두께를 먼저 입력하세요" : undefined}
             >
               {filled ? "재측정" : "측정"}
             </button>
@@ -1133,7 +1136,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
         )}
         {!isGain && disabled && !filled && (
           <div style={{ marginTop: 6, font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-            ◯ 참조 블록 두께 입력 필요
+            ◯ 교정 시험편 두께 입력 필요
           </div>
         )}
       </div>
@@ -1193,7 +1196,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
         items={[
           { label: "메인" },
           { label: "장비 상세 (" + (deviceName || "MCuF-001") + ")" },
-          { label: isEdit ? `센서 채널 편집 — ${(pre.channel ? "CH " + String(pre.channel).padStart(2, "0") : "")}`.trim() : "센서 채널 추가 + 교정", current: true },
+          { label: isEdit ? `탐촉자 채널 편집 — ${(pre.channel ? "CH " + String(pre.channel).padStart(2, "0") : "")}`.trim() : "탐촉자 채널 추가 + 교정", current: true },
         ]}
         style={{ gridRow: 1, gridColumn: "1 / -1" }}
       />
@@ -1281,6 +1284,12 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                     <option value="custom">직접 입력...</option>
                   </select>
                 </div>
+                {/* v15.3: Wedge 각도 — 수직(90°) 기본값. 90° 미만은 경사각 */}
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>Wedge 각도 (°) <span style={{ color: "var(--system-error)" }}>*</span></div>
+                  <input className="erut-field" type="number" min="0" max="90" step="0.1" value={wedgeAngle} onChange={(e) => setWedgeAngle(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                  <div style={{ font: "400 9px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>수직 = 90° (두께 측정) / 경사각 = 90° 미만 (용접부·결함 탐지, 예: 70° · 60° · 45°)</div>
+                </div>
               </div>
             </div>
 
@@ -1354,20 +1363,25 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
 
         {/* v14.1: 교정 측정 + Gate 설정 2열 배치 (가로로 나란히) */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-          {/* 교정 측정 (내부 2×2 grid 유지) — v15.0: 상단에 참조 블록 카드 추가 */}
+          {/* 교정 측정 (내부 2×2 grid 유지) — v15.0: 상단에 교정 시험편 카드 추가 (v15.3 표기 정리) */}
           <div>
             <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 8 }}>교정 측정</div>
-            {/* v15.0 참조 블록 — 영점·음속 측정의 기준 시편 */}
+            {/* v15.0 교정 시험편 — 영점·음속 측정의 기준 시편 */}
             <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-emphasis)", padding: "10px 12px", marginBottom: 10 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-                <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>참조 블록</span>
-                <span style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>영점·음속 기준 시편</span>
+                <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>교정 시험편</span>
+                <span style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>영점·음속 기준 시편 (절차서 규정 준수)</span>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
                 <div>
-                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>블록 종류</div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>시험편 종류</div>
                   <select className="erut-field" value={refBlock} onChange={(e) => setRefBlock(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
-                    {Object.entries(STANDARD_BLOCKS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                    <optgroup label="표준시험편 (국제 코드 공인)">
+                      {Object.entries(STANDARD_BLOCKS).filter(([, v]) => v.category === "standard").map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                    </optgroup>
+                    <optgroup label="비교시험편 (자체 제작)">
+                      {Object.entries(STANDARD_BLOCKS).filter(([, v]) => v.category === "custom").map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                    </optgroup>
                   </select>
                 </div>
                 <div>
@@ -1376,7 +1390,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                 </div>
               </div>
               <div style={{ marginTop: 6, font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-                음속 = 2 × 두께(mm) × 1000 / ToF(μs). 표준 블록 선택 시 두께 자동 채움.
+                음속 = 2 × 두께(mm) × 1000 / ToF(μs). 표준시험편 선택 시 두께 자동 채움 · 비교시험편은 절차서 두께 입력.
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -2288,7 +2302,7 @@ window.CalibrationWizard = function CalibrationWizard({ onClose, mode = "recalib
   const currentCh = focusCh;
 
   const stepInfo = {
-    1: { title: "영점 (Zero / Wedge Delay)",  desc: "참조 블록(IIW V1·V2 또는 STB-A1·A2)에 탐촉자를 접촉하고 [측정 시작] 클릭. 후면 에코의 ToF를 기준으로 wedge delay 자동 계산." },
+    1: { title: "영점 (Zero / Wedge Delay)",  desc: "교정 시험편(표준시험편 IIW V1·V2 / STB-A1·A2 또는 비교시험편)에 탐촉자를 접촉하고 [측정 시작] 클릭. 후면 에코의 ToF를 기준으로 wedge delay 자동 계산." },
     2: { title: "음속 (Velocity)",            desc: "기준 두께(25mm)의 후면 에코 ToF로 음속 산출. 영점 완료 후 진행." },
     3: { title: "감도 (Gain)",                desc: "DAC 곡선 작성. ø1.5 SDH (Side-drilled hole) 기준 -6 dB / -12 dB 측정." },
   };
@@ -3736,7 +3750,7 @@ window.ChannelPlacementWizard = function ChannelPlacementWizard({ targetName, on
 };
 
 // =================== Screen · [3] GATE SETUP ===================
-// Layout matches ServiceFlow_Analysis SLIDE 8 [3] 센서 Gate 설정 (v3.1).
+// Layout matches ServiceFlow_FixedProbe SLIDE 8 [3] 탐촉자 Gate 설정 (v3.1).
 // 드래그 인터랙션은 시각적 mockup (실제 드래그 핸들러 없음 — input 양방향 sync는 구현).
 
 // v14.0 DEPRECATED: [3] Gate 설정 화면은 [4-3-1] ChannelCommissioning(edit 모드)에 통합됨.

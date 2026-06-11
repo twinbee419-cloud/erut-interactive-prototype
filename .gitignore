@@ -9,7 +9,7 @@
 .claude/
 
 # ───── 메인 기획서·작업 문서 (사용자 선택: 보수적) ─────
-ERUT_ServiceFlow_Analysis.html
+ERUT_ServiceFlow_FixedProbe.html
 ERUT_ServiceFlow_Crawler.html
 ERUT_FixedRobot_Plan_UI.html
 ERUT_RealtimeScan_Plan_UI.html

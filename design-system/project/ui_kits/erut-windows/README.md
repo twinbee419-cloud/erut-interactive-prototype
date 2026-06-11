@@ -48,7 +48,7 @@ mobile companion in the Figma. This kit covers that one surface.
 
 <Button variant="emphasis" size="l">선택</Button>      {/* default | active | emphasis | disabled */}
 <Field   value={v} onChange={setV} placeholder="입력해주세요." />
-<Select  value={mode} options={["고정형 장비","이동형 장비"]} onChange={setMode} />
+<Select  value={mode} options={["고정형 장비","스캔형 장비"]} onChange={setMode} />
 <Checkbox checked onChange={setOn} label="기본 형태로 저장 (다음 실행 시 자동 진입)"/>
 <Toggle   checked onChange={setOn} label="Gate 범위 표시" size="m"/>  {/* size: m | sm. Use for live-effect on/off; Checkbox for form submit. */}
 

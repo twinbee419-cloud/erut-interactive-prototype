@@ -8,8 +8,8 @@
 | **작성일** | 2026-05-26 |
 | **작성** | 기획팀 + NDT 도메인 검토 (Claude) |
 | **적용 위치** | `SLIDE 14 [6] 검사 대상 관리` — 측정 파라미터 섹션 |
-| **관련 산출물** | `ERUT_ServiceFlow_Analysis.html` v4.6+ |
-| **장비 범위** | 고정형 (A-scan 단일 채널 측정) — 이동형은 추후 별도 사양 |
+| **관련 산출물** | `ERUT_ServiceFlow_FixedProbe.html` v4.6+ (v15.3에서 `ERUT_ServiceFlow_Analysis.html`에서 rename) |
+| **장비 범위** | 고정형 (A-scan 단일 채널 측정) — 스캔형은 추후 별도 사양 |
 
 ---
 

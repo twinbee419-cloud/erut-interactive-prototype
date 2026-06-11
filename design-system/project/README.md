@@ -47,7 +47,7 @@ Top-level surfaces:
 
 Two top-level **inspection modes** the user picks on first run:
 - **고정형 장비** (Fixed equipment — probe-based)
-- **이동형 장비** (Mobile equipment — magnetic crawler / vacuum crawler)
+- **스캔형 장비** (Scan equipment — magnetic crawler / vacuum crawler)
 
 ---
 
