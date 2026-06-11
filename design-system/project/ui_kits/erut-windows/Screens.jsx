@@ -2151,7 +2151,8 @@ window.ReportExportDialog = function ReportExportDialog({ deviceId, initialChann
 
   return (
     <window.Modal title={`보고서 출력 — ${device.id} (${allChannels.length} ch)`} onClose={onClose} footer={footer} width={1200}>
-      <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 20, minHeight: 580 }}>
+      {/* v18.2: minHeight 580 → 640 — A4 미리보기(width 420 → height 594) + 헤더(~28) 한 페이지 표시 */}
+      <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 20, minHeight: 640 }}>
         {/* 좌측 — 채널 선택 + 옵션 */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14, minHeight: 0 }}>
           <div>
