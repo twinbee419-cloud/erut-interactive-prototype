@@ -27,7 +27,7 @@ window.TitleBar = function TitleBar({ title = "ERUT - Ultrasonic Monitoring Syst
 };
 
 // ----------- FILE MENU BAR ------------
-window.MenuBar = function MenuBar({ items, active, onPick }) {
+window.MenuBar = function MenuBar({ items, active, onPick, notificationCenter }) {
   return (
     <div className="erut-bar erut-menubar">
       {items.map((label) => (
@@ -37,6 +37,76 @@ window.MenuBar = function MenuBar({ items, active, onPick }) {
           onClick={() => onPick && onPick(label)}
         >{label}</button>
       ))}
+      {/* v21.0: 메뉴바 우측 통합 알림 센터(종 아이콘) */}
+      {notificationCenter && (<><span style={{ flex: 1 }}/>{notificationCenter}</>)}
+    </div>
+  );
+};
+
+// ----------- NOTIFICATION CENTER (v21.0) ------------
+// 통합 알림 센터 — 교정/측정/통신/부착 알림을 종 아이콘 + 드롭다운으로 일원화.
+// 심각도: error(긴급) / caution(경고) / info(정보) — 시스템 색 토큰.
+// 상태바의 구 '교정 임박 N' 배지를 흡수. 드롭섀도우 미사용(디자인 원칙) — border로 구분.
+window.NotificationCenter = function NotificationCenter({ notifications = [], onAction, onSettings, onMarkAllRead }) {
+  const [open, setOpen] = React.useState(false);
+  const SEV = {
+    error:   { color: "var(--system-error)" },
+    caution: { color: "var(--system-caution)" },
+    info:    { color: "var(--system-info)" },
+  };
+  const order = { error: 0, caution: 1, info: 2 };
+  const sorted = [...notifications].sort((a, b) => (order[a.severity] ?? 9) - (order[b.severity] ?? 9));
+  const unread = notifications.filter(n => !n.read).length;
+  return (
+    <div style={{ position: "relative", display: "inline-flex" }}>
+      <button onClick={() => setOpen(o => !o)} title="알림" style={{
+        position: "relative", height: 40, width: 48, background: open ? "var(--surface-subtle-2)" : "transparent",
+        border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
+        color: open ? "var(--content-emphasis)" : "var(--content-medium)"
+      }}>
+        <window.EIcon.Bell size={20}/>
+        {unread > 0 && (
+          <span style={{
+            position: "absolute", top: 5, right: 9, minWidth: 15, height: 15, padding: "0 3px",
+            background: "var(--system-error)", color: "var(--on-primary)", borderRadius: 100,
+            font: "700 9px/15px var(--font-kr)", textAlign: "center"
+          }}>{unread}</span>
+        )}
+      </button>
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 998 }}/>
+          <div style={{
+            position: "absolute", top: 40, right: 0, width: 360, zIndex: 999,
+            background: "var(--surface-base)", border: "1px solid var(--border-high)"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderBottom: "1px solid var(--border-low)" }}>
+              <span style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>알림 ({notifications.length})</span>
+              <button onClick={() => onMarkAllRead && onMarkAllRead()} style={{ background: "none", border: "none", cursor: "pointer", font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>모두 읽음</button>
+            </div>
+            <div style={{ maxHeight: 320, overflowY: "auto" }}>
+              {sorted.length === 0 ? (
+                <div style={{ padding: "28px 14px", textAlign: "center", font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>새 알림이 없습니다.</div>
+              ) : sorted.map(n => (
+                <div key={n.id} style={{ display: "flex", gap: 10, padding: "10px 14px", borderBottom: "1px solid var(--border-low)", background: n.read ? "transparent" : "var(--surface-subtle-2)" }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: (SEV[n.severity] || SEV.info).color, marginTop: 5, flexShrink: 0 }}/>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                      <span style={{ font: "700 12px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{n.title}</span>
+                      <span style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", flexShrink: 0 }}>{n.time}</span>
+                    </div>
+                    <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 2 }}>{n.detail}</div>
+                    {n.actionLabel && <button onClick={() => onAction && onAction(n)} style={{ marginTop: 4, background: "none", border: "none", cursor: "pointer", padding: 0, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>{n.actionLabel} →</button>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: "8px 14px", borderTop: "1px solid var(--border-low)", textAlign: "right" }}>
+              <button onClick={() => onSettings && onSettings()} style={{ background: "none", border: "none", cursor: "pointer", font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>알림 정책 설정 →</button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -89,20 +159,7 @@ window.StatusBar = function StatusBar({
       <span className="erut-statusbar__text">PRF : {prf}</span>
       <span className="erut-statusbar__text">Temp : {temp}</span>
       <span style={{flex:1}}/>
-      {calibrationAlert && calibrationAlert.count > 0 && (
-        <span onClick={calibrationAlert.onClick} title="클릭 — 교정 임박/만료 채널 상세 보기" style={{
-          display: "inline-flex", alignItems: "center", gap: 5, cursor: "pointer",
-          color: calibrationAlert.tone === "error" ? "var(--system-error)" : "var(--system-caution)",
-          font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em",
-          padding: "0 10px", borderLeft: "1px solid var(--border-medium)"
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.7 21a2 2 0 0 1-3.4 0"/>
-          </svg>
-          {calibrationAlert.tone === "error" ? `교정 만료 ${calibrationAlert.count}` : `교정 임박 ${calibrationAlert.count}`}
-        </span>
-      )}
+      {/* v21.0: 교정 임박 배지 제거 → 메뉴바 통합 알림 센터(NotificationCenter)로 흡수. calibrationAlert prop은 back-compat용으로 무시 */}
       <span className="erut-statusbar__text">{version}</span>
       <span className="erut-statusbar__grip"><I.ResizeCorner/></span>
     </div>

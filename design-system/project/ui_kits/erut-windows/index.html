@@ -285,6 +285,14 @@ function App() {
           items={["파일","장비","설정","도움말"]}
           active={activeMenu}
           onPick={handleMenuPick}
+          notificationCenter={
+            <window.NotificationCenter
+              notifications={deviceConnected ? (window.MOCK.notifications || []) : []}
+              onSettings={() => setShowSettings(true)}
+              onAction={(n) => { if (n.type === "calib") setShowRecalibWizard(true); }}
+              onMarkAllRead={() => {}}
+            />
+          }
         />
         {menuOpen === "file" && (
           <div style={{ position: "absolute", left: 10, top: 40, zIndex: 50 }}>
@@ -474,11 +482,6 @@ function App() {
             prf={deviceConnected ? "2,000 Hz" : "---"}
             temp={deviceConnected ? "23.4 °C" : "---"}
             version={deviceConnected ? "v1.4.2" : "v0.0.0.0"}
-            calibrationAlert={(window.MOCK.calibrationPolicy?.statusBarBadge && deviceConnected && (window.MOCK.imminentChannels?.length || 0) > 0) ? {
-              count: window.MOCK.imminentChannels.length,
-              tone:  "caution",
-              onClick: () => setShowCalibAlert(true),
-            } : null}
           />
         );
       })()}

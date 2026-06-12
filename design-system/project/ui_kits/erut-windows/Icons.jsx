@@ -101,6 +101,13 @@ window.EIcon = {
       <path d="M12 3 L22 20 L2 20 Z"/><line x1="12" y1="10" x2="12" y2="15"/><circle cx="12" cy="17.5" r="0.6" fill="currentColor"/>
     </svg>
   ),
+  // v21.0: 알림 센터 종 아이콘
+  Bell: (p) => (
+    <svg viewBox="0 0 24 24" width={p?.size ?? 20} height={p?.size ?? 20} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" {...p}>
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.7 21a2 2 0 0 1-3.4 0"/>
+    </svg>
+  ),
   ChevronLeft: (p) => (
     <svg viewBox="0 0 24 24" width={p?.size ?? 16} height={p?.size ?? 16} fill="none" stroke="currentColor" strokeWidth="1.5" {...p}>
       <polyline points="15,6 9,12 15,18"/>

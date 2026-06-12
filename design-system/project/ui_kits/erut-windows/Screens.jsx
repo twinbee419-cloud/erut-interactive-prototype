@@ -239,6 +239,15 @@ window.MOCK = {
     ch04: 90,  // 주기 90일 (절차서 override) — 가장 짧음
     // 나머지 채널은 전역 기본 180일 따름
   },
+  // v21.0: 통합 알림 센터 — 교정/측정/통신/부착 알림 단일 소스. 메뉴바 NotificationCenter가 참조.
+  // severity: error(긴급·측정 차단급) / caution(경고) / info(정보). type: calib/measure/comm/attach
+  notifications: [
+    { id: "n1", severity: "error",   type: "calib",   title: "CH 04 교정 만료",       detail: "교정 주기 초과 · F6 측정 시작 차단됨", actionLabel: "재교정",   time: "방금" },
+    { id: "n2", severity: "error",   type: "measure", title: "CH 12 채널 미연결",     detail: "측정 중 신호 손실 (E120)",            actionLabel: "채널 보기", time: "2분 전" },
+    { id: "n3", severity: "caution", type: "calib",   title: "CH 09 교정 임박 (D-1)", detail: "1일 후 교정 주기 만료",               actionLabel: "재교정",   time: "10분 전" },
+    { id: "n4", severity: "caution", type: "attach",  title: "CH 22 부착력 약함",     detail: "신호 세기 저하 · 부착 상태 점검 권장", actionLabel: "채널 보기", time: "15분 전" },
+    { id: "n5", severity: "info",    type: "comm",    title: "MQTT 재연결됨",          detail: "서버 통신 복구 (10.10.1.20)",         time: "1시간 전", read: true },
+  ],
   // v16.0: 교정 정책 (전역 설정) — [8] 설정 모달에서 변경. 알림 다이얼로그·상태바 배지가 이 값을 참조
   calibrationPolicy: {
     defaultCycleDays:    180,    // 전역 기본 교정 주기 (일). 채널별 override가 없으면 이 값 사용
@@ -2635,7 +2644,7 @@ function SettingsCalibration() {
             <span className="erut-toggle__label erut-toggle__label--sm">{startupAlert ? "활성" : "비활성"}</span>
           </label>
         </SettingsRow>
-        <SettingsRow label="상태바 알림 배지" hint='상태바 우측에 "교정 임박 N" 배지를 항상 표시. 7일 이내 또는 만료 채널이 있을 때 노출.'>
+        <SettingsRow label="교정 알림 종 배지" hint='메뉴바 알림 센터(종)에 교정 임박/만료 채널을 알림으로 표시. (v21.0: 상태바 배지 → 통합 알림 센터로 흡수)'>
           <label className="erut-toggle" onClick={() => setBadge(v => !v)}>
             <span className={"erut-toggle__track" + (badge ? " is-on" : "")}><span className="erut-toggle__thumb"></span></span>
             <span className="erut-toggle__label erut-toggle__label--sm">{badge ? "활성" : "비활성"}</span>
