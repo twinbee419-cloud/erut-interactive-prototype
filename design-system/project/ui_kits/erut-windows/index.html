@@ -537,7 +537,7 @@ function App() {
           footer={(
             <>
               <window.Button variant="subtle" size="sm" onClick={() => setShowRecovery(false)}>취소</window.Button>
-              <window.Button variant="default" size="sm" onClick={() => { setShowRecovery(false); goto("device"); }}>[7] 보고서로 이동</window.Button>
+              <window.Button variant="default" size="sm" onClick={() => { setShowRecovery(false); setPickedProject({ id: "sk-ulsan", name: "SK에너지 울산 #2 라인" }); setSelectedTarget("PIPE-A-204"); goto("history"); }}>[7] 검사 이력으로 이동</window.Button>
               <window.Button variant="emphasis" size="sm" onClick={() => { setShowRecovery(false); setPickedProject({ id: "sk-ulsan", name: "SK에너지 울산 #2 라인" }); setSelectedTarget("PIPE-A-204"); setMeasureState("paused"); goto("realtime"); }}>[11] 측정 계속</window.Button>
             </>
           )}
