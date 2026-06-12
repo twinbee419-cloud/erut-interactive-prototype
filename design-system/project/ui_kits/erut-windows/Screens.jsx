@@ -240,9 +240,11 @@ window.MOCK = {
     // 나머지 채널은 전역 기본 180일 따름
   },
   // v21.0: 통합 알림 센터 — 교정/측정/통신/부착 알림 단일 소스. 메뉴바 NotificationCenter가 참조.
-  // severity: error(긴급·측정 차단급) / caution(경고) / info(정보). type: calib/measure/comm/attach
+  // severity: error(긴급·측정 차단급) / caution(경고) / info(정보). type: defect/calib/measure/comm/attach
+  // v22.6: defect = 결함 '검출' 사실 알림 (검사자 인지). 등급·유형 판정은 웹 책임.
   notifications: [
-    { id: "n1", severity: "error",   type: "calib",   title: "CH 04 교정 만료",       detail: "교정 주기 초과 · F6 측정 시작 차단됨", actionLabel: "재교정",   time: "방금" },
+    { id: "n0", severity: "caution", type: "defect",  title: "CH 04 결함 신호 검출",  detail: "Gate 임계값 초과 (Amp 94%) · 자동 마킹", actionLabel: "채널 보기", time: "방금" },
+    { id: "n1", severity: "error",   type: "calib",   title: "CH 04 교정 만료",       detail: "교정 주기 초과 · F6 측정 시작 차단됨", actionLabel: "재교정",   time: "1분 전" },
     { id: "n2", severity: "error",   type: "measure", title: "CH 12 채널 미연결",     detail: "측정 중 신호 손실 (E120)",            actionLabel: "채널 보기", time: "2분 전" },
     { id: "n3", severity: "caution", type: "calib",   title: "CH 09 교정 임박 (D-1)", detail: "1일 후 교정 주기 만료",               actionLabel: "재교정",   time: "10분 전" },
     { id: "n4", severity: "caution", type: "attach",  title: "CH 22 부착력 약함",     detail: "신호 세기 저하 · 부착 상태 점검 권장", actionLabel: "채널 보기", time: "15분 전" },
@@ -382,7 +384,7 @@ window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
                 <div style={{ display: "flex", gap: 12, paddingTop: 10, borderTop: "1px solid var(--border-low)", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
                   <span>검사 대상 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.targets}</strong></span>
                   <span>세션 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.sessions}</strong></span>
-                  <span>결함 <strong style={{ fontWeight: 700, color: defectColor(p.defectT) }}>{p.defects}</strong></span>
+                  <span>결함 검출 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.defects}</strong></span>
                 </div>
               </div>
             );
@@ -771,8 +773,8 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
   // 32 cells (4 rows × 8 cols). First 8 map to real sensors.
   // v8.8: 64채널 다중 검사체 분산 부착 — ch01-24 PIPE-A-204 · ch25-48 TANK-B-101 · ch49-64 VESSEL-C-301
   const getTargetName = (i) => i <= 24 ? "PIPE-A-204" : i <= 48 ? "TANK-B-101" : "VESSEL-C-301";
-  // v9.17: 결함 검출 채널 — PIPE 4건 + VESSEL 2건 (mockup 다양성)
-  const DEFECT_CHANNELS = { 4: "critical", 7: "major", 12: "minor", 18: "minor", 51: "major", 56: "minor" };
+  // v9.17/v22.6: 결함 검출 채널 — PIPE 4건 + VESSEL 2건 (검출 사실만, 등급 없음 — 판정은 웹)
+  const DEFECT_CHANNELS = [4, 7, 12, 18, 51, 56];
   // v9.30: 교정 상태 — 미교정(신규 추가 후 미진행) + 만료(주기 초과) 채널은 major 컬러 breathe
   // v12.0: window.MOCK으로 통합 — F6 차단 다이얼로그·일괄 재교정과 동일 소스
   const UNCALIBRATED_CHANNELS = window.MOCK.uncalibratedChannels;
@@ -783,17 +785,15 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
     const calibrationStatus = UNCALIBRATED_CHANNELS.includes(id)
       ? "uncalibrated"
       : EXPIRED_CHANNELS.includes(id) ? "expired" : "ok";
-    cells.push({ id, sensor: sensorMap[id], targetName: getTargetName(i), defectLevel: DEFECT_CHANNELS[i] || null, calibrationStatus });
+    cells.push({ id, sensor: sensorMap[id], targetName: getTargetName(i), defect: DEFECT_CHANNELS.includes(i), calibrationStatus });
   }
 
   // v9.14: 검사 대상 — PIPE-A-204에 결함 4건, 나머지 정상 (CH 25~64 비활성화)
   const TARGETS = [
-    { name: "PIPE-A-204",   meta: "탄소강 · 외경 300mm · 두께 10mm",     range: "ch01–24 · 24ch", defectCount: 4, topLevel: "critical" },
-    { name: "TANK-B-101",   meta: "SS 304 · 구형 · ∅ 1500mm · 두께 6mm",   range: "ch25–48 · 24ch", defectCount: 0, topLevel: null },
-    { name: "VESSEL-C-301", meta: "압력 용기 · 800 × 400mm · 두께 12mm",  range: "ch49–64 · 16ch", defectCount: 2, topLevel: "major" },
+    { name: "PIPE-A-204",   meta: "탄소강 · 외경 300mm · 두께 10mm",     range: "ch01–24 · 24ch", defectCount: 4 },
+    { name: "TANK-B-101",   meta: "SS 304 · 구형 · ∅ 1500mm · 두께 6mm",   range: "ch25–48 · 24ch", defectCount: 0 },
+    { name: "VESSEL-C-301", meta: "압력 용기 · 800 × 400mm · 두께 12mm",  range: "ch49–64 · 16ch", defectCount: 2 },
   ];
-  // 결함 등급별 색 매핑
-  const DEFECT_COLOR = { critical: "var(--system-error)", major: "var(--system-caution)", minor: "var(--content-low)" };
   // v9.29 Wave D: 카드 클릭 토글 — multi-select. 재클릭 = 해제
   const onTargetCardClick = (name) => {
     setSelectedTargetSet(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]);
@@ -4549,7 +4549,8 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
   };
 
   const defects = window.MOCK.realtimeDefects;
-  const criticalDefect = defects.find(d => d.type === "Critical");
+  // v22.6: 검출된 결함(첫 건) — 등급 무관. 검출 사실 알림용 (판정은 웹)
+  const criticalDefect = defects[0];
 
   // v9.15: 64ch cells — MOCK.sensors 기반 (두 화면 데이터 단일 진실 공급원)
   const sensorMap64 = Object.fromEntries(window.MOCK.sensors.map(s => [s.id, s]));
@@ -4568,7 +4569,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
       num: i,
       id,
       sensor: sensor || { id, state: "ok" }, // sensors에 없으면 default ok
-      defectLevel: def ? def.type.toLowerCase() : null, // "Critical" → "critical"
+      defect: !!def, // v22.6: 검출 사실(boolean) — 등급 없음
       targetName: i <= 24 ? "PIPE-A-204" : i <= 48 ? "TANK-B-101" : "VESSEL-C-301",
       calibrationStatus,
     });
@@ -4607,7 +4608,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             </svg>
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>Critical 결함 검출 · 진폭 {criticalDefect.amp} %</div>
+            <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>결함 신호 검출 · 진폭 {criticalDefect.amp} %</div>
             <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 2 }}>채널 {criticalDefect.channel} · ToF {criticalDefect.tof} μs · 두께 {criticalDefect.thickness} mm · 임계값 80 % 초과 · 자동 마킹 완료</div>
           </div>
           {/* v22.0: '검증 재측정' 삭제 — 고정 연속 모니터링은 채널별 on-demand 재측정 불가(보드 단위 연속 PRF). 확인만. */}

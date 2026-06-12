@@ -506,31 +506,15 @@
     var(--surface-subtle-1);
 }
 
-/* ---------- v9.30: 결함 셀 = static border+fill (breathe 제거) ----------
-   breathe 애니메이션은 교정 상태(is-needs-calibration)로 이전. 결함은 색상만으로 식별. */
-.erut-ch-cell.is-defect-critical{
-  background-color: rgba(255,0,94,0.13);
-  border-color: rgba(255,0,94,0.55);
-}
-.erut-ch-cell.is-defect-critical.is-strong{
-  background-color: rgba(255,0,94,0.42);
-  border-color: rgba(255,0,94,1.00);
-}
-.erut-ch-cell.is-defect-major{
-  background-color: rgba(255,146,0,0.13);
-  border-color: rgba(255,146,0,0.55);
-}
-.erut-ch-cell.is-defect-major.is-strong{
-  background-color: rgba(255,146,0,0.44);
-  border-color: rgba(255,146,0,1.00);
-}
-.erut-ch-cell.is-defect-minor{
-  background-color: rgba(107,124,155,0.13);
-  border-color: rgba(107,124,155,0.60);
-}
-.erut-ch-cell.is-defect-minor.is-strong{
-  background-color: rgba(107,124,155,0.36);
-  border-color: rgba(107,124,155,1.00);
+/* ---------- v22.6: 결함 검출 마커 (단일 · 등급 없음) ----------
+   검출 사실만 표시 — 등급(critical/major/minor)·유형 판정은 웹 서비스 책임.
+   배경은 중립 유지, 좌상단 코너 삼각형 마커(system-caution)로 '검출' 표시.
+   (구 .is-defect-critical/major/minor 등급 fill 폐기) */
+.erut-ch-cell__flaw{
+  position: absolute; top: 0; left: 0; width: 0; height: 0;
+  border-top: 9px solid var(--system-caution);
+  border-right: 9px solid transparent;
+  pointer-events: none;
 }
 
 /* ---------- v15.2: 교정 필요 셀 — content-low(회색-블루) breathe ----------
