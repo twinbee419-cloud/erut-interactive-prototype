@@ -3248,8 +3248,15 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
         {menu === "probe" && <ProbeSettings onCalibrate={() => setShowCalibration(true)}/>}
       </div>
 
-      {/* 교정 마법사 모달 */}
-      {showCalibration && <window.CalibrationWizard onClose={() => setShowCalibration(false)}/>}
+      {/* 교정 마법사 모달 — v22.2: channelList 누락으로 빈 페이지 표시되던 버그 수정 (재교정 마법사와 동일하게 데이터 전달) */}
+      {showCalibration && (
+        <window.CalibrationWizard
+          mode="recalibration"
+          channelList={window.MOCK.needsCalibrationChannels}
+          onClose={() => setShowCalibration(false)}
+          onComplete={() => setShowCalibration(false)}
+        />
+      )}
     </div>
   );
 };
