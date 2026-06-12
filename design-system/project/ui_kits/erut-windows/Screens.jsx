@@ -1061,7 +1061,7 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
 };
 
 // =================== v9.35 Wave E+F: 채널 Commissioning 풀스크린 페이지 ===================
-// 옵션 C — 채널 추가 + 교정(Wedge/음속/영점/Gain) + Gate + 시편 확인을 한 화면에 통합.
+// 옵션 C — 채널 추가 + 교정(음속/영점/Gain/PRF/DAC) + Gate를 한 화면에 통합. (v20.1: 교정 검증 섹션 제거)
 // 좌측 320px sticky: 채널 정보 + 진행 체크리스트. 우측 메인: A-scan + 4 sections.
 window.ChannelCommissioning = function ChannelCommissioning({ deviceName, targets, onBack, onAddOnly, onAddAndStart, mode = "new", prefilledChannel, onSave, onSaveAndMeasure, onRemove }) {
   // v14.0: mode "new" (신규 추가 — 기존) / "edit" (운영 중 채널 편집 — 신규)
@@ -1075,7 +1075,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const [target, setTarget]   = $s(pre.target || "");
   // v20.0: 검사체 재질 — 검사 대상 등록 재질 자동 반영. 선택 시 음속·권장 PRF prefill (window.SOUND_SPEEDS / calcPRF 재사용)
   const [material, setMaterial] = $s(pre.material || Object.keys(window.SOUND_SPEEDS)[0]);
-  // v20.0: 탐촉자 종류 프리셋 폐기 → 프로브 주파수·진동자 개별 수동 입력 (시리얼 자동 인식 X)
+  // v20.0: 탐촉자 종류 프리셋 폐기 → 탐촉자 주파수·진동자 개별 수동 입력 (시리얼 자동 인식 X)
   const [freqMHz, setFreqMHz]   = $s(pre.freqMHz != null ? pre.freqMHz : 5);
   const [elementMm, setElementMm] = $s(pre.elementMm != null ? pre.elementMm : 10);
   const [elementShape, setElementShape] = $s(pre.elementShape || "원형");
@@ -1104,10 +1104,10 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   // v15.3: optgroup 분류 — 표준시험편(국제 코드 공인) / 비교시험편(자체 제작 · 검사체 동일 재질 + 인공 결함)
   // 식: 음속(m/s) = 2 × 두께(mm) × 1000 / ToF(μs) — 왕복 시간 보정
   const STANDARD_BLOCKS = {
-    "iiw-v1": { label: "IIW V1 (25 mm · 탄소강)",   thickness: 25.0, category: "standard" },
-    "iiw-v2": { label: "IIW V2 (12.5 mm · 탄소강)", thickness: 12.5, category: "standard" },
-    "stb-a1": { label: "STB-A1 (25 mm · 탄소강)",   thickness: 25.0, category: "standard" },
-    "stb-a2": { label: "STB-A2 (12.5 mm · 탄소강)", thickness: 12.5, category: "standard" },
+    "iiw-v1": { label: "IIW V1 · ISO 2400 · 25 mm 탄소강",   thickness: 25.0, category: "standard" },
+    "iiw-v2": { label: "IIW V2 · ISO 7963 · 12.5 mm 탄소강", thickness: 12.5, category: "standard" },
+    "stb-a1": { label: "STB-A1 · JIS Z 2345 · 25 mm 탄소강",   thickness: 25.0, category: "standard" },
+    "stb-a2": { label: "STB-A2 · JIS Z 2345 · 12.5 mm 탄소강", thickness: 12.5, category: "standard" },
     "custom": { label: "사용자 정의 (검사체 동일 재질 · 인공 결함)", thickness: null, category: "custom" },
   };
   const VEL_STANDARDS = { "탄소강": 5920, "SS 304": 5790, "SS 316L": 5740, "알루미늄": 6320, "티타늄": 6070, "구리": 4660, "Inconel": 5820, "황동": 4430, "주철": 4600 };
@@ -1118,6 +1118,13 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
     setRefBlockRaw(key);
     const t = STANDARD_BLOCKS[key]?.thickness;
     if (t != null) setRefThickness(t);
+  };
+  // v20.1: 교정 시험편 종류 탭 — 표준시험편(standard) / 비교시험편(custom). 절차서상 둘 중 하나 선택 (두산 사례 = 비교시험편 단독)
+  const [refKind, setRefKind] = $s(STANDARD_BLOCKS[pre.refBlock]?.category || "standard");
+  const setRefKindTab = (kind) => {
+    setRefKind(kind);
+    if (kind === "standard") { if (STANDARD_BLOCKS[refBlock]?.category !== "standard") setRefBlock("iiw-v1"); }
+    else { setRefBlockRaw("custom"); }
   };
   const canMeasureWithRef = refThickness > 0;
   // 측정값 → 가장 가까운 표준 음속과 비교
@@ -1137,13 +1144,13 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const setA = (k, v) => setGateA(g => ({ ...g, [k]: v }));
   const setB = (k, v) => setGateB(g => ({ ...g, [k]: v }));
 
-  // ───── 시편 확인 state ─────
-  const [specimen, setSpecimen] = $s({ nominal: 10, measured: null });
+  // v20.1: 검사체 공칭 두께 — 채널 정보로 승격 (PRF 입력). 구 교정 검증 섹션의 nominal을 대체. 실제론 검사 대상 등록 두께 자동 반영
+  const [nominalThk, setNominalThk] = $s(pre.nominalThk != null ? pre.nominalThk : 10);
 
   // v20.0: 재질 선택 → 표준 종파 음속 prefill (측정으로 정밀화 가능). 경사각 채널은 횡파 음속 별도 측정
   const onMaterialChange = (m) => { setMaterial(m); setVel({ value: window.SOUND_SPEEDS[m], unit: "m/s" }); };
   // v20.0: PRF 자동 산출 — 공칭 두께 × 재질 (window.calcPRF). 자동 OFF 시 수동값 사용
-  const prfCalc  = window.calcPRF(specimen.nominal || 10, material);
+  const prfCalc  = window.calcPRF(nominalThk || 10, material);
   const prfValue = autoPRF ? prfCalc.prf : prfManual;
 
   // 차트 범위 0~50μs → 0~100% width
@@ -1216,7 +1223,6 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
     { key: "gain",   label: "Gain 설정",        done: gain.value != null },
     { key: "gateA",  label: "Gate A 설정",      done: aOn },
     { key: "gateB",  label: "Gate B 설정",      done: bOn },
-    { key: "spec",   label: "시편 확인 (권장)", done: specimen.measured != null, optional: true },
   ];
   const requiredDone = checklist.filter(c => !c.optional).every(c => c.done);
   const canAddOnly  = !!(channel && serial && target);
@@ -1238,12 +1244,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
     if (!canMeasureWithRef) return;
     setZero({ value: 2.13, unit: "μs" });
   };
-  const measureSpec  = () => setSpecimen(s => ({ ...s, measured: 9.8 }));
   const adjustGain   = (delta) => setGain(g => ({ ...g, value: Math.max(0, Math.min(80, g.value + delta)) }));
-
-  // ───── 시편 오차 계산 ─────
-  const specError = specimen.measured != null ? (specimen.measured - specimen.nominal).toFixed(1) : null;
-  const specOk = specError != null && Math.abs(parseFloat(specError)) <= 0.5;
 
   // 교정 cell 컴포넌트 — v15.0: disabled + hint(표준 비교) prop 지원
   function CalibCell({ label, state, onMeasure, isGain, disabled, hint }) {
@@ -1431,9 +1432,15 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                   </select>
                   <div style={{ font: "400 9px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>검사 대상 등록 재질 자동 반영. 표준 음속·권장 PRF가 아래 음속·PRF 항목에 prefill (참조 시험편 실측으로 보정 · 경사각은 횡파 별도 측정).</div>
                 </div>
-                {/* v20.0: 탐촉자 종류 프리셋 폐기 → 프로브 주파수 개별 수동 입력 (시리얼 자동 인식 X) */}
+                {/* v20.1: 검사체 공칭 두께 — PRF 입력 (구 교정 검증 섹션에서 승격) */}
                 <div>
-                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>프로브 주파수 (MHz) <span style={{ color: "var(--system-error)" }}>*</span></div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>검사체 공칭 두께 (mm) <span style={{ color: "var(--system-error)" }}>*</span></div>
+                  <input className="erut-field" type="number" min="0.1" step="0.1" value={nominalThk} onChange={(e) => setNominalThk(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                  <div style={{ font: "400 9px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>검사 대상 등록 두께 자동 반영. 재질과 함께 권장 PRF 산출 기준.</div>
+                </div>
+                {/* v20.0: 탐촉자 종류 프리셋 폐기 → 탐촉자 주파수 개별 수동 입력 (시리얼 자동 인식 X) */}
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>탐촉자 주파수 (MHz) <span style={{ color: "var(--system-error)" }}>*</span></div>
                   <input className="erut-field" type="number" min="0.5" max="20" step="0.25" value={freqMHz} onChange={(e) => setFreqMHz(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
                 </div>
                 {/* v20.0: 진동자 크기·형식 개별 수동 입력 */}
@@ -1570,25 +1577,38 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                 <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>교정 시험편</span>
                 <span style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>영점·음속 기준 시편 (절차서 규정 준수)</span>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-                <div>
-                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>시험편 종류</div>
-                  <select className="erut-field" value={refBlock} onChange={(e) => setRefBlock(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
-                    <optgroup label="표준시험편 (국제 코드 공인)">
-                      {Object.entries(STANDARD_BLOCKS).filter(([, v]) => v.category === "standard").map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-                    </optgroup>
-                    <optgroup label="비교시험편 (자체 제작)">
-                      {Object.entries(STANDARD_BLOCKS).filter(([, v]) => v.category === "custom").map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-                    </optgroup>
-                  </select>
-                </div>
-                <div>
-                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>두께 (mm) <span style={{ color: "var(--system-error)" }}>*</span></div>
-                  <input className="erut-field" type="number" step="0.1" value={refThickness} onChange={(e) => { setRefBlockRaw("custom"); setRefThickness(parseFloat(e.target.value) || 0); }} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
-                </div>
+              {/* v20.1: 표준시험편 / 비교시험편 = 작은 탭으로 모드 구분 (.erut-tab--sm 재사용) */}
+              <div className="erut-tabs" style={{ marginBottom: 8 }}>
+                <button className={"erut-tab erut-tab--sm" + (refKind === "standard" ? " is-active" : "")} onClick={() => setRefKindTab("standard")}>표준시험편</button>
+                <button className={"erut-tab erut-tab--sm" + (refKind === "custom" ? " is-active" : "")} onClick={() => setRefKindTab("custom")}>비교시험편</button>
               </div>
+              {refKind === "standard" ? (
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
+                  <div>
+                    <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>시험편 종류 <span style={{ color: "var(--content-low)" }}>(공인 코드)</span></div>
+                    <select className="erut-field" value={refBlock} onChange={(e) => setRefBlock(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
+                      {Object.entries(STANDARD_BLOCKS).filter(([, v]) => v.category === "standard").map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>두께 (mm) <span style={{ color: "var(--system-error)" }}>*</span></div>
+                    <input className="erut-field" type="number" step="0.1" value={refThickness} onChange={(e) => setRefThickness(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
+                  <div>
+                    <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>재질 <span style={{ color: "var(--content-low)" }}>(검사체 동일)</span></div>
+                    <input className="erut-field is-disabled" value={material} disabled style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                  </div>
+                  <div>
+                    <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>두께 (mm) <span style={{ color: "var(--system-error)" }}>*</span></div>
+                    <input className="erut-field" type="number" step="0.1" value={refThickness} onChange={(e) => setRefThickness(parseFloat(e.target.value) || 0)} placeholder="절차서 두께" style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                  </div>
+                </div>
+              )}
               <div style={{ marginTop: 6, font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-                음속 = 2 × 두께(mm) × 1000 / ToF(μs). 표준시험편 선택 시 두께 자동 채움 · 비교시험편은 절차서 두께 입력.
+                음속 = 2 × 두께(mm) × 1000 / ToF(μs). {refKind === "standard" ? "표준시험편 선택 시 두께 자동 채움." : "비교시험편 = 검사체 동일 재질·인공 결함. 절차서 두께 입력."}
               </div>
             </div>
             {/* v16.1: Wedge 카드 제거 — 측정 불가, 좌측 channel 정보 input 사용. 1×3 grid (음속·영점·Gain) */}
@@ -1606,7 +1626,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                 </div>
                 <input className={"erut-field" + (autoPRF ? " is-disabled" : "")} type="number" min="1" step="1" disabled={autoPRF} value={autoPRF ? prfValue : prfManual} onChange={(e) => setPrfManual(parseInt(e.target.value, 10) || 0)} style={{ width: "100%", height: 34, padding: "4px 8px", fontSize: 15, fontWeight: 700 }}/>
                 <div style={{ marginTop: 6, font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: autoPRF ? "var(--system-success)" : "var(--content-low)" }}>
-                  {autoPRF ? `자동 — ${material.split(" ")[0]} · ${specimen.nominal}mm 권장 ${prfValue.toLocaleString()} Hz` : "수동 입력 모드"}
+                  {autoPRF ? `자동 — ${material.split(" ")[0]} · ${nominalThk}mm 권장 ${prfValue.toLocaleString()} Hz` : "수동 입력 모드"}
                 </div>
               </div>
               <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
@@ -1634,33 +1654,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
             </div>
           </div>
         </div>
-
-        {/* 시편 확인 (항상 표시) */}
-        <div>
-          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 8 }}>시편 확인 (권장)</div>
-          <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "12px 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 12, alignItems: "end" }}>
-            <div>
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>공칭 두께 (mm)</div>
-              <input className="erut-field" type="number" step="0.1" value={specimen.nominal} onChange={(e) => setSpecimen(s => ({ ...s, nominal: parseFloat(e.target.value) || 0 }))} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
-            </div>
-            <div>
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>측정 두께 (mm)</div>
-              <div style={{ font: "700 18px/1 var(--font-kr)", letterSpacing: ".02em", color: specimen.measured != null ? "var(--content-high)" : "var(--content-low)", padding: "6px 0" }}>
-                {specimen.measured != null ? `${specimen.measured}` : "---"}
-              </div>
-            </div>
-            <div>
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>오차 / 판정</div>
-              <div style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: specimen.measured == null ? "var(--content-low)" : (specOk ? "var(--system-success)" : "var(--system-caution)"), padding: "6px 0" }}>
-                {specimen.measured == null ? "--- mm" : `${specError > 0 ? "+" : ""}${specError} mm ${specOk ? "✓ 통과" : "⚠ 허용범위 초과"}`}
-              </div>
-            </div>
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={measureSpec}>{specimen.measured != null ? "재측정" : "측정"}</button>
-          </div>
-          <div style={{ marginTop: 4, font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-            공칭 두께와 측정 두께 오차가 ±0.5 mm 이내면 교정 정확도 통과 (KS B 0817).
-          </div>
-        </div>
+        {/* v20.1: 하단 '교정 검증'(구 시편 확인) 제거 — 64ch 고정 구조에서 채널별 검증 비현실 + 탱크 벽 검증은 감육과 혼동. 음속 velHint + 교정 시험편이 정확도 anchor. 공칭 두께는 채널 정보로 승격(PRF 입력) */}
       </div>
 
       {/* ───── 하단 sticky 액션 바 — v14.0 모드별 분기 ───── */}
@@ -3021,7 +3015,7 @@ window.CalibrationWizard = function CalibrationWizard({ onClose, mode = "recalib
               <div>
                 <div style={{ font: "700 11px/1 var(--font-kr)", color: "var(--content-medium)", marginBottom: 4 }}>블록 종류</div>
                 <select className="erut-field" value={refBlock} onChange={(e) => setRefBlock(e.target.value)} style={{ width: "100%" }}>
-                  <option>IIW V1 (25 mm)</option><option>IIW V2</option><option>STB-A1</option><option>STB-A2</option><option>사용자 정의</option>
+                  <option>IIW V1 · ISO 2400 · 25 mm</option><option>IIW V2 · ISO 7963</option><option>STB-A1 · JIS Z 2345</option><option>STB-A2 · JIS Z 2345</option><option>사용자 정의 (비교시험편)</option>
                 </select>
               </div>
               <div>
