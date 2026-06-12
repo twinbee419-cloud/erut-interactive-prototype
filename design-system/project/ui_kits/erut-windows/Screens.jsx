@@ -4927,17 +4927,18 @@ window.ReportGenerator = function ReportGenerator({ sessionId = "SES-2026-047", 
 window.InspectionHistory = function InspectionHistory({ onBack, onSelectReport }) {
   const [search, setSearch] = $s("");
   const [period, setPeriod] = $s("최근 30일");
-  const [statusFilter, setStatusFilter] = $s("모든 상태");
+  const [statusFilter, setStatusFilter] = $s("모든 교정상태");
   const [selectedId, setSelectedId] = $s("SES-2026-047");
   const [checked, setChecked] = $s(new Set(["SES-2026-047"]));
 
+  // v22.5: '결함'→'최소 두께'(감육 KPI), '판정'→'교정 상태'(측정 신뢰성). 판정·결함 등급은 웹 책임. size=용량
   const sessions = [
-    { id: "SES-2026-047", target: "PIPE-A-204",   inspector: "김검사 · Lv.II",  date: "2026-05-21 14:23", defects: 3, defectColor: "var(--system-error)",   size: "340 MB", status: "조건부", statusColor: "var(--system-caution)" },
-    { id: "SES-2026-046", target: "TANK-B-101",   inspector: "이검사 · Lv.III", date: "2026-05-20 09:12", defects: 0, defectColor: "var(--system-success)", size: "128 MB", status: "합격",   statusColor: "var(--system-success)" },
-    { id: "SES-2026-045", target: "VESSEL-C-301", inspector: "김검사 · Lv.II",  date: "2026-05-19 16:48", defects: 1, defectColor: "var(--system-caution)", size: "96 MB",  status: "검토",   statusColor: "var(--system-caution)" },
-    { id: "SES-2026-044", target: "WELD-F-22",    inspector: "박검사 · Lv.II",  date: "2026-05-19 11:02", defects: 5, defectColor: "var(--system-error)",   size: "412 MB", status: "불합격", statusColor: "var(--system-error)" },
-    { id: "SES-2026-043", target: "PIPE-A-204",   inspector: "김검사 · Lv.II",  date: "2026-05-18 14:21", defects: 2, defectColor: "var(--system-caution)", size: "298 MB", status: "검토",   statusColor: "var(--system-caution)" },
-    { id: "SES-2026-042", target: "FLANGE-D-08",  inspector: "이검사 · Lv.III", date: "2026-05-18 10:33", defects: 0, defectColor: "var(--system-success)", size: "82 MB",  status: "합격",   statusColor: "var(--system-success)" },
+    { id: "SES-2026-047", target: "PIPE-A-204",   inspector: "김검사 · Lv.II",  date: "2026-05-21 14:23", minThk: "7.2 mm", minThkColor: "var(--system-error)",   size: "340 MB", calib: "유효",    calibColor: "var(--system-success)" },
+    { id: "SES-2026-046", target: "TANK-B-101",   inspector: "이검사 · Lv.III", date: "2026-05-20 09:12", minThk: "9.6 mm", minThkColor: "var(--system-success)", size: "128 MB", calib: "유효",    calibColor: "var(--system-success)" },
+    { id: "SES-2026-045", target: "VESSEL-C-301", inspector: "김검사 · Lv.II",  date: "2026-05-19 16:48", minThk: "8.4 mm", minThkColor: "var(--system-caution)", size: "96 MB",  calib: "만료 2ch", calibColor: "var(--system-caution)" },
+    { id: "SES-2026-044", target: "WELD-F-22",    inspector: "박검사 · Lv.II",  date: "2026-05-19 11:02", minThk: "6.1 mm", minThkColor: "var(--system-error)",   size: "412 MB", calib: "유효",    calibColor: "var(--system-success)" },
+    { id: "SES-2026-043", target: "PIPE-A-204",   inspector: "김검사 · Lv.II",  date: "2026-05-18 14:21", minThk: "8.0 mm", minThkColor: "var(--system-caution)", size: "298 MB", calib: "유효",    calibColor: "var(--system-success)" },
+    { id: "SES-2026-042", target: "FLANGE-D-08",  inspector: "이검사 · Lv.III", date: "2026-05-18 10:33", minThk: "9.8 mm", minThkColor: "var(--system-success)", size: "82 MB",  calib: "유효",    calibColor: "var(--system-success)" },
   ];
 
   const filtered = sessions.filter(s => !search || s.id.includes(search) || s.target.includes(search) || s.inspector.includes(search));
@@ -4972,13 +4973,11 @@ window.InspectionHistory = function InspectionHistory({ onBack, onSelectReport }
           <option>전체</option>
         </select>
         <select className="erut-field" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ width: 140 }}>
-          <option>모든 상태</option>
-          <option>합격</option>
-          <option>조건부</option>
-          <option>검토</option>
-          <option>불합격</option>
+          <option>모든 교정상태</option>
+          <option>유효</option>
+          <option>만료 포함</option>
         </select>
-        <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => { setSearch(""); setPeriod("최근 30일"); setStatusFilter("모든 상태"); }}>필터 초기화</button>
+        <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => { setSearch(""); setPeriod("최근 30일"); setStatusFilter("모든 교정상태"); }}>필터 초기화</button>
       </div>
 
       {/* 테이블 */}
@@ -4990,9 +4989,9 @@ window.InspectionHistory = function InspectionHistory({ onBack, onSelectReport }
           <div style={cellHead}>검사자</div>
           <div style={cellHead}>측정 PC</div>
           <div style={cellHead}>시작 시각</div>
-          <div style={cellHead}>결함</div>
-          <div style={cellHead}>크기</div>
-          <div style={cellHead}>상태</div>
+          <div style={cellHead}>최소두께</div>
+          <div style={cellHead}>용량</div>
+          <div style={cellHead}>교정 상태</div>
           <div style={cellHead}/>
         </div>
         {filtered.map(s => {
@@ -5020,9 +5019,9 @@ window.InspectionHistory = function InspectionHistory({ onBack, onSelectReport }
               <div style={cellRow}>{s.inspector}</div>
               <div style={cellRow}>{(window.MOCK.sessionPcAlias && window.MOCK.sessionPcAlias[s.id]) || "—"}</div>
               <div style={cellRow}>{s.date}</div>
-              <div style={cellRow}><span style={{ color: s.defectColor, fontWeight: 700 }}>{s.defects}</span></div>
+              <div style={cellRow}><span style={{ color: s.minThkColor, fontWeight: 700 }}>{s.minThk}</span></div>
               <div style={cellRow}>{s.size}</div>
-              <div style={cellRow}><span style={{ color: s.statusColor, fontWeight: 700 }}>{s.status}</span></div>
+              <div style={cellRow}><span style={{ color: s.calibColor, fontWeight: 700 }}>{s.calib}</span></div>
               <div style={cellRow}>
                 {isSel && <button className="erut-btn erut-btn--default erut-btn--sm" style={{ padding: "4px 8px" }} onClick={(e) => { e.stopPropagation(); }}>선택됨</button>}
               </div>
