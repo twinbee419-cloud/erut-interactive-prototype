@@ -373,8 +373,8 @@ window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
                 }}
                 onClick={() => onPick && onPick(p.id)}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <span style={{ padding: "2px 6px", font: "700 9px/1 var(--font-kr)", letterSpacing: ".02em", color: statusColor(p.statusT), border: "1px solid " + statusBorder(p.statusT), background: "var(--surface-base)" }}>{p.status}</span>
+                {/* v22.0: 프로젝트 상태 태그(진행중/완료/검토) 삭제 — 최근 시각·카운트로 충분, 검토는 웹 책임과 충돌 */}
+                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "flex-start" }}>
                   <span style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>{p.time}</span>
                 </div>
                 <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{p.name}</div>
@@ -612,10 +612,17 @@ window.MainScreen = function MainScreen({ onAddDevice, onOpenDevice, onChangePro
         {/* 하단: 액션 버튼 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
           {isMeasuring && (
-            <button className="erut-btn erut-btn--default erut-btn--sm" style={{ background: "var(--system-error)", color: "var(--on-primary)", borderColor: "var(--system-error)", display: "inline-flex", alignItems: "center", gap: 4 }}>
-              <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><rect x="2" y="2" width="8" height="8"/></svg>
-              중지
-            </button>
+            /* v22.0: 측정 중 = 일시정지 + 중지 ([2]/툴바와 제어 세트 일관) */
+            <div style={{ display: "flex", gap: 6 }}>
+              <button className="erut-btn erut-btn--default erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="일시정지 (Space)">
+                <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><rect x="2" y="2" width="3" height="8"/><rect x="7" y="2" width="3" height="8"/></svg>
+                일시정지
+              </button>
+              <button className="erut-btn erut-btn--default erut-btn--sm" style={{ background: "var(--system-error)", color: "var(--on-primary)", borderColor: "var(--system-error)", display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 중지 (F7)">
+                <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><rect x="2" y="2" width="8" height="8"/></svg>
+                중지
+              </button>
+            </div>
           )}
           {d.state === "idle" && (
             <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -880,7 +887,15 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
               측정 중
             </span>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {/* v22.0: MC보드 단위 측정 제어 — 측정은 보드 단위(64ch 동시 PRF). 측정 중 = 일시정지/중지, 정지 시 = '측정 시작' 1버튼. [11]에서 이전 */}
+            <button className="erut-btn erut-btn--default erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="일시정지 (Space)">
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3" height="12"/><rect x="10" y="2" width="3" height="12"/></svg>일시정지
+            </button>
+            <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-error)", borderColor: "var(--system-error)" }} title="측정 중지 (F7)">
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="3" width="10" height="10"/></svg>측정 중지
+            </button>
+            <span style={{ width: 1, height: 20, background: "var(--border-medium)", margin: "0 2px" }}/>
             {/* v18.1: 보고서 출력 — MC보드 단위 데이터 액션 (진단/로그 옆) */}
             <button
               className="erut-btn erut-btn--default erut-btn--sm"
@@ -4477,13 +4492,12 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
   // 일시정지/측정 중지/긴급 정지/측정 재개 버튼은 setState로 동일하게 상태 전환.
   // 메인 [11]의 "전체 진행률 · 81/150 라인" 진행 바는 고정형 컨텍스트(라인 스캔 없음)에 부적합하여 제외.
   const [selectedCh, setSelectedCh] = $s(4); // 64ch grid 선택 (main: CH 04)
-  const [autoSwitch, setAutoSwitch] = $s(true);
   const [showAlert, setShowAlert] = $s(true);
   // v9.18 (NDT 1.4): 세션 시작 시 교정 확인 다이얼로그
   const [showCalibCheck, setShowCalibCheck] = $s(false);
   const [showRecalibration, setShowRecalibration] = $s(false);
   // v9.18 (NDT 1.9): 결함 검증 재측정 — 추후 삭제 가능성
-  const [showVerification, setShowVerification] = $s(false);
+  // v22.0: showVerification 제거 (검증 재측정 폐기)
   // mock — 교정 주기 초과 채널 (v16.0: 채널별 주기 override / 전역 기본값 모두 반영. 실제 백엔드 연동 시 sensor.lastCalibration + channel.calibrationCycle 기준)
   const expiredChannels = ["ch04", "ch09", "ch12"];
 
@@ -4560,9 +4574,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>Critical 결함 검출 · 진폭 {criticalDefect.amp} %</div>
             <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 2 }}>채널 {criticalDefect.channel} · ToF {criticalDefect.tof} μs · 두께 {criticalDefect.thickness} mm · 임계값 80 % 초과 · 자동 마킹 완료</div>
           </div>
-          {/* v9.18 (NDT 1.9): 검증 재측정 버튼 — 추후 삭제 가능성 */}
-          <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => setShowVerification(true)}>검증 재측정</button>
-          {/* v9.19: 일시정지 버튼 삭제 (측정 제어 패널과 중복) */}
+          {/* v22.0: '검증 재측정' 삭제 — 고정 연속 모니터링은 채널별 on-demand 재측정 불가(보드 단위 연속 PRF). 확인만. */}
           <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowAlert(false)}>확인 후 계속</button>
         </div>
       )}
@@ -4603,14 +4615,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
       <div className="erut-panel" style={{ gridRow: 3, gridColumn: 3, minWidth: 0 }}>
         <div className="erut-panel__header">64CH 채널 상태</div>
         <div className="erut-panel__body" style={{ overflow: "visible", padding: 14, display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <label className="erut-toggle" style={{ flexDirection: "row-reverse" }} onClick={() => setAutoSwitch(!autoSwitch)}>
-              <span className={"erut-toggle__track" + (autoSwitch ? " is-on" : "")}>
-                <span className="erut-toggle__thumb"/>
-              </span>
-              <span className="erut-toggle__label erut-toggle__label--sm">결함 검출 시 자동 전환</span>
-            </label>
-          </div>
+          {/* v22.0: '결함 검출 시 자동 전환' 토글 삭제 — A-scan 자동 점프는 검사자 혼란, 결함 판정은 웹 */}
           <window.ChannelGrid
             cells={cells64}
             totalCh={64}
@@ -4623,9 +4628,9 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
         </div>
       </div>
 
-      {/* v9.7: 검사 대상·부착 상태·측정 제어 — column 2 (340px, 중앙) */}
+      {/* v9.7: 검사 대상·부착 상태 — column 2 (340px, 중앙) · v22.0: 측정 제어 제거(보드 단위 → [2] 배너) */}
       <div className="erut-panel" style={{ gridRow: 3, gridColumn: 2, minWidth: 0 }}>
-        <div className="erut-panel__header">검사 대상 · 부착 상태 · 측정 제어</div>
+        <div className="erut-panel__header">검사 대상 · 부착 상태</div>
         <div className="erut-panel__body" style={{ overflow: "visible", padding: 14 }}>
 
           {/* 검사 대상 정보 (현재 선택 채널의 검사체) */}
@@ -4673,49 +4678,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
 
           {/* v8.7: 결함 검출 카드 삭제 — 64ch 그리드 색상 + 자동 전환 토글로 충분 */}
 
-          {/* 측정 제어 (v8.5: 일시정지 토글 + 측정 중지 2버튼. 긴급정지 폐기) */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "14px 0 6px" }}>
-            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>측정 제어</div>
-            <div style={{ font: "400 9px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>단축키 활성</div>
-          </div>
-
-          {/* 일시정지 / 측정 재개 / 측정 시작 토글 */}
-          {state === "measuring" && (
-            <button className="erut-btn erut-btn--default erut-btn--m" style={{ width: "100%", marginBottom: 6, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px" }} onClick={() => setState("paused")}>
-              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3" height="12"/><rect x="10" y="2" width="3" height="12"/></svg>
-                일시정지
-              </span>
-              <span style={{ font: "700 9px/1 var(--font-kr)", padding: "2px 5px", border: "1px solid var(--border-medium)", color: "var(--content-low)" }}>Space</span>
-            </button>
-          )}
-          {state === "paused" && (
-            <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%", marginBottom: 6, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px" }} onClick={() => setState("measuring")}>
-              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><polygon points="4,2 14,8 4,14"/></svg>
-                측정 재개
-              </span>
-              <span style={{ font: "700 9px/1 var(--font-kr)", padding: "2px 5px", border: "1px solid var(--on-primary)", color: "var(--on-primary)" }}>Space</span>
-            </button>
-          )}
-          {state === "stopped" && (
-            <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%", marginBottom: 6, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px" }} onClick={handleStartMeasure}>
-              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><polygon points="4,2 14,8 4,14"/></svg>
-                측정 시작
-              </span>
-              <span style={{ font: "700 9px/1 var(--font-kr)", padding: "2px 5px", border: "1px solid var(--on-primary)", color: "var(--on-primary)" }}>F6</span>
-            </button>
-          )}
-
-          {/* 측정 중지 */}
-          <button className="erut-btn erut-btn--subtle erut-btn--m" style={{ width: "100%", color: "var(--system-error)", borderColor: "var(--system-error)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px" }} onClick={() => { setState("stopped"); onStop && onStop(); }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="3" width="10" height="10"/></svg>
-              측정 중지
-            </span>
-            <span style={{ font: "700 9px/1 var(--font-kr)", padding: "2px 5px", border: "1px solid var(--system-error)", color: "var(--system-error)" }}>F7</span>
-          </button>
+          {/* v22.0: 측정 제어 제거 — 측정은 MC보드 단위. 보드 제어는 [2] DeviceDetail 배너 + 툴바(활성 보드). 우측 패널은 '선택 채널 분석'(검사 대상·부착)만. */}
         </div>
       </div>
 
@@ -4754,17 +4717,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
         />
       )}
 
-      {/* v9.18 (NDT 1.9): 결함 검증 재측정 다이얼로그 — 추후 삭제 가능성 명시 */}
-      {showVerification && criticalDefect && (
-        <window.VerificationDialog
-          channel={criticalDefect.channel}
-          defectLevel={criticalDefect.type.toLowerCase()}
-          initialAmp={criticalDefect.amp}
-          onClose={() => setShowVerification(false)}
-          onConfirm={(stats) => { console.log("결함 확정:", stats); setShowAlert(false); }}
-          onRecalibrate={() => { setShowVerification(false); setShowRecalibration(true); }}
-        />
-      )}
+      {/* v22.0: 결함 검증 재측정 다이얼로그 제거 — 고정 연속 모니터링은 채널별 재측정 불가 */}
     </div>
   );
 };
