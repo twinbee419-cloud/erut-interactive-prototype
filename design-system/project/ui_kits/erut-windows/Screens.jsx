@@ -243,7 +243,7 @@ window.MOCK = {
   // severity: error(긴급·측정 차단급) / caution(경고) / info(정보). type: defect/calib/measure/comm/attach
   // v22.6: defect = 결함 '검출' 사실 알림 (검사자 인지). 등급·유형 판정은 웹 책임.
   notifications: [
-    { id: "n0", severity: "caution", type: "defect",  title: "CH 04 결함 신호 검출",  detail: "Gate 임계값 초과 (Amp 94%) · 자동 마킹", actionLabel: "채널 보기", time: "방금" },
+    { id: "n0", severity: "caution", type: "defect",  title: "CH 04 결함 신호 검출",  detail: "Gate 임계값 초과 (Amp 94%) · 검출 시점 자동 기록", actionLabel: "채널 보기", time: "방금" },
     { id: "n1", severity: "error",   type: "calib",   title: "CH 04 교정 만료",       detail: "교정 주기 초과 · F6 측정 시작 차단됨", actionLabel: "재교정",   time: "1분 전" },
     { id: "n2", severity: "error",   type: "measure", title: "CH 12 채널 미연결",     detail: "측정 중 신호 손실 (E120)",            actionLabel: "채널 보기", time: "2분 전" },
     { id: "n3", severity: "caution", type: "calib",   title: "CH 09 교정 임박 (D-1)", detail: "1일 후 교정 주기 만료",               actionLabel: "재교정",   time: "10분 전" },
@@ -1477,19 +1477,17 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                     {(targets || []).map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
                   </select>
                 </div>
-                {/* v20.0: 검사체 재질 — 선택 시 음속·권장 PRF 자동 prefill */}
+                {/* v22.7: 검사체 재질 — 검사 대상([6])에서 상속(readonly). 음속·권장 PRF 산출 기준. SSOT=[6] */}
                 <div>
-                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>검사체 재질 <span style={{ color: "var(--system-error)" }}>*</span></div>
-                  <select className="erut-field" value={material} onChange={(e) => onMaterialChange(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
-                    {Object.keys(window.SOUND_SPEEDS).map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                  <div style={{ font: "400 9px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>검사 대상 등록 재질 자동 반영. 표준 음속·권장 PRF가 아래 음속·PRF 항목에 prefill (참조 시험편 실측으로 보정 · 경사각은 횡파 별도 측정).</div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>검사체 재질 <span style={{ color: "var(--content-low)" }}>(검사 대상 상속)</span></div>
+                  <input className="erut-field is-disabled" value={material} readOnly disabled style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                  <div style={{ font: "400 9px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>검사 대상([6])에서 상속 — 변경은 [6]에서. 음속·권장 PRF 산출 기준.</div>
                 </div>
-                {/* v20.1: 검사체 공칭 두께 — PRF 입력 (구 교정 검증 섹션에서 승격) */}
+                {/* v22.7: 검사체 공칭 두께 — 검사 대상([6])에서 상속(readonly). PRF 산출 입력 */}
                 <div>
-                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>검사체 공칭 두께 (mm) <span style={{ color: "var(--system-error)" }}>*</span></div>
-                  <input className="erut-field" type="number" min="0.1" step="0.1" value={nominalThk} onChange={(e) => setNominalThk(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
-                  <div style={{ font: "400 9px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>검사 대상 등록 두께 자동 반영. 재질과 함께 권장 PRF 산출 기준.</div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>검사체 공칭 두께 (mm) <span style={{ color: "var(--content-low)" }}>(검사 대상 상속)</span></div>
+                  <input className="erut-field is-disabled" type="number" value={nominalThk} readOnly disabled style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                  <div style={{ font: "400 9px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>검사 대상([6])에서 상속. 재질과 함께 권장 PRF 산출 기준.</div>
                 </div>
                 {/* v20.0: 탐촉자 종류 프리셋 폐기 → 탐촉자 주파수 개별 수동 입력 (시리얼 자동 인식 X) */}
                 <div>
@@ -1675,11 +1673,11 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
               <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>PRF</span>
-                  <window.Toggle checked={autoPRF} onChange={setAutoPRF} size="sm" label="자동"/>
+                  <window.Toggle checked={autoPRF} onChange={setAutoPRF} size="sm" label="상속"/>
                 </div>
                 <input className={"erut-field" + (autoPRF ? " is-disabled" : "")} type="number" min="1" step="1" disabled={autoPRF} value={autoPRF ? prfValue : prfManual} onChange={(e) => setPrfManual(parseInt(e.target.value, 10) || 0)} style={{ width: "100%", height: 34, padding: "4px 8px", fontSize: 15, fontWeight: 700 }}/>
-                <div style={{ marginTop: 6, font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: autoPRF ? "var(--system-success)" : "var(--content-low)" }}>
-                  {autoPRF ? `자동 — ${material.split(" ")[0]} · ${nominalThk}mm 권장 ${prfValue.toLocaleString()} Hz` : "수동 입력 모드"}
+                <div style={{ marginTop: 6, font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: autoPRF ? "var(--system-success)" : "var(--system-caution)" }}>
+                  {autoPRF ? `검사 대상 기준 상속 — ${material.split(" ")[0]} · ${nominalThk}mm 권장 ${prfValue.toLocaleString()} Hz` : "채널 override (수동 입력)"}
                 </div>
               </div>
               <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
@@ -4609,7 +4607,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>결함 신호 검출 · 진폭 {criticalDefect.amp} %</div>
-            <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 2 }}>채널 {criticalDefect.channel} · ToF {criticalDefect.tof} μs · 두께 {criticalDefect.thickness} mm · 임계값 80 % 초과 · 자동 마킹 완료</div>
+            <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 2 }}>채널 {criticalDefect.channel} · ToF {criticalDefect.tof} μs · 두께 {criticalDefect.thickness} mm · 임계값 80 % 초과 · 세션 데이터에 검출 시점 자동 기록</div>
           </div>
           {/* v22.0: '검증 재측정' 삭제 — 고정 연속 모니터링은 채널별 on-demand 재측정 불가(보드 단위 연속 PRF). 확인만. */}
           <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowAlert(false)}>확인 후 계속</button>
@@ -4690,7 +4688,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             {/* v8.7 B-1: 현재 채널 상태 요약 (결함 있을 때 표시) */}
             <div style={{ borderTop: "1px solid var(--border-low)", marginTop: 8, paddingTop: 8, font: "700 11px/1.3 var(--font-kr)", letterSpacing: ".02em" }}>
               <span style={{ color: "var(--content-low)" }}>현재 채널 상태</span>
-              <div style={{ color: "var(--system-error)", marginTop: 4 }}>⚠ Critical · Amp 94% · 두께 17.4mm</div>
+              <div style={{ color: "var(--system-error)", marginTop: 4 }}>⚠ 결함 검출 · Amp 94% · 두께 17.4mm</div>
             </div>
           </div>
 
