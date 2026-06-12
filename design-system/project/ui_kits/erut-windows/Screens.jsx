@@ -563,23 +563,27 @@ function MiniPill({ children, tone = "neutral", ledColor }) {
   );
 }
 
-window.MainScreen = function MainScreen({ onAddDevice, onOpenDevice, onChangeProject, onOpenHistory }) {
+window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevice, onOpenDevice, onChangeProject, onOpenHistory }) {
   const proj = window.MOCK.project;
   const devices = window.MOCK.devices;
+  // v22.1: 보드별 측정 상태 (공유 state) — 없으면 MOCK 기본값
+  const stOf = (d) => (boardStates && boardStates[d.id]) || d.state;
 
   // 장비 패널 헤더 요약 카운터
-  const connectedCount = devices.filter(d => d.state !== "offline").length;
-  const measuringCount = devices.filter(d => d.state === "measuring").length;
+  const connectedCount = devices.filter(d => stOf(d) !== "offline").length;
+  const measuringCount = devices.filter(d => stOf(d) === "measuring").length;
   const activeChTotal  = devices.reduce((s, d) => s + (d.activeCh || 0), 0);
   const totalChTotal   = devices.reduce((s, d) => s + d.totalCh, 0);
 
   // 각 장비 mini-card 렌더링
   function renderDeviceCard(d) {
-    const isMeasuring = d.state === "measuring";
-    const isOffline   = d.state === "offline";
+    const st = stOf(d);
+    const isMeasuring = st === "measuring";
+    const isPaused    = st === "paused";
+    const isOffline   = st === "offline";
 
     // v9.13: border/padding/background를 kit.css로 이동. 상태 클래스로 분기 (inline specificity 문제 해결)
-    const cardCls = "erut-device-card" + (isMeasuring ? " is-measuring" : isOffline ? " is-offline" : "");
+    const cardCls = "erut-device-card" + (isMeasuring || isPaused ? " is-measuring" : isOffline ? " is-offline" : "");
 
     return (
       <div key={d.id} className={cardCls}>
@@ -611,21 +615,28 @@ window.MainScreen = function MainScreen({ onAddDevice, onOpenDevice, onChangePro
         </div>
         {/* 하단: 액션 버튼 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-          {isMeasuring && (
-            /* v22.0: 측정 중 = 일시정지 + 중지 ([2]/툴바와 제어 세트 일관) */
+          {(isMeasuring || isPaused) && (
+            /* v22.0/v22.1: 측정 중 = 일시정지+중지 / 일시정지 = 재개+중지 (인터랙티브) */
             <div style={{ display: "flex", gap: 6 }}>
-              <button className="erut-btn erut-btn--default erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="일시정지 (Space)">
-                <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><rect x="2" y="2" width="3" height="8"/><rect x="7" y="2" width="3" height="8"/></svg>
-                일시정지
-              </button>
-              <button className="erut-btn erut-btn--default erut-btn--sm" style={{ background: "var(--system-error)", color: "var(--on-primary)", borderColor: "var(--system-error)", display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 중지 (F7)">
+              {isMeasuring ? (
+                <button className="erut-btn erut-btn--default erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="일시정지 (Space)" onClick={() => onBoardControl && onBoardControl(d.id, "pause")}>
+                  <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><rect x="2" y="2" width="3" height="8"/><rect x="7" y="2" width="3" height="8"/></svg>
+                  일시정지
+                </button>
+              ) : (
+                <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 재개 (Space)" onClick={() => onBoardControl && onBoardControl(d.id, "resume")}>
+                  <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><polygon points="3,2 10,6 3,10"/></svg>
+                  재개
+                </button>
+              )}
+              <button className="erut-btn erut-btn--default erut-btn--sm" style={{ background: "var(--system-error)", color: "var(--on-primary)", borderColor: "var(--system-error)", display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 중지 (F7)" onClick={() => onBoardControl && onBoardControl(d.id, "stop")}>
                 <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><rect x="2" y="2" width="8" height="8"/></svg>
                 중지
               </button>
             </div>
           )}
-          {d.state === "idle" && (
-            <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          {st === "idle" && (
+            <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} onClick={() => onBoardControl && onBoardControl(d.id, "start")}>
               <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><polygon points="3,2 10,6 3,10"/></svg>
               시작
             </button>
@@ -712,9 +723,12 @@ window.MainScreen = function MainScreen({ onAddDevice, onOpenDevice, onChangePro
 };
 
 // =================== Screen · [2] DEVICE DETAIL ===================
-window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, onStartMeasure, onEditChannel, onAddTarget, onEditTarget, onAddSensor, onOpenReport }) {
+window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targetId, focusChannel, onBack, onStartMeasure, onEditChannel, onAddTarget, onEditTarget, onAddSensor, onOpenReport }) {
   // v14.0: onOpenGate → onEditChannel — Gate/교정 분리 폐기, commission(edit 모드) 단일 진입점
   // v18.0: onOpenReport 신규 — 우측 채널 패널 "보고서 출력" 버튼 → ReportExportDialog 모달
+  // v22.1: 배너 측정 제어 인터랙션 — 이 화면의 MC보드(mockup: MCuF-001) 상태를 공유 boardStates에서 도출
+  const boardId = "MCuF-001";
+  const bSt = (boardStates && boardStates[boardId]) || "measuring";
   const target = window.MOCK.targets.find(t => t.id === targetId) || window.MOCK.targets[0];
   const sensorMap = Object.fromEntries(window.MOCK.sensors.map(s => [s.id, s]));
   const [selected, setSelected] = $s(focusChannel || "ch01");
@@ -882,19 +896,34 @@ window.DeviceDetail = function DeviceDetail({ targetId, focusChannel, onBack, on
               <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
               연결됨
             </span>
-            <span className="erut-pill" style={{ padding: "2px 8px", fontSize: 11, lineHeight: 1, background: "linear-gradient(rgba(34,133,239,0.12),rgba(34,133,239,0.12)), var(--surface-subtle-2)", color: "var(--content-emphasis)", borderColor: "var(--border-emphasis)" }}>
-              <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
-              측정 중
-            </span>
+            {bSt !== "idle" && (
+              <span className="erut-pill" style={{ padding: "2px 8px", fontSize: 11, lineHeight: 1, background: "linear-gradient(rgba(34,133,239,0.12),rgba(34,133,239,0.12)), var(--surface-subtle-2)", color: bSt === "paused" ? "var(--system-caution)" : "var(--content-emphasis)", borderColor: bSt === "paused" ? "var(--system-caution)" : "var(--border-emphasis)" }}>
+                <span className={"erut-led " + (bSt === "paused" ? "is-gray" : "is-green")} style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
+                {bSt === "paused" ? "일시정지" : "측정 중"}
+              </span>
+            )}
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            {/* v22.0: MC보드 단위 측정 제어 — 측정은 보드 단위(64ch 동시 PRF). 측정 중 = 일시정지/중지, 정지 시 = '측정 시작' 1버튼. [11]에서 이전 */}
-            <button className="erut-btn erut-btn--default erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="일시정지 (Space)">
-              <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3" height="12"/><rect x="10" y="2" width="3" height="12"/></svg>일시정지
-            </button>
-            <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-error)", borderColor: "var(--system-error)" }} title="측정 중지 (F7)">
-              <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="3" width="10" height="10"/></svg>측정 중지
-            </button>
+            {/* v22.0/v22.1: MC보드 단위 측정 제어 (인터랙티브) — measuring=일시정지+중지 / paused=재개+중지 / idle=측정 시작 */}
+            {bSt === "measuring" && (
+              <button className="erut-btn erut-btn--default erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="일시정지 (Space)" onClick={() => onBoardControl && onBoardControl(boardId, "pause")}>
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3" height="12"/><rect x="10" y="2" width="3" height="12"/></svg>일시정지
+              </button>
+            )}
+            {bSt === "paused" && (
+              <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 재개 (Space)" onClick={() => onBoardControl && onBoardControl(boardId, "resume")}>
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><polygon points="4,2 14,8 4,14"/></svg>측정 재개
+              </button>
+            )}
+            {bSt === "idle" ? (
+              <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 시작 (F6)" onClick={() => onBoardControl && onBoardControl(boardId, "start")}>
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><polygon points="4,2 14,8 4,14"/></svg>측정 시작
+              </button>
+            ) : (
+              <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-error)", borderColor: "var(--system-error)" }} title="측정 중지 (F7)" onClick={() => onBoardControl && onBoardControl(boardId, "stop")}>
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="3" width="10" height="10"/></svg>측정 중지
+              </button>
+            )}
             <span style={{ width: 1, height: 20, background: "var(--border-medium)", margin: "0 2px" }}/>
             {/* v18.1: 보고서 출력 — MC보드 단위 데이터 액션 (진단/로그 옆) */}
             <button

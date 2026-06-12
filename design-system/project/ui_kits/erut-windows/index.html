@@ -74,6 +74,19 @@ function App() {
   const [measureState, setMeasureState] = useState("measuring"); // "stopped" | "measuring" | "paused"
   const [elapsed, setElapsed]           = useState(272);          // seconds
 
+  // v22.1: 보드별 측정 상태 — [1] 카드 + [2] 배너 측정 제어 인터랙션 (공유 state). action: start/pause/resume/stop
+  const [boardStates, setBoardStates] = useState(() => {
+    const m = {}; (window.MOCK.devices || []).forEach(d => { m[d.id] = d.state; }); return m;
+  });
+  const controlBoard = (id, action) => setBoardStates(s => {
+    const cur = s[id]; let next = cur;
+    if (action === "start"  && cur === "idle")      next = "measuring";
+    else if (action === "pause"  && cur === "measuring") next = "paused";
+    else if (action === "resume" && cur === "paused")    next = "measuring";
+    else if (action === "stop"   && (cur === "measuring" || cur === "paused")) next = "idle";
+    return next === cur ? s : { ...s, [id]: next };
+  });
+
   // [4] 장비 연결 설정 진입 시 sub-view 지정용 (예: + 장비 추가 → mc-add)
   const [settingsInitialSubView, setSettingsInitialSubView] = useState(null);
   // settings 화면을 떠날 때 초기 sub-view 리셋 (다음 진입 시 list부터)
@@ -319,6 +332,8 @@ function App() {
         )}
         {screen === "main" && (
           <window.MainScreen
+            boardStates={boardStates}
+            onBoardControl={controlBoard}
             onAddDevice={() => { setSettingsInitialSubView("mc-add"); goto("settings"); }}
             onOpenDevice={() => { setSelectedChannel(null); goto("device"); }}
             onChangeProject={() => goto("project")}
@@ -328,6 +343,8 @@ function App() {
         {/* v8.5: [1-1] dashboard 라우트 폐기 — MC보드 자산 중심 모델 */}
         {screen === "device" && (
           <window.DeviceDetail
+            boardStates={boardStates}
+            onBoardControl={controlBoard}
             targetId={selectedTarget}
             focusChannel={selectedChannel}
             onBack={() => goto("main")}
