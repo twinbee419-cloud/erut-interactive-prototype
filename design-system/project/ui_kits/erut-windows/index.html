@@ -71,19 +71,17 @@ function App() {
   const [toolKey, setToolKey]       = useState(null);
 
   // 측정 상태 (lifted up from RealtimeScan — toolbar에서도 표시)
-  const [measureState, setMeasureState] = useState("measuring"); // "stopped" | "measuring" | "paused"
+  const [measureState, setMeasureState] = useState("measuring"); // "stopped" | "measuring" (일시정지 폐기)
   const [elapsed, setElapsed]           = useState(272);          // seconds
 
-  // v22.1: 보드별 측정 상태 — [1] 카드 + [2] 배너 측정 제어 인터랙션 (공유 state). action: start/pause/resume/stop
+  // 보드별 측정 상태 — [1] 카드 + [2] 배너 측정 제어 (공유 state). action: start/stop (일시정지 폐기)
   const [boardStates, setBoardStates] = useState(() => {
     const m = {}; (window.MOCK.devices || []).forEach(d => { m[d.id] = d.state; }); return m;
   });
   const controlBoard = (id, action) => setBoardStates(s => {
     const cur = s[id]; let next = cur;
-    if (action === "start"  && cur === "idle")      next = "measuring";
-    else if (action === "pause"  && cur === "measuring") next = "paused";
-    else if (action === "resume" && cur === "paused")    next = "measuring";
-    else if (action === "stop"   && (cur === "measuring" || cur === "paused")) next = "idle";
+    if (action === "start" && cur === "idle")                          next = "measuring";
+    else if (action === "stop" && cur === "measuring")                 next = "idle";
     return next === cur ? s : { ...s, [id]: next };
   });
 
@@ -161,17 +159,9 @@ function App() {
     { label: "전체 측정 중지", shortcut: "F7" },
   ];
 
-  // v8.5: 측정 제어 3개 버튼 (시작·일시정지·중지). 긴급 정지 폐기.
+  // 툴바 = home(메인 페이지)만. 측정 제어는 [2] 장비 상세 배너 단위.
   const tools = [
     { key: "home",   label: "메인 페이지",      icon: <window.EIcon.Home/> },
-    { divider: true },
-    { key: "add",    label: "장비 추가",        icon: <window.EIcon.AddMachine/> },
-    { divider: true },
-    { key: "play",   label: "측정 시작 (F6)",   icon: <window.EIcon.Play/> },
-    { key: "pause",  label: "일시정지 (Space)", icon: <window.EIcon.Pause/> },
-    { key: "stop",   label: "측정 중지 (F7)",   icon: <window.EIcon.Stop/> },
-    { divider: true },
-    { key: "set",    label: "설정",             icon: <window.EIcon.Setting/> },
   ];
 
   // v8.5: [1-1] 대시보드 폐기. v14.0: [3] Gate 설정 폐기 → [4-3-1] commission 통합
@@ -209,9 +199,8 @@ function App() {
       // v18.0: Ctrl+P → 보고서 출력 모달 (screen 라우팅 폐기)
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") { e.preventDefault(); setReportDialog({ deviceId: "MCuF-001", initialChannel: null }); }
       if (screen === "realtime") {
-        // v9.25: F7 측정 중지 시 [7] 검사 이력으로 자동 진입
+        // F7 측정 중지 시 [7] 검사 이력으로 자동 진입 (일시정지 폐기 — Space 핸들러 제거)
         if (e.key === "F7") { e.preventDefault(); setMeasureState("stopped"); goto("history"); }
-        if (e.code === "Space") { e.preventDefault(); setMeasureState(s => s === "measuring" ? "paused" : "measuring"); }
       }
     };
     window.addEventListener("keydown", onKey);
@@ -236,9 +225,7 @@ function App() {
   // v9.22 (NDT 1.5): realtime만 "마지막 저장 N초 전" 표시. 다른 화면은 단축키 hint
   let toolbarHint;
   if (screen === "realtime") {
-    const c = measureState === "measuring" ? "var(--system-error)"
-            : measureState === "paused"    ? "var(--system-caution)"
-            : "var(--content-low)";
+    const c = measureState === "measuring" ? "var(--system-error)" : "var(--content-low)";
     toolbarHint = (
       <span className="erut-tb-hint" style={{ color: c, display: "inline-flex", alignItems: "center", gap: 8 }}>
         <span style={{
@@ -246,15 +233,14 @@ function App() {
           ...(measureState === "measuring" ? { animation: "erut-sensor-breathe 1.4s ease-in-out infinite", transformOrigin: "center" } : {})
         }}/>
         {measureState === "measuring" && <span>측정 중 · {fmtTime(elapsed)} 경과 · 잔여 {fmtTime(remaining)}</span>}
-        {measureState === "paused"    && <span>일시정지 · {fmtTime(elapsed)} 경과 (멈춤)</span>}
-        {measureState === "stopped"   && <span>정지</span>}
+        {measureState !== "measuring" && <span>정지</span>}
         <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)", paddingLeft: 8, borderLeft: "1px solid var(--border-medium)" }}>{fmtSave(lastSaveSec)}</span>
       </span>
     );
   } else {
     // 측정 외 화면 — 단축키 hint 표시
     toolbarHint = (
-      <span className="erut-tb-hint" style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>F6 시작 · Space 일시정지 · F7 중지</span>
+      <span className="erut-tb-hint" style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>F6 시작 · F7 중지</span>
     );
   }
 
@@ -275,14 +261,7 @@ function App() {
 
   const handleToolPick = (k) => {
     setToolKey(k);
-    if (k === "home")  goto("main");
-    if (k === "add")   goto("settings");
-    // v12.0: 툴바 play도 F6과 동일한 차단 로직 적용
-    if (k === "play")  { tryStartMeasurement(); }
-    if (k === "pause") setMeasureState(s => s === "measuring" ? "paused" : "measuring"); // 토글
-    if (k === "stop")  setMeasureState("stopped");
-    // v10.0: 툴바 gear → 환경 설정 모달 (메뉴바 [설정]과 동일 진입점)
-    if (k === "set")   setShowSettings(true);
+    if (k === "home")  goto("main");   // 툴바 = home만 (측정 제어는 [2] 배너)
   };
 
   const handleMenuItemClick = (item) => {
@@ -538,7 +517,7 @@ function App() {
             <>
               <window.Button variant="subtle" size="sm" onClick={() => setShowRecovery(false)}>취소</window.Button>
               <window.Button variant="default" size="sm" onClick={() => { setShowRecovery(false); setPickedProject({ id: "sk-ulsan", name: "SK에너지 울산 #2 라인" }); setSelectedTarget("PIPE-A-204"); goto("history"); }}>[7] 검사 이력으로 이동</window.Button>
-              <window.Button variant="emphasis" size="sm" onClick={() => { setShowRecovery(false); setPickedProject({ id: "sk-ulsan", name: "SK에너지 울산 #2 라인" }); setSelectedTarget("PIPE-A-204"); setMeasureState("paused"); goto("realtime"); }}>[11] 측정 계속</window.Button>
+              <window.Button variant="emphasis" size="sm" onClick={() => { setShowRecovery(false); setPickedProject({ id: "sk-ulsan", name: "SK에너지 울산 #2 라인" }); setSelectedTarget("PIPE-A-204"); setMeasureState("measuring"); goto("realtime"); }}>[11] 측정 계속</window.Button>
             </>
           )}
         >

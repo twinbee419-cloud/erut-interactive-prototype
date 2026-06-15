@@ -581,11 +581,10 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
   function renderDeviceCard(d) {
     const st = stOf(d);
     const isMeasuring = st === "measuring";
-    const isPaused    = st === "paused";
     const isOffline   = st === "offline";
 
-    // v9.13: border/padding/background를 kit.css로 이동. 상태 클래스로 분기 (inline specificity 문제 해결)
-    const cardCls = "erut-device-card" + (isMeasuring || isPaused ? " is-measuring" : isOffline ? " is-offline" : "");
+    // 상태 클래스로 분기 (measuring / offline / idle) — 일시정지 폐기
+    const cardCls = "erut-device-card" + (isMeasuring ? " is-measuring" : isOffline ? " is-offline" : "");
 
     return (
       <div key={d.id} className={cardCls}>
@@ -617,20 +616,9 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
         </div>
         {/* 하단: 액션 버튼 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-          {(isMeasuring || isPaused) && (
-            /* v22.0/v22.1: 측정 중 = 일시정지+중지 / 일시정지 = 재개+중지 (인터랙티브) */
+          {isMeasuring && (
+            /* 측정 중 = 중지만 (시작/중지 — 일시정지 폐기) */
             <div style={{ display: "flex", gap: 6 }}>
-              {isMeasuring ? (
-                <button className="erut-btn erut-btn--default erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="일시정지 (Space)" onClick={() => onBoardControl && onBoardControl(d.id, "pause")}>
-                  <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><rect x="2" y="2" width="3" height="8"/><rect x="7" y="2" width="3" height="8"/></svg>
-                  일시정지
-                </button>
-              ) : (
-                <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 재개 (Space)" onClick={() => onBoardControl && onBoardControl(d.id, "resume")}>
-                  <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><polygon points="3,2 10,6 3,10"/></svg>
-                  재개
-                </button>
-              )}
               <button className="erut-btn erut-btn--default erut-btn--sm" style={{ background: "var(--system-error)", color: "var(--on-primary)", borderColor: "var(--system-error)", display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 중지 (F7)" onClick={() => onBoardControl && onBoardControl(d.id, "stop")}>
                 <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><rect x="2" y="2" width="8" height="8"/></svg>
                 중지
@@ -896,25 +884,15 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
               <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
               연결됨
             </span>
-            {bSt !== "idle" && (
-              <span className="erut-pill" style={{ padding: "2px 8px", fontSize: 11, lineHeight: 1, background: "linear-gradient(rgba(34,133,239,0.12),rgba(34,133,239,0.12)), var(--surface-subtle-2)", color: bSt === "paused" ? "var(--system-caution)" : "var(--content-emphasis)", borderColor: bSt === "paused" ? "var(--system-caution)" : "var(--border-emphasis)" }}>
-                <span className={"erut-led " + (bSt === "paused" ? "is-gray" : "is-green")} style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
-                {bSt === "paused" ? "일시정지" : "측정 중"}
+            {bSt === "measuring" && (
+              <span className="erut-pill" style={{ padding: "2px 8px", fontSize: 11, lineHeight: 1, background: "linear-gradient(rgba(34,133,239,0.12),rgba(34,133,239,0.12)), var(--surface-subtle-2)", color: "var(--content-emphasis)", borderColor: "var(--border-emphasis)" }}>
+                <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
+                측정 중
               </span>
             )}
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            {/* v22.0/v22.1: MC보드 단위 측정 제어 (인터랙티브) — measuring=일시정지+중지 / paused=재개+중지 / idle=측정 시작 */}
-            {bSt === "measuring" && (
-              <button className="erut-btn erut-btn--default erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="일시정지 (Space)" onClick={() => onBoardControl && onBoardControl(boardId, "pause")}>
-                <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3" height="12"/><rect x="10" y="2" width="3" height="12"/></svg>일시정지
-              </button>
-            )}
-            {bSt === "paused" && (
-              <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 재개 (Space)" onClick={() => onBoardControl && onBoardControl(boardId, "resume")}>
-                <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><polygon points="4,2 14,8 4,14"/></svg>측정 재개
-              </button>
-            )}
+            {/* MC보드 단위 측정 제어 — idle=측정 시작 / measuring=측정 중지 (일시정지 폐기) */}
             {bSt === "idle" ? (
               <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 시작 (F6)" onClick={() => onBoardControl && onBoardControl(boardId, "start")}>
                 <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><polygon points="4,2 14,8 4,14"/></svg>측정 시작
@@ -1710,9 +1688,17 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
 
       {/* ───── 하단 sticky 액션 바 — v14.0 모드별 분기 ───── */}
       <div style={{ gridRow: 3, gridColumn: "1 / -1", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 24px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
-        <a style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", textDecoration: "underline", cursor: "pointer" }}>
-          여러 채널 일괄 등록 / 관리 → [4-3] 탐촉자 설정
-        </a>
+        {!isEdit ? (
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>적용 범위</span>
+            <select className="erut-field" style={{ height: 30, padding: "4px 8px", fontSize: 12 }}>
+              <option>단일 채널 (CH 09)</option>
+              <option>같은 검사 대상 (PIPE-A · 24ch)</option>
+              <option>전체 64채널</option>
+            </select>
+            <span style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>여러 채널 = 공통 설정 일괄 적용 · SN은 채널별 입력</span>
+          </div>
+        ) : <span/>}
         <div style={{ display: "flex", gap: 8 }}>
           <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onBack}>취소</button>
           {isEdit ? (
@@ -2553,7 +2539,6 @@ function SettingsShortcuts() {
   const shortcuts = [
     ["측정 시작",       "F6"],
     ["측정 중지",       "F7"],
-    ["측정 일시정지",   "Space"],
     ["프로젝트 열기",   "Ctrl+O"],
     ["다른 이름으로 저장", "Ctrl+Shift+S"],
     ["검사 이력",       "Ctrl+D"],
@@ -3196,8 +3181,8 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
   const menuItems = [
     { id: "mc",    label: "MC보드 연결", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="6" width="14" height="12"/><line x1="16" y1="12" x2="20" y2="12"/><line x1="18" y1="10" x2="18" y2="14"/></svg> },
     { id: "mqtt",  label: "MQTT 설정",   icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 12a10 10 0 0 1 14 0"/><path d="M8.5 15a5 5 0 0 1 7 0"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg> },
-    { id: "probe", label: "탐촉자 설정", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="9" width="18" height="6"/><line x1="6" y1="9" x2="6" y2="15"/><line x1="9" y1="9" x2="9" y2="15"/><line x1="12" y1="9" x2="12" y2="15"/><line x1="15" y1="9" x2="15" y2="15"/><line x1="18" y1="9" x2="18" y2="15"/></svg> },
   ];
+  // #2: '탐촉자 설정' 메뉴 폐기 — 탐촉자 등록은 [2] +탐촉자 추가 → [4-3-1] ChannelCommissioning (적용 범위로 일괄)
 
   return (
     <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 0, padding: 0, height: "100%" }}>
@@ -3237,13 +3222,12 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
             { label: "메인" },
             { label: "설정" },
             { label: "장비 연결" },
-            { label: menu === "mc" ? "MC보드 연결" : menu === "mqtt" ? "MQTT 설정" : menu === "probe" ? "탐촉자 설정" : "장비 연결 설정", current: true },
+            { label: menu === "mc" ? "MC보드 연결" : menu === "mqtt" ? "MQTT 설정" : "장비 연결 설정", current: true },
           ]}
         />
         {menu === "mc" && !subView && <MCBoardList onAdd={() => setSubView("mc-add")} onEdit={(id) => { setEditingBoardId(id); setSubView("mc-edit"); }}/>}
         {menu === "mc" && subView && <MCBoardForm mode={subView} editingId={editingBoardId} onCancel={() => setSubView(null)} onSave={() => setSubView(null)}/>}
         {menu === "mqtt" && <MQTTSettings/>}
-        {menu === "probe" && <ProbeSettings onCalibrate={() => setShowCalibration(true)}/>}
       </div>
 
       {/* 교정 마법사 모달 — v22.2: channelList 누락으로 빈 페이지 표시되던 버그 수정 (재교정 마법사와 동일하게 데이터 전달) */}
@@ -4529,8 +4513,7 @@ window.GateSetup = function GateSetup({ channel, onBack, onPrevChannel, onNextCh
 };
 
 window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed, setElapsed, onBack, onStop }) {
-  // state(measureState) · elapsed는 App에서 lift up — toolbar 우측에 표시.
-  // 일시정지/측정 중지/긴급 정지/측정 재개 버튼은 setState로 동일하게 상태 전환.
+  // state(measureState) · elapsed는 App에서 lift up — toolbar 우측에 표시. 측정 제어(시작/중지)는 [2] 배너 (일시정지 폐기).
   // 메인 [11]의 "전체 진행률 · 81/150 라인" 진행 바는 고정형 컨텍스트(라인 스캔 없음)에 부적합하여 제외.
   const [selectedCh, setSelectedCh] = $s(4); // 64ch grid 선택 (main: CH 04)
   const [showAlert, setShowAlert] = $s(true);
