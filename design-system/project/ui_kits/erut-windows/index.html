@@ -277,14 +277,6 @@ function App() {
           items={["파일","장비","설정","도움말"]}
           active={activeMenu}
           onPick={handleMenuPick}
-          notificationCenter={
-            <window.NotificationCenter
-              notifications={deviceConnected ? (window.MOCK.notifications || []) : []}
-              onSettings={() => setShowSettings(true)}
-              onAction={(n) => { if (n.type === "calib") setShowRecalibWizard(true); }}
-              onMarkAllRead={() => {}}
-            />
-          }
         />
         {menuOpen === "file" && (
           <div style={{ position: "absolute", left: 10, top: 40, zIndex: 50 }}>
@@ -297,7 +289,16 @@ function App() {
           </div>
         )}
       </div>
-      <window.Toolbar items={tools} activeKey={toolKey} onPick={handleToolPick} hint={toolbarHint}/>
+      <window.Toolbar items={tools} activeKey={toolKey} onPick={handleToolPick} hint={toolbarHint}
+        notificationCenter={
+          <window.NotificationCenter
+            notifications={deviceConnected ? (window.MOCK.notifications || []) : []}
+            onSettings={() => setShowSettings(true)}
+            onAction={(n) => { if (n.type === "calib") setShowRecalibWizard(true); }}
+            onMarkAllRead={() => {}}
+          />
+        }
+      />
       <div className="erut-window__content" onClick={closeMenus} style={{ position: "relative" }}>
         {screen === "project" && (
           <window.ProjectPicker

@@ -27,7 +27,7 @@ window.TitleBar = function TitleBar({ title = "ERUT - Ultrasonic Monitoring Syst
 };
 
 // ----------- FILE MENU BAR ------------
-window.MenuBar = function MenuBar({ items, active, onPick, notificationCenter }) {
+window.MenuBar = function MenuBar({ items, active, onPick }) {
   return (
     <div className="erut-bar erut-menubar">
       {items.map((label) => (
@@ -37,8 +37,6 @@ window.MenuBar = function MenuBar({ items, active, onPick, notificationCenter })
           onClick={() => onPick && onPick(label)}
         >{label}</button>
       ))}
-      {/* v21.0: 메뉴바 우측 통합 알림 센터(종 아이콘) */}
-      {notificationCenter && (<><span style={{ flex: 1 }}/>{notificationCenter}</>)}
     </div>
   );
 };
@@ -112,7 +110,7 @@ window.NotificationCenter = function NotificationCenter({ notifications = [], on
 };
 
 // ----------- TOOLBAR ------------
-window.Toolbar = function Toolbar({ items, activeKey, onPick, hint }) {
+window.Toolbar = function Toolbar({ items, activeKey, onPick, hint, notificationCenter }) {
   return (
     <div className="erut-bar erut-toolbar">
       {items.map((item, i) => item.divider ? (
@@ -125,6 +123,8 @@ window.Toolbar = function Toolbar({ items, activeKey, onPick, hint }) {
           onClick={() => onPick && onPick(item.key)}
         >{item.icon}</button>
       ))}
+      {/* 통합 알림 센터(종) — home 우측 */}
+      {notificationCenter && (<><span className="erut-tb-sep"/>{notificationCenter}</>)}
       <span style={{flex:1}}/>
       {hint || <span className="erut-tb-hint">F6 측정 시작 · F7 중지</span>}
     </div>
