@@ -215,14 +215,6 @@ window.MOCK = {
     { id: "MCF-2024-002", alias: "보조 장비", ip: "192.168.0.45", port: 8080, channels: 32, freq: 10, firmware: "v2.3.8", state: "warn",      note: "영점 편차 CH 7 · CH 43" },
     { id: "MCF-2024-003", alias: "예비",     ip: "192.168.0.46", port: 8080, channels: 64, freq: 5,  firmware: "v2.4.1", state: "offline",   note: "연결 끊김 (10분 전)" },
   ],
-  // [4-3] 탐촉자 64채널 SN — 일부 미등록 (CH 07 등)
-  channelSerials: Array.from({ length: 64 }, (_, i) => {
-    const num = i + 1;
-    if (num === 7)  return { ch: num, sn: "", status: "empty"    };
-    if (num >= 9 && num <= 12) return { ch: num, sn: "PXT-2024-" + String(num).padStart(3, "0"), status: "needsCalib" };
-    if ([41, 42, 47, 48].includes(num)) return { ch: num, sn: "", status: "empty" };
-    return { ch: num, sn: "PXT-2024-" + String(num).padStart(3, "0"), status: "ok" };
-  }),
   // v12.0: 교정 필요 채널 (uncalibrated: 신규 추가 후 미진행 + expired: 주기 초과 만료) — DeviceDetail breathe 셀과 동일 소스
   uncalibratedChannels: ["ch20", "ch33"],
   expiredChannels:      ["ch04", "ch09", "ch12"],
@@ -3172,7 +3164,6 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
   const [menu, setMenu] = $s(initialMenu || "mc");          // "mc" | "mqtt" | "probe"
   const [subView, setSubView] = $s(initialSubView || null); // null | "mc-add" | "mc-edit"
   const [editingBoardId, setEditingBoardId] = $s(null);
-  const [showCalibration, setShowCalibration] = $s(false);
 
   // 메뉴 변경 시 sub-view 리셋
   const switchMenu = (m) => { setSubView(null); setEditingBoardId(null); setMenu(m); };
@@ -3228,16 +3219,6 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
         {menu === "mc" && subView && <MCBoardForm mode={subView} editingId={editingBoardId} onCancel={() => setSubView(null)} onSave={() => setSubView(null)}/>}
         {menu === "mqtt" && <MQTTSettings/>}
       </div>
-
-      {/* 교정 마법사 모달 — v22.2: channelList 누락으로 빈 페이지 표시되던 버그 수정 (재교정 마법사와 동일하게 데이터 전달) */}
-      {showCalibration && (
-        <window.CalibrationWizard
-          mode="recalibration"
-          channelList={window.MOCK.needsCalibrationChannels}
-          onClose={() => setShowCalibration(false)}
-          onComplete={() => setShowCalibration(false)}
-        />
-      )}
     </div>
   );
 };
@@ -4137,15 +4118,6 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
       calibrationStatus,
     });
   }
-
-  // v8.5: 채널 부착 상태 detail (우측 패널 위젯용 — 카운터는 ChannelGrid가 자동 집계)
-  const channelAttachStatus = {
-    detail: [
-      { ch: 16, target: "PIPE-A-204",   signal: 12, status: "미부착" },
-      { ch: 22, target: "PIPE-A-204",   signal: 14, status: "미부착" },
-      { ch: 49, target: "VESSEL-C-301", signal: 42, status: "약함" },
-    ],
-  };
 
   return (
     <div className="erut-page-enter" style={{ padding: "20px 24px", height: "100%", display: "grid", gridTemplateColumns: "1fr 340px 320px", gridTemplateRows: "40px auto 540px", alignContent: "start", columnGap: 14, rowGap: 20 }}>
