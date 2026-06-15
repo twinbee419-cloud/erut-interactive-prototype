@@ -4133,10 +4133,10 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
         style={{ gridRow: 1, gridColumn: "1 / -1" }}
       />
 
-      {/* v8.8: Critical 알림 — grid row 2, 양 컬럼 span (좌·우 분리되어 정렬됨) */}
+      {/* 감육 검출 배너 — caution(orange)로 통일 (검출=확인 요망, red는 측정 차단 전용) */}
       {showAlert && criticalDefect && (
-        <div style={{ gridRow: 2, gridColumn: "1 / -1", background: "var(--surface-base)", border: "1px solid var(--system-error)", borderLeft: "4px solid var(--system-error)", padding: "12px 16px", display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ color: "var(--system-error)", flexShrink: 0 }}>
+        <div style={{ gridRow: 2, gridColumn: "1 / -1", background: "var(--surface-base)", border: "1px solid var(--system-caution)", borderLeft: "4px solid var(--system-caution)", padding: "12px 16px", display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ color: "var(--system-caution)", flexShrink: 0 }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M12 2 L22 20 L2 20 Z"/>
               <line x1="12" y1="9" x2="12" y2="14"/>
@@ -4144,7 +4144,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             </svg>
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>감육 검출 · 감육률 {criticalDefect.thinPct} %</div>
+            <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-caution)" }}>감육 검출 · 감육률 {criticalDefect.thinPct} %</div>
             <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 2 }}>채널 {criticalDefect.channel} · 측정 두께 {criticalDefect.thickness} mm · 감육량 {criticalDefect.thinMm} mm · 허용 감육 2.0 mm 초과 · 신호 세기 {criticalDefect.amp} %FSH · 정상 · 세션 데이터에 검출 시점 자동 기록</div>
           </div>
           {/* v22.0: '검증 재측정' 삭제 — 고정 연속 모니터링은 채널별 on-demand 재측정 불가(보드 단위 연속 PRF). 확인만. */}
