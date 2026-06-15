@@ -2531,8 +2531,8 @@ function SettingsShortcuts() {
   const shortcuts = [
     ["측정 시작",       "F6"],
     ["측정 중지",       "F7"],
-    ["프로젝트 열기",   "Ctrl+O"],
-    ["다른 이름으로 저장", "Ctrl+Shift+S"],
+    ["프로젝트 불러오기", "Ctrl+O"],
+    ["프로젝트 저장",   "Ctrl+Shift+S"],
     ["검사 이력",       "Ctrl+D"],
     ["보고서 출력",     "Ctrl+P"],
     ["메뉴 닫기 · 모달 닫기", "Esc"],

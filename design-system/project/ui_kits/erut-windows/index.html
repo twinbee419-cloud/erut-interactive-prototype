@@ -135,12 +135,10 @@ function App() {
   function goto(s) { closeMenus(); setScreen(s); }
 
   const fileMenu = [
-    { label: "프로젝트 열기", shortcut: "Ctrl+O", onClick: () => goto("project") },
-    // v9.22 (NDT 1.5): 수동 저장(Ctrl+S) 제거 — 30초 자동 저장으로 대체. 페이지 내 명시적 "저장" 버튼은 유지
-    { label: "다른 이름으로 저장", shortcut: "Ctrl+Shift+S" },
+    // 프로젝트 저장 — [0]에서 비활성, [1]부터 활성 (구 '다른 이름으로 저장'). 저장은 30초 자동 + 페이지 내 명시 버튼 병행
+    { label: "프로젝트 저장", shortcut: "Ctrl+Shift+S", disabled: screen === "project" },
     { divider: true },
-    { label: "최근 프로젝트" },
-    // v9.25: 검사 이력 메뉴 추가 (Ctrl+D)
+    // v9.25: 검사 이력 메뉴 (Ctrl+D)
     { label: "검사 이력", shortcut: "Ctrl+D", onClick: () => goto("history") },
     // v18.0: [파일] 보고서 출력 → 채널 측정 보고서 모달 (selectedTarget 기준 prefill, 첫 채널 초기 선택)
     { label: "보고서 출력", shortcut: "Ctrl+P", onClick: () => setReportDialog({ deviceId: "MCuF-001", initialChannel: null }) },

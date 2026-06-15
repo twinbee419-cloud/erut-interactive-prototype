@@ -103,7 +103,7 @@ window.ContextMenu = function ContextMenu({ items, width = 300, style }) {
       {items.map((it, i) => it.divider ? (
         <div key={"d"+i} className="erut-cmenu__sep"/>
       ) : (
-        <div key={it.label} className="erut-cmenu__row" onClick={it.onClick}>
+        <div key={it.label} className="erut-cmenu__row" onClick={it.disabled ? undefined : it.onClick} style={it.disabled ? { color: "var(--content-low)", opacity: 0.55, cursor: "default", pointerEvents: "none" } : undefined}>
           <span>{it.label}</span>
           {it.shortcut && <span className="erut-cmenu__kbd">{it.shortcut}</span>}
         </div>
