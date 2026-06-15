@@ -4209,10 +4209,16 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
           {/* 감육 측정 카드 (선택 채널 — ToF→두께·감육률 + 신호 세기 통합) */}
           <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 6 }}>감육 측정 (CH 04)</div>
           <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 10px", font: "400 10px/1.3 var(--font-kr)" }}>
-              {[["측정 두께", "7.8 mm"], ["감육량", "2.2 mm"], ["감육률", "22.0 %"], ["ToF", "2.64 μs"]].map(([k, v]) => (
-                <div key={k}><span style={{ color: "var(--content-low)" }}>{k}</span> <strong style={{ fontWeight: 700, color: k === "감육률" ? "var(--system-caution)" : "var(--content-high)" }}>{v}</strong></div>
-              ))}
+            {/* 감육률 강조 (hero — 핵심 KPI) */}
+            <div style={{ font: "700 10px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 2 }}>감육률</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
+              <span style={{ font: "700 30px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-caution)" }}>22.0<span style={{ fontSize: 15, marginLeft: 2 }}>%</span></span>
+              <span style={{ font: "400 11px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>감육량 2.2 mm</span>
+            </div>
+            {/* 보조 측정값 */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 10px", font: "400 10px/1.3 var(--font-kr)", borderTop: "1px solid var(--border-low)", paddingTop: 6 }}>
+              <div><span style={{ color: "var(--content-low)" }}>측정 두께</span> <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>7.8 mm <span style={{ color: "var(--content-low)", fontWeight: 400 }}>/ 공칭 10</span></strong></div>
+              <div><span style={{ color: "var(--content-low)" }}>ToF</span> <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>2.64 μs</strong></div>
             </div>
             {/* 신호 세기 (Amp) — 감육 측정 카드에 통합 (세기 1회) */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 10px", font: "400 10px/1.3 var(--font-kr)", borderTop: "1px solid var(--border-low)", marginTop: 6, paddingTop: 6 }}>
