@@ -141,7 +141,7 @@ window.Toolbar = function Toolbar({ items, activeKey, onPick, hint }) {
 window.StatusBar = function StatusBar({
   // v17.1: device 통합 props — mcConnected/mcTotal/measuringCount 집계
   mcConnected = 0, mcTotal = 0, measuringCount = 0,
-  mqttConnected = false, prf = "---", temp = "---", version = "v0.0.0.0", calibrationAlert = null,
+  mqttConnected = false, version = "v0.0.0.0", calibrationAlert = null,
   // (legacy) deviceConnected — 기존 호출처 호환. true = (1, 1), false = (0, 1)
   deviceConnected,
 }) {
@@ -153,11 +153,13 @@ window.StatusBar = function StatusBar({
   }
   return (
     <div className="erut-statusbar">
+      {/* v22.10: 그룹 라벨 형식 — "MC보드 : (연결됨) (측정 중) / MQTT : (연결됨)". 측정 중이 MC보드 단위임을 명확화. PRF·Temp 제거 */}
+      <span className="erut-statusbar__text">MC보드 :</span>
       <McConnectionPill connected={mcConnected} total={mcTotal}/>
       <MeasurementPill measuring={measuringCount} totalConnected={mcConnected}/>
-      <StatusPill connected={mqttConnected} labelOn="MQTT 연결됨" labelOff="MQTT 미연결"/>
-      <span className="erut-statusbar__text">PRF : {prf}</span>
-      <span className="erut-statusbar__text">Temp : {temp}</span>
+      <span style={{ width: 1, height: 14, background: "var(--border-medium)", alignSelf: "center" }}/>
+      <span className="erut-statusbar__text">MQTT :</span>
+      <StatusPill connected={mqttConnected} labelOn="연결됨" labelOff="미연결"/>
       <span style={{flex:1}}/>
       {/* v21.0: 교정 임박 배지 제거 → 메뉴바 통합 알림 센터(NotificationCenter)로 흡수. calibrationAlert prop은 back-compat용으로 무시 */}
       <span className="erut-statusbar__text">{version}</span>
@@ -186,7 +188,7 @@ function McConnectionPill({ connected, total }) {
   if (total === 0) return null;
   const allConn = connected === total;
   const noneConn = connected === 0;
-  const label = noneConn ? "MC보드 미연결" : allConn ? "MC보드 연결됨" : `MC보드 연결됨 ${connected}/${total}`;
+  const label = noneConn ? "미연결" : allConn ? "연결됨" : `연결됨 ${connected}/${total}`;
   return (
     <span className="erut-pill">
       <span className={"erut-led " + (noneConn ? "is-red" : "is-green")}>

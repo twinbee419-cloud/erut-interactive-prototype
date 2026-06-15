@@ -1742,7 +1742,7 @@ window.DiagnosticsModal = function DiagnosticsModal({ onClose }) {
     { id: "hw",    label: "하드웨어 진단" },
     { id: "comm",  label: "통신 로그" },
     { id: "calib", label: "교정 이력" },
-    { id: "err",   label: "측정 에러", badge: 2 },
+    { id: "err",   label: "측정 로그" },
   ];
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
@@ -1854,10 +1854,11 @@ function DiagCalibHistory() {
   ];
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
         <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>교정 이력</h3>
-        <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>교정 주기 초과 시 측정 신뢰성 의심 — 재교정 권장 (주기는 [8] 설정 → 교정 정책에서 지정)</span>
+        <button className="erut-btn erut-btn--default erut-btn--sm">CSV 내보내기 ↓</button>
       </div>
+      <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 12 }}>교정 주기 초과 시 측정 신뢰성 의심 — 재교정 권장 (주기는 [8] 설정 → 교정 정책에서 지정)</div>
       <table style={{ width: "100%", borderCollapse: "collapse", font: "400 12px/1.4 var(--font-kr)" }}>
         <thead>
           <tr style={{ borderBottom: "1px solid var(--border-medium)", textAlign: "left", color: "var(--content-low)", fontWeight: 700 }}>
@@ -2091,8 +2092,8 @@ function DiagCommLog() {
   );
 }
 
-// ─────────────────────── 탭 #2 (이전: 측정 에러) ───────────────────────
-// v17.0: 비고 컬럼 제거 — page state 아닌 자유 텍스트는 폐기. 에러 코드만 표시.
+// ─────────────────────── 탭: 측정 로그 (시각·채널·Amp·ToF·두께 raw) ───────────────────────
+// 측정값 raw 로그. 측정 에러(E1xx)는 알림 센터로 전달 — 본 탭은 에러 코드 열 없음.
 function DiagMeasErrorLog() {
   const [period, setPeriod] = $s("7d");
   const [kind, setKind] = $s("all");
@@ -2111,7 +2112,7 @@ function DiagMeasErrorLog() {
       const range = kind === "1-24" ? [1, 24] : kind === "25-48" ? [25, 48] : kind === "49-64" ? [49, 64] : null;
       if (range && (r.channel < range[0] || r.channel > range[1])) return false;
     }
-    if (search && !(r.code + " CH " + r.channel + " " + r.codeMsg).toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !(("CH " + r.channel)).toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
@@ -2127,13 +2128,12 @@ function DiagMeasErrorLog() {
     { key: "amp", label: "Amp (% FSH)", width: 110, align: "right", render: (r) => numCell(r.amp, r.ampTone) },
     { key: "tof", label: "ToF (μs)", width: 100, align: "right", render: (r) => numCell(r.tof, r.tof == null ? "error" : null) },
     { key: "thickness", label: "두께 (mm)", width: 100, align: "right", render: (r) => numCell(r.thickness, r.thickness == null ? "error" : null) },
-    { key: "code", label: "에러 코드", render: (r) => <span style={{ color: "var(--content-emphasis)", fontWeight: 700 }}>{r.code} — {r.codeMsg}</span> },
   ];
 
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
-        <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>측정 에러 <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>({filtered.length}건)</span></h3>
+        <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>측정 로그 <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>({filtered.length}건)</span></h3>
         <button className="erut-btn erut-btn--default erut-btn--sm">CSV 내보내기 ↓</button>
       </div>
       <DiagLogFilterBar
@@ -3812,8 +3812,9 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   const prfCalc = window.calcPRF(parseFloat(form.th) || 10, form.material);
   const prfValue = autoPRF ? prfCalc.prf : prfManual;
 
-  // 필수 항목 검증 (대상명·형태·두께·소재·유체)
-  const requiredOk = !!(form.name && form.shape && form.th && form.material && form.fluid);
+  // 필수 항목 검증 (대상명·MC보드·형태·두께·소재·유체)
+  const mcBoard = form.mcBoard || "MCuF-001";   // 검사 대상이 속한 MC보드 (기본값 첫 보드)
+  const requiredOk = !!(form.name && mcBoard && form.shape && form.th && form.material && form.fluid);
 
   // 좌측 리스트 검색 필터
   const filteredTargets = search
@@ -3951,6 +3952,12 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
           <div>
             {formLabel("대상명", true)}
             <input className="erut-field" value={form.name} onChange={(e) => setField("name", e.target.value)} style={{ width: "100%" }}/>
+          </div>
+          <div>
+            {formLabel("MC보드", true)}
+            <select className="erut-field" value={mcBoard} onChange={(e) => setField("mcBoard", e.target.value)} style={{ width: "100%" }}>
+              {window.MOCK.devices.map(d => <option key={d.id}>{d.id}</option>)}
+            </select>
           </div>
           <div>
             {formLabel("코드")}
