@@ -107,6 +107,7 @@ function App() {
   // v18.0: 보고서 출력 모달 — [2] DeviceDetail 채널 패널 "보고서 출력" / [7] InspectionHistory "보고서 출력" / [파일] 메뉴
   // v18.1: targetId → deviceId (MC보드 단위 진입)
   const [reportDialog, setReportDialog] = useState(null);   // null | { deviceId, initialChannel }
+  const [showDiag, setShowDiag] = useState(false);          // 진단/로그 모달 — toolbar 전역 트리거
 
   // 토스트 (gear 아이콘 등 미구현 항목 안내용 — 메인 기획 보류)
   const [toast, setToast] = useState(null);
@@ -133,6 +134,19 @@ function App() {
 
   function closeMenus() { setMenuOpen(null); setActiveMenu(null); }
   function goto(s) { closeMenus(); setScreen(s); }
+  // toolbar 내비게이션 — 이전(back) + breadcrumb(우측 끝)
+  const BACK_TO = { main: "project", device: "main", realtime: "device", commission: "device", settings: "main", manage: "main", history: "main" };
+  const goBack = () => { const t = BACK_TO[screen]; if (t) goto(t); };
+  const BREADCRUMB = {
+    project:    [{ label: "프로젝트 선택", current: true }],
+    main:       [{ label: "프로젝트 (" + (pickedProject?.name || "—") + ")" }, { label: "메인", current: true }],
+    device:     [{ label: "메인" }, { label: "장비 상세 (MCuF-001)", current: true }],
+    realtime:   [{ label: "메인" }, { label: "장비 상세" }, { label: "실시간 스캔 · 세션 #047", current: true }],
+    commission: [{ label: "메인" }, { label: "장비 상세" }, { label: "채널 설정", current: true }],
+    settings:   [{ label: "메인" }, { label: "장비 연결 설정", current: true }],
+    manage:     [{ label: "메인" }, { label: "검사 대상 관리", current: true }],
+    history:    [{ label: "메인" }, { label: "검사 이력", current: true }],
+  };
 
   const fileMenu = [
     // 프로젝트 저장 — [0]에서 비활성, [1]부터 활성 (구 '다른 이름으로 저장'). 저장은 30초 자동 + 페이지 내 명시 버튼 병행
@@ -157,9 +171,12 @@ function App() {
     { label: "전체 측정 중지", shortcut: "F7" },
   ];
 
-  // 툴바 = home(메인 페이지)만. 측정 제어는 [2] 장비 상세 배너 단위.
+  // 툴바: 홈 / 보고서 / 진단 (보고서·진단은 장비 컨텍스트에서만 활성). 이전·알림·breadcrumb은 Toolbar 별도 슬롯.
+  const hasDevice = ["device", "realtime", "commission"].includes(screen);
   const tools = [
-    { key: "home",   label: "메인 페이지",      icon: <window.EIcon.Home/> },
+    { key: "home",   label: "메인 페이지", icon: <window.EIcon.Home/> },
+    { key: "report", label: "보고서 출력", icon: <window.EIcon.Report/>, disabled: !hasDevice },
+    { key: "diag",   label: "진단 / 로그", icon: <window.EIcon.Diag/>,   disabled: !hasDevice },
   ];
 
   // v8.5: [1-1] 대시보드 폐기. v14.0: [3] Gate 설정 폐기 → [4-3-1] commission 통합
@@ -259,7 +276,9 @@ function App() {
 
   const handleToolPick = (k) => {
     setToolKey(k);
-    if (k === "home")  goto("main");   // 툴바 = home만 (측정 제어는 [2] 배너)
+    if (k === "home")   goto("main");
+    if (k === "report") setReportDialog({ deviceId: "MCuF-001", initialChannel: null });
+    if (k === "diag")   setShowDiag(true);
   };
 
   const handleMenuItemClick = (item) => {
@@ -287,7 +306,9 @@ function App() {
           </div>
         )}
       </div>
-      <window.Toolbar items={tools} activeKey={toolKey} onPick={handleToolPick} hint={toolbarHint}
+      <window.Toolbar items={tools} activeKey={toolKey} onPick={handleToolPick}
+        onBack={goBack} backDisabled={screen === "project"}
+        breadcrumb={<window.Breadcrumb items={BREADCRUMB[screen] || []}/>}
         notificationCenter={
           <window.NotificationCenter
             notifications={deviceConnected ? (window.MOCK.notifications || []) : []}
@@ -424,6 +445,8 @@ function App() {
             onExport={(payload) => { console.log("PDF export:", payload); setReportDialog(null); setToast("PDF 출력 완료 (" + payload.channels.length + " 장)"); }}
           />
         )}
+        {/* 진단/로그 모달 — toolbar 전역 트리거 (구 [2] DeviceDetail 내부 → App 승격) */}
+        {showDiag && <window.DiagnosticsModal onClose={() => setShowDiag(false)}/>}
 
         {/* v12.0: 측정 시작 차단 다이얼로그 (F6 / 툴바 play 공통) — default 일괄 재교정 */}
         {showCalibStartDialog && (

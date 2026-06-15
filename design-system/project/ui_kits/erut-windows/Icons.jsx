@@ -128,4 +128,19 @@ window.EIcon = {
       <path d="M3 11 L12 3 L21 11 V20 H14 V14 H10 V20 H3 Z"/>
     </svg>
   ),
+  // 보고서 출력 (file-text)
+  Report: (p) => (
+    <svg viewBox="0 0 24 24" width={p?.size ?? 20} height={p?.size ?? 20} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" {...p}>
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+      <polyline points="14 3 14 9 20 9"/>
+      <line x1="8" y1="13" x2="16" y2="13"/>
+      <line x1="8" y1="17" x2="16" y2="17"/>
+    </svg>
+  ),
+  // 진단 / 로그 (activity / pulse)
+  Diag: (p) => (
+    <svg viewBox="0 0 24 24" width={p?.size ?? 20} height={p?.size ?? 20} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" {...p}>
+      <polyline points="3 12 7 12 10 19 14 5 17 12 21 12"/>
+    </svg>
+  ),
 };

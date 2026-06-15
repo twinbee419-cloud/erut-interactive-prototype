@@ -5,8 +5,7 @@ const I = window.EIcon;
 const { useState: $s } = React;
 
 // =================== v8.5: Breadcrumb 통일 컴포넌트 ===================
-// 사용법: <window.Breadcrumb onBack={fn} items={[{label}, {label}, {label, current:true}]} />
-window.Breadcrumb = function Breadcrumb({ items, onBack, style }) {
+// 사용법:window.Breadcrumb = function Breadcrumb({ items, onBack, style }) {
   return (
     <div className="erut-crumb" style={style}>
       {onBack && <button className="erut-crumb__back" onClick={onBack}>← 이전으로</button>}
@@ -635,15 +634,6 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
 
   return (
     <div className="erut-page-enter" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      {/* v8.5 Breadcrumb */}
-      <window.Breadcrumb
-        onBack={onChangeProject}
-        items={[
-          { label: "프로젝트 (" + proj.name + ")" },
-          { label: "메인", current: true },
-        ]}
-        style={{ margin: "20px 40px 16px" }}
-      />
 
       {/* ▼ 프로젝트 헤더 + Tab (통합 패널) ▼ */}
       <div style={{ background: "var(--surface-subtle-1)", borderBottom: "1px solid var(--border-medium)", padding: "14px 40px 0" }}>
@@ -720,7 +710,6 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
   // v14.0: 단일 채널 교정/Gate 진입 → commission(edit 모드)으로 라우팅. 일괄 재교정만 모달 유지.
   const [showRecalibration, setShowRecalibration] = $s(false);  // 일괄 재교정 마법사 모달 trigger
   const [recalibChannels, setRecalibChannels]     = $s([]);
-  const [showDiagnostics, setShowDiagnostics] = $s(false);
   // v9.29 Wave D: 검사 대상 multi-select (array of names). 재클릭 = 토글 해제
   const [selectedTargetSet, setSelectedTargetSet] = $s([]);
 
@@ -795,16 +784,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
 
   return (
     // v9.30: MC보드 정보 full-width 배너(row 2) + 검사 대상/64ch/우측 패널 동일 행(row 3)
-    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "260px 1fr 400px", gridTemplateRows: "40px auto 1fr", alignContent: "start", columnGap: 16, rowGap: 16, padding: "20px 24px 20px 0", height: "100%" }}>
-      {/* v8.5 Breadcrumb */}
-      <window.Breadcrumb
-        onBack={onBack}
-        items={[
-          { label: "메인" },
-          { label: "장비 상세 (MCuF-001)", current: true },
-        ]}
-        style={{ gridRow: 1, gridColumn: "1 / -1", marginLeft: 24 }}
-      />
+    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "260px 1fr 400px", gridTemplateRows: "0px auto 1fr", alignContent: "start", columnGap: 16, rowGap: 16, padding: "20px 24px 20px 0", height: "100%" }}>
 
       {/* ───── v9.30: 좌측 검사 대상 세로 리스트 — row 3 col 1 (MC보드 배너 아래) ───── */}
       <div style={{ gridRow: 3, gridColumn: 1, background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", display: "flex", flexDirection: "column", minHeight: 0 }}>
@@ -895,18 +875,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
                 <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="3" width="10" height="10"/></svg>측정 중지
               </button>
             )}
-            <span style={{ width: 1, height: 20, background: "var(--border-medium)", margin: "0 2px" }}/>
-            {/* v18.1: 보고서 출력 — MC보드 단위 데이터 액션 (진단/로그 옆) */}
-            <button
-              className="erut-btn erut-btn--default erut-btn--sm"
-              style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
-              onClick={() => onOpenReport && onOpenReport(selected)}
-              title="채널 측정 데이터를 PDF로 출력 — 다중 채널 선택 가능"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="14 3 14 9 20 9"/></svg>
-              보고서 출력
-            </button>
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowDiagnostics(true)}>진단 / 로그</button>
+            {/* 보고서 출력·진단/로그 → toolbar로 이동 (전역 컨텍스트 액션) */}
           </div>
         </div>
         {/* v8.8: 메타 정보 4-col stripe (Config/샘플링/펌웨어는 진단/로그 모달로 이동) */}
@@ -1078,8 +1047,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
         />
       )}
 
-      {/* v8.8: 진단 / 로그 모달 */}
-      {showDiagnostics && <window.DiagnosticsModal onClose={() => setShowDiagnostics(false)}/>}
+      {/* 진단/로그 모달은 App(toolbar)에서 전역 렌더 */}
     </div>
   );
 };
@@ -1353,22 +1321,12 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
     <div className="erut-page-enter" style={{
       display: "grid",
       gridTemplateColumns: "320px 1fr",
-      gridTemplateRows: "40px 1fr 64px",
+      gridTemplateRows: "0px 1fr 64px",
       height: "100%",
       padding: "20px 24px 0",
       columnGap: 20,
       rowGap: 14,
     }}>
-      {/* Breadcrumb — v14.0 모드별 라벨 분기 */}
-      <window.Breadcrumb
-        onBack={onBack}
-        items={[
-          { label: "메인" },
-          { label: "장비 상세 (" + (deviceName || "MCuF-001") + ")" },
-          { label: isEdit ? `탐촉자 채널 편집 — ${(pre.channel ? "CH " + String(pre.channel).padStart(2, "0") : "")}`.trim() : "탐촉자 채널 추가 + 교정", current: true },
-        ]}
-        style={{ gridRow: 1, gridColumn: "1 / -1" }}
-      />
 
       {/* ───── 좌측 sticky 패널 (320px) — v14.0: 모드별 분기 ───── */}
       <div style={{ gridRow: 2, gridColumn: 1, background: "var(--surface-subtle-1)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column", overflowY: "auto", minHeight: 0 }}>
@@ -3206,16 +3164,6 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
 
       {/* ───── 우측 콘텐츠 ───── */}
       <div style={{ padding: "20px 30px", overflowY: "auto" }}>
-        {/* v8.5 Breadcrumb */}
-        <window.Breadcrumb
-          onBack={onBack}
-          items={[
-            { label: "메인" },
-            { label: "설정" },
-            { label: "장비 연결" },
-            { label: menu === "mc" ? "MC보드 연결" : menu === "mqtt" ? "MQTT 설정" : "장비 연결 설정", current: true },
-          ]}
-        />
         {menu === "mc" && !subView && <MCBoardList onAdd={() => setSubView("mc-add")} onEdit={(id) => { setEditingBoardId(id); setSubView("mc-edit"); }}/>}
         {menu === "mc" && subView && <MCBoardForm mode={subView} editingId={editingBoardId} onCancel={() => setSubView(null)} onSave={() => setSubView(null)}/>}
         {menu === "mqtt" && <MQTTSettings/>}
@@ -3794,14 +3742,6 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
 
       {/* ───── 우측: 상세 입력 폼 + 프리셋 ───── */}
       <div style={{ padding: "20px 30px", overflowY: "auto" }}>
-        {/* v8.5 Breadcrumb */}
-        <window.Breadcrumb
-          onBack={onBack}
-          items={[
-            { label: "메인" },
-            { label: "검사 대상 관리", current: true },
-          ]}
-        />
         {/* 헤더 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
@@ -3814,7 +3754,6 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             {selectedId && (
               <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ color: "var(--system-error)" }}>검사 대상 삭제</button>
             )}
-            {/* v9.27 Wave B: '← 메인' 삭제 (Breadcrumb '이전으로'와 중복) → '프리셋' 버튼 */}
             <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowPresetModal(true)}>프리셋</button>
             <button
               className={"erut-btn erut-btn--sm " + (requiredOk ? "erut-btn--emphasis" : "erut-btn--disabled")}
@@ -4121,17 +4060,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
   }
 
   return (
-    <div className="erut-page-enter" style={{ padding: "20px 24px", height: "100%", display: "grid", gridTemplateColumns: "1fr 340px 320px", gridTemplateRows: "40px auto 540px", alignContent: "start", columnGap: 14, rowGap: 20 }}>
-      {/* v8.5 Breadcrumb */}
-      <window.Breadcrumb
-        onBack={onBack}
-        items={[
-          { label: "메인" },
-          { label: "장비 상세 (MCuF-001)" },
-          { label: "실시간 스캔 · 세션 #047", current: true },
-        ]}
-        style={{ gridRow: 1, gridColumn: "1 / -1" }}
-      />
+    <div className="erut-page-enter" style={{ padding: "20px 24px", height: "100%", display: "grid", gridTemplateColumns: "1fr 340px 320px", gridTemplateRows: "0px auto 540px", alignContent: "start", columnGap: 14, rowGap: 20 }}>
 
       {/* 감육 검출 배너 — caution(orange)로 통일 (검출=확인 요망, red는 측정 차단 전용) */}
       {showAlert && criticalDefect && (
@@ -4334,11 +4263,7 @@ window.InspectionHistory = function InspectionHistory({ onBack, onSelectReport }
   const cellRow  = { padding: "14px 10px", font: "400 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" };
 
   return (
-    <div className="erut-page-enter" style={{ padding: "20px 40px", display: "grid", gridTemplateRows: "40px auto 1fr auto", rowGap: 16, height: "100%" }}>
-      <window.Breadcrumb
-        onBack={onBack}
-        items={[{ label: "메인" }, { label: "검사 이력 관리", current: true }]}
-      />
+    <div className="erut-page-enter" style={{ padding: "20px 40px", display: "grid", gridTemplateRows: "auto 1fr auto", rowGap: 16, height: "100%" }}>
 
       {/* 필터 바 */}
       <div style={{ display: "flex", gap: 10, alignItems: "center", padding: 12, background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)" }}>

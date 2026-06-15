@@ -110,23 +110,23 @@ window.NotificationCenter = function NotificationCenter({ notifications = [], on
 };
 
 // ----------- TOOLBAR ------------
-window.Toolbar = function Toolbar({ items, activeKey, onPick, hint, notificationCenter }) {
+// 순서: 이전 / 홈 / 보고서 / 진단 / 알림 ········· 브레드크럼(우측 끝). 보고서·진단은 장비 컨텍스트에서만 활성.
+window.Toolbar = function Toolbar({ items, activeKey, onPick, notificationCenter, onBack, backDisabled, breadcrumb }) {
   return (
     <div className="erut-bar erut-toolbar">
-      {items.map((item, i) => item.divider ? (
-        <span key={"d"+i} className="erut-tb-sep"/>
-      ) : (
+      <button className="erut-tb" title="이전으로" onClick={backDisabled ? undefined : onBack} style={backDisabled ? { opacity: 0.4, cursor: "default" } : undefined}><I.ChevronLeft/></button>
+      {items.map((item) => (
         <button
           key={item.key}
           className={"erut-tb" + (activeKey === item.key ? " is-active" : "")}
           title={item.label}
-          onClick={() => onPick && onPick(item.key)}
+          onClick={item.disabled ? undefined : () => onPick && onPick(item.key)}
+          style={item.disabled ? { opacity: 0.4, cursor: "default" } : undefined}
         >{item.icon}</button>
       ))}
-      {/* 통합 알림 센터(종) — home 우측 */}
-      {notificationCenter && (<><span className="erut-tb-sep"/>{notificationCenter}</>)}
+      {notificationCenter}
       <span style={{flex:1}}/>
-      {hint || <span className="erut-tb-hint">F6 측정 시작 · F7 중지</span>}
+      {breadcrumb}
     </div>
   );
 };
