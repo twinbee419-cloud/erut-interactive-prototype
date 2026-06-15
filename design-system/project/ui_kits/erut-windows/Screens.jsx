@@ -117,8 +117,8 @@ window.MOCK = {
       trend: [9.90, 9.90, 9.89, 9.89, 9.88, 9.88, 9.88] },
     { id: "ch03", state: "ok",   thickness: 9.85, amp: 28, tof: 3.33, age: "1 분 전",
       trend: [9.88, 9.87, 9.87, 9.86, 9.86, 9.85, 9.85] },
-    { id: "ch04", state: "ok",   thickness: 9.82, amp: 26, tof: 3.32, age: "1 분 전",
-      trend: [9.85, 9.84, 9.84, 9.83, 9.83, 9.82, 9.82] },
+    { id: "ch04", state: "ok",   thickness: 7.80, amp: 92, tof: 2.64, age: "1 분 전",
+      trend: [8.4, 8.2, 8.1, 8.0, 7.9, 7.85, 7.80] },
     { id: "ch05", state: "ok",   thickness: 9.80, amp: 30, tof: 3.31, age: "1 분 전",
       trend: [9.83, 9.82, 9.82, 9.81, 9.81, 9.80, 9.80] },
     { id: "ch06", state: "ok",   thickness: 9.81, amp: 27, tof: 3.31, age: "1 분 전",
@@ -204,10 +204,11 @@ window.MOCK = {
     { id: "SES-2026-031", date: "2026-04-28 15:42", inspector: "박검사 · Lv.II",   defects: 1, judge: "검토",   judgeT: "warn" },
   ],
   // [11] 실시간 스캔 — 채널 기반 결함 (main slide 16과 매칭)
+  // 감육 검출 채널 — 측정두께 ≤ 공칭−허용감육. amp = 측정 신뢰도(ampState: ok 51-100 / warn 6-50 / bad 1-5). 등급 판정은 웹.
   realtimeDefects: [
-    { id: 1, type: "Critical", channel: 4,  amp: 94, tof: 5.8, thickness: 17.4 },
-    { id: 2, type: "Major",    channel: 7,  amp: 76, tof: 6.2, thickness: 18.6 },
-    { id: 3, type: "Major",    channel: 38, amp: 63, tof: 6.5, thickness: 19.5 },
+    { id: 1, channel: 4,  amp: 92, tof: 2.64, thickness: 7.8, nominal: 10, thinMm: 2.2, thinPct: 22.0, ampState: "ok"   },
+    { id: 2, channel: 7,  amp: 78, tof: 2.70, thickness: 8.0, nominal: 10, thinMm: 2.0, thinPct: 20.0, ampState: "ok"   },
+    { id: 3, channel: 38, amp: 41, tof: 2.85, thickness: 8.4, nominal: 10, thinMm: 1.6, thinPct: 16.0, ampState: "warn" },
   ],
   // [4] 장비 연결 설정 — MC보드 리스트 (main slide 9 매칭)
   mcBoards: [
@@ -235,7 +236,7 @@ window.MOCK = {
   // severity: error(긴급·측정 차단급) / caution(경고) / info(정보). type: defect/calib/measure/comm/attach
   // v22.6: defect = 결함 '검출' 사실 알림 (검사자 인지). 등급·유형 판정은 웹 책임.
   notifications: [
-    { id: "n0", severity: "caution", type: "defect",  title: "CH 04 결함 신호 검출",  detail: "Gate 임계값 초과 (Amp 94%) · 검출 시점 자동 기록", actionLabel: "채널 보기", time: "방금" },
+    { id: "n0", severity: "caution", type: "defect",  title: "CH 04 감육 검출",  detail: "측정 두께 7.8mm · 감육률 22.0% (허용 감육 2.0mm 초과) · 검출 시점 자동 기록", actionLabel: "채널 보기", time: "방금" },
     { id: "n1", severity: "error",   type: "calib",   title: "CH 04 교정 만료",       detail: "교정 주기 초과 · F6 측정 시작 차단됨", actionLabel: "재교정",   time: "1분 전" },
     { id: "n2", severity: "error",   type: "measure", title: "CH 12 채널 미연결",     detail: "측정 중 신호 손실 (E120)",            actionLabel: "채널 보기", time: "2분 전" },
     { id: "n3", severity: "caution", type: "calib",   title: "CH 09 교정 임박 (D-1)", detail: "1일 후 교정 주기 만료",               actionLabel: "재교정",   time: "10분 전" },
@@ -376,7 +377,7 @@ window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
                 <div style={{ display: "flex", gap: 12, paddingTop: 10, borderTop: "1px solid var(--border-low)", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
                   <span>검사 대상 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.targets}</strong></span>
                   <span>세션 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.sessions}</strong></span>
-                  <span>결함 검출 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.defects}</strong></span>
+                  <span>감육 검출 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.defects}</strong></span>
                 </div>
               </div>
             );
@@ -753,7 +754,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
   // 32 cells (4 rows × 8 cols). First 8 map to real sensors.
   // v8.8: 64채널 다중 검사체 분산 부착 — ch01-24 PIPE-A-204 · ch25-48 TANK-B-101 · ch49-64 VESSEL-C-301
   const getTargetName = (i) => i <= 24 ? "PIPE-A-204" : i <= 48 ? "TANK-B-101" : "VESSEL-C-301";
-  // v9.17/v22.6: 결함 검출 채널 — PIPE 4건 + VESSEL 2건 (검출 사실만, 등급 없음 — 판정은 웹)
+  // v9.17/v22.6: 감육 검출 채널 — PIPE 4건 + VESSEL 2건 (검출 사실만, 등급 없음 — 판정은 웹)
   const DEFECT_CHANNELS = [4, 7, 12, 18, 51, 56];
   // v9.30: 교정 상태 — 미교정(신규 추가 후 미진행) + 만료(주기 초과) 채널은 major 컬러 breathe
   // v12.0: window.MOCK으로 통합 — F6 차단 다이얼로그·일괄 재교정과 동일 소스
@@ -1011,33 +1012,33 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
             </div>
           </div>
 
-          {/* 측정 통계 (2×2 grid) */}
-          <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 12px", padding: 12, background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)" }}>
-            <div>
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>Gate A 피크 진폭</div>
-              <div style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: isCurWarn ? "var(--system-error)" : "var(--content-high)" }}>
-                {cur.amp}% <span style={{ fontSize: 10, color: "var(--content-low)", fontWeight: 400 }}>FSH</span>
-              </div>
-            </div>
-            <div>
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>Gate A 비행시간 (ToF)</div>
-              <div style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>
-                {cur.tof} <span style={{ fontSize: 10, color: "var(--content-low)", fontWeight: 400 }}>μs</span>
-              </div>
-            </div>
-            <div>
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>두께 환산</div>
-              <div style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: isCurWarn ? "var(--system-caution)" : "var(--content-high)" }}>
-                {cur.thickness.toFixed(2)} <span style={{ fontSize: 10, color: "var(--content-low)", fontWeight: 400 }}>mm</span>
-              </div>
-            </div>
-            <div>
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>DAC 대비</div>
-              <div style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: isCurWarn ? "var(--system-caution)" : "var(--content-medium)" }}>
-                {isCurWarn ? "+2 dB" : "0 dB"}
-              </div>
-            </div>
-          </div>
+          {/* 측정 통계 (감육 모델: ToF→두께·감육률 / 상태=Amp 신뢰도) */}
+          {(() => {
+            const nominal = 10;                              // 공칭 두께 (PIPE-A)
+            const thinMm = Math.max(0, nominal - cur.thickness);
+            const thinPct = (thinMm / nominal * 100).toFixed(1);
+            const isBad = cur.state === "err";               // Amp 나쁨(1-5%) → 측정 불가
+            const isWeak = cur.state === "warn";             // Amp 약함(6-50%) → 신뢰도 낮음
+            const detected = !isBad && thinMm >= 2.0;        // 허용 감육 2.0mm 초과
+            const lbl = { font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 };
+            const val = { font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" };
+            const unit = { fontSize: 10, color: "var(--content-low)", fontWeight: 400 };
+            const relColor = isBad ? "var(--system-error)" : isWeak ? "var(--system-caution)" : "var(--system-success)";
+            const relText = isBad ? "측정 불가 (미부착)" : isWeak ? "점검 요망" : "정상";
+            return (
+              <>
+                <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 12px", padding: 12, background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)" }}>
+                  <div><div style={lbl}>측정 두께</div><div style={val}>{isBad ? "—" : cur.thickness.toFixed(2)} <span style={unit}>mm / 공칭 10</span></div></div>
+                  <div><div style={lbl}>감육률 <span style={{ color: "var(--content-low)" }}>(감육량 {isBad ? "—" : thinMm.toFixed(1) + "mm"})</span></div><div style={{ ...val, color: "var(--system-caution)" }}>{isBad ? "—" : thinPct + " %" + (isWeak ? " ⚠" : "")}</div></div>
+                  <div><div style={lbl}>ToF</div><div style={val}>{cur.tof} <span style={unit}>μs</span></div></div>
+                  <div><div style={lbl}>측정 신뢰도 <span style={{ color: "var(--content-low)" }}>(Amp)</span></div><div style={{ ...val, color: relColor, display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, background: relColor, borderRadius: "50%" }}/>{relText}</div></div>
+                </div>
+                {detected && (
+                  <div style={{ marginTop: 8, font: "700 12px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-caution)" }}>⚠ 감육 검출 · 허용 감육 2.0 mm 초과</div>
+                )}
+              </>
+            );
+          })()}
 
           {/* v8.8: 채널 메타 한 줄 (측정 통계 컨테이너 하단으로 이동) */}
           <div style={{ font: "400 12px/1.7 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", padding: "12px 0 0", marginTop: 12, borderTop: "1px solid var(--border-low)" }}>
@@ -2081,7 +2082,7 @@ function DiagMeasErrorLog() {
     { id: 1, ts: "06-09 10:42:18.412", channel: 22, amp: 98.4, tof: 3.32, thickness: 9.84, code: "E101", codeMsg: "ADC saturation", ampTone: "error" },
     { id: 2, ts: "06-09 10:15:02.108", channel: 49, amp: 8.2,  tof: null, thickness: null, code: "E115", codeMsg: "신호 검출 실패 (부착력 저하)", ampTone: "caution" },
     { id: 3, ts: "06-09 09:58:31.022", channel: 62, amp: 0.0,  tof: null, thickness: null, code: "E120", codeMsg: "채널 미연결", ampTone: "error" },
-    { id: 4, ts: "06-08 17:21:09.654", channel: 4,  amp: 94.0, tof: 5.80, thickness: 17.4, code: "E108", codeMsg: "Amp Threshold 초과 (Critical)", ampTone: "caution" },
+    { id: 4, ts: "06-08 17:21:09.654", channel: 4,  amp: 94.0, tof: 2.64, thickness: 7.8, code: "E108", codeMsg: "Amp Threshold 초과 (Critical)", ampTone: "caution" },
   ];
 
   const filtered = allRows.filter(r => {
@@ -2190,7 +2191,7 @@ window.SettingsModal = function SettingsModal({ onClose }) {
 };
 
 // =================== v18.0 보고서 출력 다이얼로그 (채널 측정 보고서 — 현장 데이터 dump) ===================
-// 합의: 결함 판정 미포함. 채널별 A4 1장. 탐촉자 스펙 + 교정 이력 + A-scan + 적용 표준.
+// 합의: 감육 등급 판정 미포함. 채널별 A4 1장. 탐촉자 스펙 + 교정 이력 + A-scan + 적용 표준.
 // 진입: [2] DeviceDetail MC보드 정보 옆 "보고서 출력" 버튼 (v18.1) / 메뉴바 [파일] → "보고서 출력..." / Ctrl+P
 // v18.1: 채널 → 검사 대상 매핑 helper, 64채널 전체 표시, 검사 대상명 서브텍스트, 좌/우 chevron + 키보드 ←/→
 window.getChannelTarget = function getChannelTarget(chId) {
@@ -2515,7 +2516,7 @@ function SettingsGeneral() {
             </label>
           </div>
         </SettingsRow>
-        <SettingsRow label="측정 알림음" hint="결함 검출 · 부착력 저하 시 효과음 재생.">
+        <SettingsRow label="측정 알림음" hint="감육 검출 · 부착력 저하 시 효과음 재생.">
           <label className="erut-toggle" onClick={() => setSound(s => !s)}>
             <span className={"erut-toggle__track" + (sound ? " is-on" : "")}><span className="erut-toggle__thumb"></span></span>
             <span className="erut-toggle__label erut-toggle__label--sm">{sound ? "활성" : "비활성"}</span>
@@ -4143,8 +4144,8 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             </svg>
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>결함 신호 검출 · 진폭 {criticalDefect.amp} %</div>
-            <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 2 }}>채널 {criticalDefect.channel} · ToF {criticalDefect.tof} μs · 두께 {criticalDefect.thickness} mm · 임계값 80 % 초과 · 세션 데이터에 검출 시점 자동 기록</div>
+            <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>감육 검출 · 감육률 {criticalDefect.thinPct} %</div>
+            <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 2 }}>채널 {criticalDefect.channel} · 측정 두께 {criticalDefect.thickness} mm · 감육량 {criticalDefect.thinMm} mm · 허용 감육 2.0 mm 초과 · Amp {criticalDefect.amp} %FSH (측정 신뢰) · 세션 데이터에 검출 시점 자동 기록</div>
           </div>
           {/* v22.0: '검증 재측정' 삭제 — 고정 연속 모니터링은 채널별 on-demand 재측정 불가(보드 단위 연속 PRF). 확인만. */}
           <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowAlert(false)}>확인 후 계속</button>
@@ -4175,10 +4176,10 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
         </svg>
         {/* 측정값 stripe (하단) */}
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, display: "flex", gap: 14, padding: "8px 14px", background: "var(--surface-subtle-2)", borderTop: "1px solid var(--border-low)", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
-          <span>Gate A 피크 <strong style={{ fontWeight: 700, color: "var(--system-error)" }}>94% FSH</strong></span>
-          <span>ToF <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>5.8 μs</strong></span>
-          <span>두께 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>17.4 mm</strong></span>
-          <span>Gate B ToF <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>19.2 μs</strong></span>
+          <span>Amp <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>92% FSH</strong></span>
+          <span>ToF <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>2.64 μs</strong></span>
+          <span>측정 두께 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>7.8 mm</strong></span>
+          <span>감육률 <strong style={{ fontWeight: 700, color: "var(--system-caution)" }}>22.0 %</strong></span>
           <span style={{ marginLeft: "auto" }}>샘플링 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>100 MHz</strong></span>
         </div>
       </div>
@@ -4187,7 +4188,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
       <div className="erut-panel" style={{ gridRow: 3, gridColumn: 3, minWidth: 0 }}>
         <div className="erut-panel__header">64CH 채널 상태</div>
         <div className="erut-panel__body" style={{ overflow: "visible", padding: 14, display: "flex", flexDirection: "column", gap: 8 }}>
-          {/* v22.0: '결함 검출 시 자동 전환' 토글 삭제 — A-scan 자동 점프는 검사자 혼란, 결함 판정은 웹 */}
+          {/* v22.0: '감육 검출 시 자동 전환' 토글 삭제 — A-scan 자동 점프는 검사자 혼란, 감육 등급 판정은 웹 */}
           <window.ChannelGrid
             cells={cells64}
             totalCh={64}
@@ -4222,10 +4223,18 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
                 <div key={k}><span style={{ color: "var(--content-low)" }}>{k}</span> <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{v}</strong></div>
               ))}
             </div>
-            {/* v8.7 B-1: 현재 채널 상태 요약 (결함 있을 때 표시) */}
-            <div style={{ borderTop: "1px solid var(--border-low)", marginTop: 8, paddingTop: 8, font: "700 11px/1.3 var(--font-kr)", letterSpacing: ".02em" }}>
-              <span style={{ color: "var(--content-low)" }}>현재 채널 상태</span>
-              <div style={{ color: "var(--system-error)", marginTop: 4 }}>⚠ 결함 검출 · Amp 94% · 두께 17.4mm</div>
+            {/* B-1: 감육 측정 요약 (ToF→두께·감육률, Amp 신뢰도 동반) */}
+            <div style={{ borderTop: "1px solid var(--border-low)", marginTop: 8, paddingTop: 8 }}>
+              <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 6 }}>감육 측정 (CH 04)</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 10px", font: "400 10px/1.3 var(--font-kr)" }}>
+                {[["측정 두께", "7.8 mm"], ["감육량", "2.2 mm"], ["감육률", "22.0 %"], ["ToF", "2.64 μs"]].map(([k, v]) => (
+                  <div key={k}><span style={{ color: "var(--content-low)" }}>{k}</span> <strong style={{ fontWeight: 700, color: k === "감육률" ? "var(--system-caution)" : "var(--content-high)" }}>{v}</strong></div>
+                ))}
+              </div>
+              <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 3, font: "700 11px/1.3 var(--font-kr)" }}>
+                <span style={{ color: "var(--system-caution)" }}>⚠ 감육 검출 · 허용 감육 2.0 mm 초과</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-success)" }}><span style={{ width: 7, height: 7, background: "var(--system-success)", borderRadius: "50%" }}/>측정 신뢰 (Amp 정상)</span>
+              </div>
             </div>
           </div>
 
@@ -4248,7 +4257,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             </div>
           </div>
 
-          {/* v8.7: 결함 검출 카드 삭제 — 64ch 그리드 색상 + 자동 전환 토글로 충분 */}
+          {/* v8.7: 감육 검출 카드 삭제 — 64ch 그리드 색상 + 자동 전환 토글로 충분 */}
 
           {/* v22.0: 측정 제어 제거 — 측정은 MC보드 단위. 보드 제어는 [2] DeviceDetail 배너 + 툴바(활성 보드). 우측 패널은 '선택 채널 분석'(검사 대상·부착)만. */}
         </div>
@@ -4297,7 +4306,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
 // =================== Screen · [18] REPORT GENERATOR (v9.24 신규) ===================
 // 메인 HTML SLIDE 17 [18] 보고서 자동 생성 페이지 구현
 // 진입: 메뉴바 [파일] > 보고서 출력 (Ctrl+P) — index.html
-// v18.0 DEPRECATED: 결함 판정 보고서 폐기 — 현장 데이터 dump (window.ReportExportDialog)로 전환.
+// v18.0 DEPRECATED: 감육 보고서 폐기 — 현장 데이터 dump (window.ReportExportDialog)로 전환.
 // 코드는 archive/ERUT_ServiceFlow_FixedProbe_v17.2.html에 보존. office 후처리 보고서 요구 재발생 시 복원.
 // 현재는 라우팅에서 빠져있어 실제 표시되지 않음 (index.html screen === "report" 제거됨).
 

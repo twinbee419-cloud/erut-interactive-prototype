@@ -193,7 +193,7 @@ window.Tooltip = function Tooltip({ x, y, title, rows, sparkValues, hint, warn }
 // v9.5 (NDT 1.8): [2]·[11] 셀 그리드 통일 컴포넌트.
 // cells: [{ id, num, sensor?, targetName?, defect (boolean — 검출 사실, 등급 없음) }]
 // variant: "device-detail" (긴 가로형, 채널명+검사대상명) | "realtime" (정사각형, 번호만)
-// forceStrongAll: [11] 측정 중 — 모든 결함을 strong (true). [2]는 false (선택 카드만 strong)
+// forceStrongAll: [11] 측정 중 — 모든 감육을 strong (true). [2]는 false (선택 카드만 strong)
 // selectedTargetCard: [2] 카드 선택 컨텍스트 (forceStrongAll=false일 때만 유효)
 window.ChannelGrid = function ChannelGrid({
   cells,
@@ -229,7 +229,7 @@ window.ChannelGrid = function ChannelGrid({
     return acc;
   }, { normal: 0, weak: 0, unattached: 0, inactive: 0 });
 
-  // v22.6: 결함 검출 카운트 (단일 — 등급 없음. 판정은 웹 책임)
+  // v22.6: 감육 검출 카운트 (단일 — 등급 없음. 판정은 웹 책임)
   const detectCount = cells.filter(c => c.defect).length;
 
   const headerTitle = title || (n + "CH 채널 상태");
@@ -275,17 +275,17 @@ window.ChannelGrid = function ChannelGrid({
           const isSel = (c.id === selectedCh || c.num === selectedCh) && active;
           const isFocus = isSel && focusActive;
           const hasDefect = !!c.defect; // v22.6: 검출 사실(boolean) — 등급 없음
-          // v9.30: 교정 상태 — 미교정/만료 채널은 회색 breathe (결함과 독립)
+          // v9.30: 교정 상태 — 미교정/만료 채널은 회색 breathe (감육과 독립)
           const needsCalibration = c.calibrationStatus === "uncalibrated" || c.calibrationStatus === "expired";
 
           const clsParts = ["erut-ch-cell"];
           if (isSel) clsParts.push("is-active");
           if (isFocus) clsParts.push("is-focused");
           if (hasDefect) clsParts.push("is-defect"); // 셀 dim 제외 로직용 (시각 표시는 코너 마커)
-          // v9.30: breathe 애니메이션은 결함 → 교정 상태로 이전
+          // v9.30: breathe 애니메이션은 감육 → 교정 상태로 이전
           if (needsCalibration) clsParts.push("is-needs-calibration");
 
-          // v9.10: 다른 카드의 정상 채널만 dim 0.6 (결함 채널은 유지). 카드 미선택 시 1.0
+          // v9.10: 다른 카드의 정상 채널만 dim 0.6 (감육 채널은 유지). 카드 미선택 시 1.0
           // v9.29 Wave D: multi-select 지원 — 선택된 카드 외 정상 채널만 dim
           const isOtherCardNormal = hasSelection && c.targetName && !targetSet.includes(c.targetName) && !hasDefect;
           const cellOpacity = !active ? 0.55 : isOtherCardNormal ? 0.6 : 1;
@@ -309,7 +309,7 @@ window.ChannelGrid = function ChannelGrid({
             >
               {isRealtime ? (
                 <>
-                  {/* v22.6: 결함 검출 마커 — 좌상단 코너(단일·등급 없음) */}
+                  {/* v22.6: 감육 검출 마커 — 좌상단 코너(단일·등급 없음) */}
                   {hasDefect && <span className="erut-ch-cell__flaw"/>}
                   {/* 부착 LED dot — 우상단 */}
                   <span style={{ position: "absolute", top: 2, right: 2, width: 5, height: 5, borderRadius: "50%", background: dotColor }}/>
@@ -318,7 +318,7 @@ window.ChannelGrid = function ChannelGrid({
                 </>
               ) : (
                 <>
-                  {/* v22.6: 결함 검출 마커 — 좌상단 코너(단일·등급 없음) */}
+                  {/* v22.6: 감육 검출 마커 — 좌상단 코너(단일·등급 없음) */}
                   {hasDefect && <span className="erut-ch-cell__flaw"/>}
                   {/* v9.31: 위 = 채널명 + 통신 세기 LED dot / 중 = 검사 대상 / 우하단 = Amp 4-bar 아이콘 */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -352,7 +352,7 @@ window.ChannelGrid = function ChannelGrid({
         return (
           <div style={{ display: "flex", gap: 14, marginTop: 4, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-              <span style={{ position: "relative", width: 12, height: 12, border: "1px solid var(--border-medium)" }}><span style={{ position: "absolute", top: 0, left: 0, width: 0, height: 0, borderTop: "7px solid var(--system-caution)", borderRight: "7px solid transparent" }}/></span>결함 검출 {detectCount}
+              <span style={{ position: "relative", width: 12, height: 12, border: "1px solid var(--border-medium)" }}><span style={{ position: "absolute", top: 0, left: 0, width: 0, height: 0, borderTop: "7px solid var(--system-caution)", borderRight: "7px solid transparent" }}/></span>감육 검출 {detectCount}
             </span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
               <span style={{ width: 12, height: 12, background: "rgba(107,124,155,0.32)", border: "1px solid var(--content-low)" }}/>교정 필요 {needsCalibCount}
