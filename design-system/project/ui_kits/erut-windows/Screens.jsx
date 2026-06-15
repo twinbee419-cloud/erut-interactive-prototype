@@ -4203,11 +4203,28 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
 
       {/* v9.7: 검사 대상·부착 상태 — column 2 (340px, 중앙) · v22.0: 측정 제어 제거(보드 단위 → [2] 배너) */}
       <div className="erut-panel" style={{ gridRow: 3, gridColumn: 2, minWidth: 0 }}>
-        <div className="erut-panel__header">검사 대상 · 신호 세기</div>
+        <div className="erut-panel__header">감육 측정 · 검사 대상</div>
         <div className="erut-panel__body" style={{ overflow: "visible", padding: 14 }}>
 
-          {/* 검사 대상 정보 (현재 선택 채널의 검사체) */}
-          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 6 }}>검사 대상</div>
+          {/* 감육 측정 카드 (선택 채널 — ToF→두께·감육률 + 신호 세기 통합) */}
+          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 6 }}>감육 측정 (CH 04)</div>
+          <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 10px", font: "400 10px/1.3 var(--font-kr)" }}>
+              {[["측정 두께", "7.8 mm"], ["감육량", "2.2 mm"], ["감육률", "22.0 %"], ["ToF", "2.64 μs"]].map(([k, v]) => (
+                <div key={k}><span style={{ color: "var(--content-low)" }}>{k}</span> <strong style={{ fontWeight: 700, color: k === "감육률" ? "var(--system-caution)" : "var(--content-high)" }}>{v}</strong></div>
+              ))}
+            </div>
+            {/* 신호 세기 (Amp) — 감육 측정 카드에 통합 (세기 1회) */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 10px", font: "400 10px/1.3 var(--font-kr)", borderTop: "1px solid var(--border-low)", marginTop: 6, paddingTop: 6 }}>
+              <div><span style={{ color: "var(--content-low)" }}>신호 세기</span> <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>92 %FSH</strong></div>
+              <div><span style={{ color: "var(--content-low)" }}>상태</span> <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontWeight: 700, color: "var(--system-success)" }}><span style={{ width: 7, height: 7, background: "var(--system-success)", borderRadius: "50%" }}/>정상</span></div>
+              <div><span style={{ color: "var(--content-low)" }}>커플런트</span> <strong style={{ fontWeight: 700, color: "var(--content-medium)" }}>양호</strong></div>
+            </div>
+            <div style={{ marginTop: 6, font: "700 11px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-caution)" }}>⚠ 감육 검출 · 허용 감육 2.0 mm 초과</div>
+          </div>
+
+          {/* 검사 대상 카드 (현재 선택 채널의 검사체) */}
+          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", margin: "14px 0 6px" }}>검사 대상</div>
           <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
             <div style={{ marginBottom: 4 }}>
               <span style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>PIPE-A-204</span>
@@ -4223,43 +4240,9 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
                 <div key={k}><span style={{ color: "var(--content-low)" }}>{k}</span> <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{v}</strong></div>
               ))}
             </div>
-            {/* B-1: 감육 측정 요약 (ToF→두께·감육률, Amp 신뢰도 동반) */}
-            <div style={{ borderTop: "1px solid var(--border-low)", marginTop: 8, paddingTop: 8 }}>
-              <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 6 }}>감육 측정 (CH 04)</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 10px", font: "400 10px/1.3 var(--font-kr)" }}>
-                {[["측정 두께", "7.8 mm"], ["감육량", "2.2 mm"], ["감육률", "22.0 %"], ["ToF", "2.64 μs"]].map(([k, v]) => (
-                  <div key={k}><span style={{ color: "var(--content-low)" }}>{k}</span> <strong style={{ fontWeight: 700, color: k === "감육률" ? "var(--system-caution)" : "var(--content-high)" }}>{v}</strong></div>
-                ))}
-              </div>
-              <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 3, font: "700 11px/1.3 var(--font-kr)" }}>
-                <span style={{ color: "var(--system-caution)" }}>⚠ 감육 검출 · 허용 감육 2.0 mm 초과</span>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-success)" }}><span style={{ width: 7, height: 7, background: "var(--system-success)", borderRadius: "50%" }}/>신호 세기 (Amp) · 정상</span>
-              </div>
-            </div>
           </div>
 
-          {/* v8.7: 선택 채널 신호 세기 (Amp) (단순화 — 신호 강도 + 상태만) */}
-          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", margin: "14px 0 6px" }}>선택 채널 신호 세기 (Amp)</div>
-          <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>세기</span>
-              <strong style={{ font: "700 14px/1 var(--font-kr)", color: "var(--system-success)" }}>92 %FSH</strong>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-              <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>상태</span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, font: "700 12px/1 var(--font-kr)", color: "var(--system-success)" }}>
-                <span style={{ width: 8, height: 8, background: "var(--system-success)", borderRadius: "50%" }}/>정상
-              </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-              <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>커플런트</span>
-              <span style={{ font: "700 11px/1 var(--font-kr)", color: "var(--content-medium)" }}>양호</span>
-            </div>
-          </div>
-
-          {/* v8.7: 감육 검출 카드 삭제 — 64ch 그리드 색상 + 자동 전환 토글로 충분 */}
-
-          {/* v22.0: 측정 제어 제거 — 측정은 MC보드 단위. 보드 제어는 [2] DeviceDetail 배너 + 툴바(활성 보드). 우측 패널은 '선택 채널 분석'(검사 대상·부착)만. */}
+          {/* 측정 제어 제거 — 측정은 MC보드 단위 ([2] DeviceDetail 배너 + 툴바) */}
         </div>
       </div>
 
