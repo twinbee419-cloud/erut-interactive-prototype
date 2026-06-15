@@ -105,7 +105,7 @@ window.MOCK = {
   ],
   // 3 MCuF devices — matches ServiceFlow_Analysis SLIDE 5 device panel (lines 1158-1246)
   devices: [
-    { id: "MCuF-001", ip: "192.168.1.100", state: "measuring", activeCh: 32, totalCh: 64, dataRate: "2,048 msg/s", lastComm: null },
+    { id: "MCuF-001", ip: "192.168.1.100", state: "measuring", activeCh: 64, totalCh: 64, dataRate: "2,048 msg/s", lastComm: null },
     { id: "MCuF-002", ip: "192.168.1.101", state: "idle",      activeCh: 16, totalCh: 64, dataRate: null,           lastComm: null },
     { id: "MCuF-003", ip: "192.168.1.102", state: "offline",   activeCh: null, totalCh: 64, dataRate: null,         lastComm: "10분 전" },
   ],
@@ -808,7 +808,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
   const META = [
     { label: "SN (시리얼)",   value: "MCF-2024-001" },
     { label: "IP 주소",       value: "192.168.1.100" },
-    { label: "활성 채널",     value: "32 / 64 CH", emphasis: true },
+    { label: "활성 채널",     value: "64 / 64 CH", emphasis: true },
     { label: "마지막 통신",   value: "실시간 (0.3s)", success: true },
   ];
 
