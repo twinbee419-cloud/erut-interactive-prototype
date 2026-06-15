@@ -204,7 +204,7 @@ window.MOCK = {
     { id: "SES-2026-031", date: "2026-04-28 15:42", inspector: "박검사 · Lv.II",   defects: 1, judge: "검토",   judgeT: "warn" },
   ],
   // [11] 실시간 스캔 — 채널 기반 결함 (main slide 16과 매칭)
-  // 감육 검출 채널 — 측정두께 ≤ 공칭−허용감육. amp = 측정 신뢰도(ampState: ok 51-100 / warn 6-50 / bad 1-5). 등급 판정은 웹.
+  // 감육 검출 채널 — 측정두께 ≤ 공칭−허용감육. amp = 신호 세기(ampState: ok 51-100 / warn 6-50 / bad 1-5). 등급 판정은 웹.
   realtimeDefects: [
     { id: 1, channel: 4,  amp: 92, tof: 2.64, thickness: 7.8, nominal: 10, thinMm: 2.2, thinPct: 22.0, ampState: "ok"   },
     { id: 2, channel: 7,  amp: 78, tof: 2.70, thickness: 8.0, nominal: 10, thinMm: 2.0, thinPct: 20.0, ampState: "ok"   },
@@ -1024,14 +1024,14 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
             const val = { font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" };
             const unit = { fontSize: 10, color: "var(--content-low)", fontWeight: 400 };
             const relColor = isBad ? "var(--system-error)" : isWeak ? "var(--system-caution)" : "var(--system-success)";
-            const relText = isBad ? "측정 불가 (미부착)" : isWeak ? "점검 요망" : "정상";
+            const relText = isBad ? "나쁨 (미부착)" : isWeak ? "약함 (점검 요망)" : "정상";
             return (
               <>
                 <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 12px", padding: 12, background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)" }}>
                   <div><div style={lbl}>측정 두께</div><div style={val}>{isBad ? "—" : cur.thickness.toFixed(2)} <span style={unit}>mm / 공칭 10</span></div></div>
                   <div><div style={lbl}>감육률 <span style={{ color: "var(--content-low)" }}>(감육량 {isBad ? "—" : thinMm.toFixed(1) + "mm"})</span></div><div style={{ ...val, color: "var(--system-caution)" }}>{isBad ? "—" : thinPct + " %" + (isWeak ? " ⚠" : "")}</div></div>
                   <div><div style={lbl}>ToF</div><div style={val}>{cur.tof} <span style={unit}>μs</span></div></div>
-                  <div><div style={lbl}>측정 신뢰도 <span style={{ color: "var(--content-low)" }}>(Amp)</span></div><div style={{ ...val, color: relColor, display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, background: relColor, borderRadius: "50%" }}/>{relText}</div></div>
+                  <div><div style={lbl}>신호 세기 <span style={{ color: "var(--content-low)" }}>(Amp)</span></div><div style={{ ...val, color: relColor, display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, background: relColor, borderRadius: "50%" }}/>{relText}</div></div>
                 </div>
                 {detected && (
                   <div style={{ marginTop: 8, font: "700 12px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-caution)" }}>⚠ 감육 검출 · 허용 감육 2.0 mm 초과</div>
@@ -4145,7 +4145,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>감육 검출 · 감육률 {criticalDefect.thinPct} %</div>
-            <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 2 }}>채널 {criticalDefect.channel} · 측정 두께 {criticalDefect.thickness} mm · 감육량 {criticalDefect.thinMm} mm · 허용 감육 2.0 mm 초과 · Amp {criticalDefect.amp} %FSH (측정 신뢰) · 세션 데이터에 검출 시점 자동 기록</div>
+            <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 2 }}>채널 {criticalDefect.channel} · 측정 두께 {criticalDefect.thickness} mm · 감육량 {criticalDefect.thinMm} mm · 허용 감육 2.0 mm 초과 · 신호 세기 {criticalDefect.amp} %FSH · 정상 · 세션 데이터에 검출 시점 자동 기록</div>
           </div>
           {/* v22.0: '검증 재측정' 삭제 — 고정 연속 모니터링은 채널별 on-demand 재측정 불가(보드 단위 연속 PRF). 확인만. */}
           <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowAlert(false)}>확인 후 계속</button>
@@ -4203,7 +4203,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
 
       {/* v9.7: 검사 대상·부착 상태 — column 2 (340px, 중앙) · v22.0: 측정 제어 제거(보드 단위 → [2] 배너) */}
       <div className="erut-panel" style={{ gridRow: 3, gridColumn: 2, minWidth: 0 }}>
-        <div className="erut-panel__header">검사 대상 · 부착 상태</div>
+        <div className="erut-panel__header">검사 대상 · 신호 세기</div>
         <div className="erut-panel__body" style={{ overflow: "visible", padding: 14 }}>
 
           {/* 검사 대상 정보 (현재 선택 채널의 검사체) */}
@@ -4233,20 +4233,20 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
               </div>
               <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 3, font: "700 11px/1.3 var(--font-kr)" }}>
                 <span style={{ color: "var(--system-caution)" }}>⚠ 감육 검출 · 허용 감육 2.0 mm 초과</span>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-success)" }}><span style={{ width: 7, height: 7, background: "var(--system-success)", borderRadius: "50%" }}/>측정 신뢰 (Amp 정상)</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-success)" }}><span style={{ width: 7, height: 7, background: "var(--system-success)", borderRadius: "50%" }}/>신호 세기 (Amp) · 정상</span>
               </div>
             </div>
           </div>
 
-          {/* v8.7: 선택 채널 부착 상태 (단순화 — 신호 강도 + 상태만) */}
-          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", margin: "14px 0 6px" }}>선택 채널 부착 상태</div>
+          {/* v8.7: 선택 채널 신호 세기 (Amp) (단순화 — 신호 강도 + 상태만) */}
+          <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", margin: "14px 0 6px" }}>선택 채널 신호 세기 (Amp)</div>
           <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>신호 강도</span>
-              <strong style={{ font: "700 14px/1 var(--font-kr)", color: "var(--system-success)" }}>92%</strong>
+              <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>세기</span>
+              <strong style={{ font: "700 14px/1 var(--font-kr)", color: "var(--system-success)" }}>92 %FSH</strong>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-              <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>부착 상태</span>
+              <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>상태</span>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4, font: "700 12px/1 var(--font-kr)", color: "var(--system-success)" }}>
                 <span style={{ width: 8, height: 8, background: "var(--system-success)", borderRadius: "50%" }}/>정상
               </span>
