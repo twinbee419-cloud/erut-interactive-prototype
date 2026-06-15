@@ -4215,6 +4215,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
               <span style={{ font: "700 30px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-caution)" }}>22.0<span style={{ fontSize: 15, marginLeft: 2 }}>%</span></span>
               <span style={{ font: "400 11px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>감육량 2.2 mm</span>
             </div>
+            <div style={{ marginBottom: 8, font: "700 11px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-caution)" }}>⚠ 감육 검출 · 허용 감육 2.0 mm 초과</div>
             {/* 보조 측정값 */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 10px", font: "400 10px/1.3 var(--font-kr)", borderTop: "1px solid var(--border-low)", paddingTop: 6 }}>
               <div><span style={{ color: "var(--content-low)" }}>측정 두께</span> <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>7.8 mm <span style={{ color: "var(--content-low)", fontWeight: 400 }}>/ 공칭 10</span></strong></div>
@@ -4226,7 +4227,6 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
               <div><span style={{ color: "var(--content-low)" }}>상태</span> <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontWeight: 700, color: "var(--system-success)" }}><span style={{ width: 7, height: 7, background: "var(--system-success)", borderRadius: "50%" }}/>정상</span></div>
               <div><span style={{ color: "var(--content-low)" }}>커플런트</span> <strong style={{ fontWeight: 700, color: "var(--content-medium)" }}>양호</strong></div>
             </div>
-            <div style={{ marginTop: 6, font: "700 11px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-caution)" }}>⚠ 감육 검출 · 허용 감육 2.0 mm 초과</div>
           </div>
 
           {/* 검사 대상 카드 (현재 선택 채널의 검사체) */}
