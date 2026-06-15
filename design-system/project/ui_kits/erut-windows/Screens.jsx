@@ -5,7 +5,8 @@ const I = window.EIcon;
 const { useState: $s } = React;
 
 // =================== v8.5: Breadcrumb 통일 컴포넌트 ===================
-// 사용법:window.Breadcrumb = function Breadcrumb({ items, onBack, style }) {
+// 사용법: <window.Breadcrumb items={[{ label }, { label, current: true }]} /> (toolbar 우측)
+window.Breadcrumb = function Breadcrumb({ items, onBack, style }) {
   return (
     <div className="erut-crumb" style={style}>
       {onBack && <button className="erut-crumb__back" onClick={onBack}>← 이전으로</button>}
