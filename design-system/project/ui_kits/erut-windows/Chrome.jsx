@@ -75,7 +75,7 @@ window.NotificationCenter = function NotificationCenter({ notifications = [], on
         <>
           <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 998 }}/>
           <div style={{
-            position: "absolute", top: 40, right: 0, width: 360, zIndex: 999,
+            position: "absolute", top: 40, left: 0, width: 360, zIndex: 999,
             background: "var(--surface-base)", border: "1px solid var(--border-high)"
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderBottom: "1px solid var(--border-low)" }}>
