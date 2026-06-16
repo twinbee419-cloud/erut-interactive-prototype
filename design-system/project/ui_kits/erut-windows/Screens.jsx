@@ -3571,6 +3571,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   const [selectedPresetId, setSelectedPresetId] = $s(null);
   const [presetSearch, setPresetSearch] = $s("");   // 프리셋 모달 검색/필터
   const [presetName, setPresetName]     = $s("");   // 프리셋으로 저장 시 프리셋명 (코드는 PRE-XXX 자동)
+  const [showSavePresetModal, setShowSavePresetModal] = $s(false); // #22: 전용 '프리셋으로 저장' 다이얼로그
   // v9.27 Wave B fix: '+새 검사 대상 추가' 클릭 시 입력 초기화 confirm
   const [showResetConfirm, setShowResetConfirm] = $s(false);
 
@@ -3702,7 +3703,8 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             {selectedId && (
               <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ color: "var(--system-error)" }}>검사 대상 삭제</button>
             )}
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowPresetModal(true)}>프리셋</button>
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowPresetModal(true)}>프리셋 불러오기</button>
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => { setPresetName(form.name || ""); setShowSavePresetModal(true); }}>프리셋으로 저장</button>
             <button
               className={"erut-btn erut-btn--sm " + (requiredOk ? "erut-btn--emphasis" : "erut-btn--disabled")}
               disabled={!requiredOk}
@@ -3944,36 +3946,34 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
               ? "변경 사항을 저장하시겠습니까?"
               : "검사 대상을 추가하시겠습니까?"}
           </div>
-          {!isFromPreset && (
-            <div>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                <span
-                  className={"erut-cb__box" + (saveAsPreset ? " is-on" : "")}
-                  onClick={() => setSaveAsPreset(s => !s)}
-                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
-                >
-                  {saveAsPreset && <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="#FFFFFF" strokeWidth="2"><polyline points="3,8 7,12 13,4"/></svg>}
-                </span>
-                <span style={{ font: "400 12px/1.2 var(--font-kr)", color: "var(--content-medium)" }}>프리셋으로 저장</span>
-              </label>
-              {/* #22 프리셋명 input + PRE-XXX 자동 코드 / #24 기본 정보 제외 안내 */}
-              {saveAsPreset && (
-                <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
-                  <div>
-                    <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>프리셋명</div>
-                    <input className="erut-field" value={presetName} onChange={(e) => setPresetName(e.target.value)} placeholder="예: 탄소강 배관 6~12mm @ 고온 스팀" style={{ width: "100%" }}/>
-                  </div>
-                  <div>
-                    <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>코드</div>
-                    <input className="erut-field is-disabled" value="PRE-014" readOnly tabIndex={-1} style={{ width: "100%" }}/>
-                  </div>
-                  <div style={{ gridColumn: "1 / -1", font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-                    프리셋에는 형상 · 소재 · 유체 · 운영 환경 · 측정 파라미터만 저장됩니다 (기본 정보 제외). 코드는 PRE-XXX 형식으로 자동 부여됩니다.
-                  </div>
-                </div>
-              )}
-            </div>
+        </window.Modal>
+      )}
+
+      {/* #22/#24: 전용 '프리셋으로 저장' 다이얼로그 — 프리셋명 + PRE-XXX 자동 코드 + 기본 정보 제외 */}
+      {showSavePresetModal && (
+        <window.Modal
+          title="프리셋으로 저장"
+          onClose={() => setShowSavePresetModal(false)}
+          footer={(
+            <>
+              <window.Button variant="subtle" size="sm" onClick={() => setShowSavePresetModal(false)}>닫기</window.Button>
+              <window.Button variant={presetName ? "emphasis" : "disabled"} size="sm" onClick={presetName ? () => setShowSavePresetModal(false) : undefined}>저장</window.Button>
+            </>
           )}
+        >
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
+            <div>
+              <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>프리셋명 <span style={{ color: "var(--system-error)" }}>*</span></div>
+              <input className="erut-field" value={presetName} onChange={(e) => setPresetName(e.target.value)} placeholder="예: 탄소강 배관 6~12mm @ 고온 스팀" style={{ width: "100%" }}/>
+            </div>
+            <div>
+              <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>코드 <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>(자동)</span></div>
+              <input className="erut-field is-disabled" value="PRE-014" readOnly tabIndex={-1} style={{ width: "100%" }}/>
+            </div>
+          </div>
+          <div style={{ padding: "10px 12px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)", font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
+            저장 항목: <strong style={{ color: "var(--content-high)" }}>형상 · 소재 · 유체 · 운영 환경 · 측정 파라미터</strong>. 기본 정보(대상명 · MC보드 · 코드)는 제외됩니다. 코드는 <strong style={{ color: "var(--content-high)" }}>PRE-XXX</strong> 형식으로 자동 부여됩니다.
+          </div>
         </window.Modal>
       )}
     </div>
