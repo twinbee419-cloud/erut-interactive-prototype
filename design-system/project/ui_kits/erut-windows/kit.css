@@ -512,7 +512,7 @@
    (구 .is-defect-critical/major/minor 등급 fill 폐기) */
 .erut-ch-cell__flaw{
   position: absolute; top: 0; left: 0; width: 0; height: 0;
-  border-top: 9px solid var(--system-caution);
+  border-top: 9px solid var(--system-error);
   border-right: 9px solid transparent;
   pointer-events: none;
 }

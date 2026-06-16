@@ -236,7 +236,7 @@ window.MOCK = {
   // severity: error(긴급·측정 차단급) / caution(경고) / info(정보). type: defect/calib/measure/comm/attach
   // v22.6: defect = 결함 '검출' 사실 알림 (검사자 인지). 등급·유형 판정은 웹 책임.
   notifications: [
-    { id: "n0", severity: "caution", type: "defect",  title: "CH 04 감육 검출",  detail: "측정 두께 7.8mm · 감육률 22.0% (허용 감육 2.0mm 초과) · 검출 시점 자동 기록", actionLabel: "채널 보기", time: "방금" },
+    { id: "n0", severity: "error", type: "defect",  title: "CH 04 감육 검출",  detail: "측정 두께 7.8mm · 감육률 22.0% (허용 감육 2.0mm 초과) · 검출 시점 자동 기록", actionLabel: "채널 보기", time: "방금" },
     { id: "n1", severity: "error",   type: "calib",   title: "CH 04 교정 만료",       detail: "교정 주기 초과 · F6 측정 시작 차단됨", actionLabel: "재교정",   time: "1분 전" },
     { id: "n2", severity: "error",   type: "measure", title: "CH 12 채널 미연결",     detail: "측정 중 신호 손실 (E120)",            actionLabel: "채널 보기", time: "2분 전" },
     { id: "n3", severity: "caution", type: "calib",   title: "CH 09 교정 임박 (D-1)", detail: "1일 후 교정 주기 만료",               actionLabel: "재교정",   time: "10분 전" },
@@ -999,12 +999,12 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
               <>
                 <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 12px", padding: 12, background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)" }}>
                   <div><div style={lbl}>측정 두께</div><div style={val}>{isBad ? "—" : cur.thickness.toFixed(2)} <span style={unit}>mm / 공칭 10</span></div></div>
-                  <div><div style={lbl}>감육률 <span style={{ color: "var(--content-low)" }}>(감육량 {isBad ? "—" : thinMm.toFixed(1) + "mm"})</span></div><div style={{ ...val, color: "var(--system-caution)" }}>{isBad ? "—" : thinPct + " %" + (isWeak ? " ⚠" : "")}</div></div>
+                  <div><div style={lbl}>감육률 <span style={{ color: "var(--content-low)" }}>(감육량 {isBad ? "—" : thinMm.toFixed(1) + "mm"})</span></div><div style={{ ...val, color: "var(--system-error)" }}>{isBad ? "—" : thinPct + " %" + (isWeak ? " ⚠" : "")}</div></div>
                   <div><div style={lbl}>ToF</div><div style={val}>{cur.tof} <span style={unit}>μs</span></div></div>
                   <div><div style={lbl}>신호 세기 <span style={{ color: "var(--content-low)" }}>(Amp)</span></div><div style={{ ...val, color: relColor, display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, background: relColor, borderRadius: "50%" }}/>{relText}</div></div>
                 </div>
                 {detected && (
-                  <div style={{ marginTop: 8, font: "700 12px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-caution)" }}>⚠ 감육 검출 · 허용 감육 2.0 mm 초과</div>
+                  <div style={{ marginTop: 8, font: "700 12px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>⚠ 감육 검출 · 허용 감육 2.0 mm 초과</div>
                 )}
               </>
             );
@@ -4065,8 +4065,8 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
 
       {/* 감육 검출 배너 — caution(orange)로 통일 (검출=확인 요망, red는 측정 차단 전용) */}
       {showAlert && criticalDefect && (
-        <div style={{ gridRow: 2, gridColumn: "1 / -1", background: "var(--surface-base)", border: "1px solid var(--system-caution)", borderLeft: "4px solid var(--system-caution)", padding: "12px 16px", display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ color: "var(--system-caution)", flexShrink: 0 }}>
+        <div style={{ gridRow: 2, gridColumn: "1 / -1", background: "var(--surface-base)", border: "1px solid var(--system-error)", borderLeft: "4px solid var(--system-error)", padding: "12px 16px", display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ color: "var(--system-error)", flexShrink: 0 }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M12 2 L22 20 L2 20 Z"/>
               <line x1="12" y1="9" x2="12" y2="14"/>
@@ -4074,7 +4074,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             </svg>
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-caution)" }}>감육 검출 · 감육률 {criticalDefect.thinPct} %</div>
+            <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>감육 검출 · 감육률 {criticalDefect.thinPct} %</div>
             <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 2 }}>채널 {criticalDefect.channel} · 측정 두께 {criticalDefect.thickness} mm · 감육량 {criticalDefect.thinMm} mm · 허용 감육 2.0 mm 초과 · 신호 세기 {criticalDefect.amp} %FSH · 정상 · 세션 데이터에 검출 시점 자동 기록</div>
           </div>
           {/* v22.0: '검증 재측정' 삭제 — 고정 연속 모니터링은 채널별 on-demand 재측정 불가(보드 단위 연속 PRF). 확인만. */}
@@ -4109,7 +4109,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
           <span>Amp <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>92% FSH</strong></span>
           <span>ToF <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>2.64 μs</strong></span>
           <span>측정 두께 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>7.8 mm</strong></span>
-          <span>감육률 <strong style={{ fontWeight: 700, color: "var(--system-caution)" }}>22.0 %</strong></span>
+          <span>감육률 <strong style={{ fontWeight: 700, color: "var(--system-error)" }}>22.0 %</strong></span>
           <span style={{ marginLeft: "auto" }}>샘플링 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>100 MHz</strong></span>
         </div>
       </div>
@@ -4142,10 +4142,10 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             {/* 감육률 강조 (hero — 핵심 KPI) */}
             <div style={{ font: "700 10px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 2 }}>감육률</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
-              <span style={{ font: "700 30px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-caution)" }}>22.0<span style={{ fontSize: 15, marginLeft: 2 }}>%</span></span>
+              <span style={{ font: "700 30px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>22.0<span style={{ fontSize: 15, marginLeft: 2 }}>%</span></span>
               <span style={{ font: "400 11px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>감육량 2.2 mm</span>
             </div>
-            <div style={{ marginBottom: 8, font: "700 11px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-caution)" }}>⚠ 감육 검출 · 허용 감육 2.0 mm 초과</div>
+            <div style={{ marginBottom: 8, font: "700 11px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>⚠ 감육 검출 · 허용 감육 2.0 mm 초과</div>
             {/* 보조 측정값 */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 10px", font: "400 10px/1.3 var(--font-kr)", borderTop: "1px solid var(--border-low)", paddingTop: 6 }}>
               <div><span style={{ color: "var(--content-low)" }}>측정 두께</span> <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>7.8 mm <span style={{ color: "var(--content-low)", fontWeight: 400 }}>/ 공칭 10</span></strong></div>

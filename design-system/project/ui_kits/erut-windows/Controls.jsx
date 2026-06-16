@@ -352,7 +352,7 @@ window.ChannelGrid = function ChannelGrid({
         return (
           <div style={{ display: "flex", gap: 14, marginTop: 4, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-              <span style={{ position: "relative", width: 12, height: 12, border: "1px solid var(--border-medium)" }}><span style={{ position: "absolute", top: 0, left: 0, width: 0, height: 0, borderTop: "7px solid var(--system-caution)", borderRight: "7px solid transparent" }}/></span>감육 검출 {detectCount}
+              <span style={{ position: "relative", width: 12, height: 12, border: "1px solid var(--border-medium)" }}><span style={{ position: "absolute", top: 0, left: 0, width: 0, height: 0, borderTop: "7px solid var(--system-error)", borderRight: "7px solid transparent" }}/></span>감육 검출 {detectCount}
             </span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
               <span style={{ width: 12, height: 12, background: "rgba(107,124,155,0.32)", border: "1px solid var(--content-low)" }}/>교정 필요 {needsCalibCount}
