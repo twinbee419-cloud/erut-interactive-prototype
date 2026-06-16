@@ -984,7 +984,9 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
 
           {/* v8.8: 채널 메타 한 줄 (측정 통계 컨테이너 하단으로 이동) */}
           <div style={{ font: "400 12px/1.7 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", padding: "12px 0 0", marginTop: 12, borderTop: "1px solid var(--border-low)" }}>
-            주파수 5 MHz · Gain 28 dB · Pulser 200V<br/>
+            주파수 5 MHz · Pulser 200V<br/>
+            {/* #7: Gain 3종 표시 — [4-3-1]에서 설정한 소프트웨어/디지털/아날로그 */}
+            Gain SW 12 · 디지털 8 · 아날로그 8 dB<br/>
             영점 정상 · 마지막 측정 {cur.age}
           </div>
 
@@ -1038,6 +1040,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const [channel, setChannel] = $s(pre.channel || "");
   const [serial, setSerial]   = $s(pre.serial || "");
   const [target, setTarget]   = $s(pre.target || "");
+  const [productName, setProductName] = $s(pre.productName || ""); // #11: 탐촉자 제품명/모델명
+  const [loadFrom, setLoadFrom] = $s("");                          // #19: 기존 채널 설정 불러오기 (선택 후 리셋)
   // v20.0: 검사체 재질 — 검사 대상 등록 재질 자동 반영. 선택 시 음속·권장 PRF prefill (window.SOUND_SPEEDS / calcPRF 재사용)
   const [material, setMaterial] = $s(pre.material || Object.keys(window.SOUND_SPEEDS)[0]);
   // v20.0: 탐촉자 종류 프리셋 폐기 → 탐촉자 주파수·진동자 개별 수동 입력 (시리얼 자동 인식 X)
@@ -1057,13 +1061,18 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const [wedge, setWedge]     = $s(pre.wedge    || { value: null, unit: "°" });
   const [velocity, setVel]    = $s(pre.velocity || { value: null, unit: "m/s" });
   const [zero, setZero]       = $s(pre.zero     || { value: null, unit: "μs" });
-  const [gain, setGain]       = $s(pre.gain     || { value: 28,   unit: "dB" });
-  // v20.0: PRF — 재질·공칭두께 기반 자동 산출 + 수동 override (window.calcPRF — [6]와 동일 로직)
-  const [autoPRF, setAutoPRF]   = $s(pre.autoPRF !== false);
-  const [prfManual, setPrfManual] = $s(pre.prfManual != null ? pre.prfManual : 2000);
-  // v20.0: DAC 선도 — 교정 메타 + Amp 진폭보정 기준으로만 저장. 결함 크기 판정은 웹 서비스 책임
-  const [dacOn, setDacOn]       = $s(pre.dacOn || false);
-  const [dacPoints, setDacPoints] = $s(pre.dacPoints != null ? pre.dacPoints : 0);
+  // #6: Gain 3종(소프트웨어·디지털·아날로그) 개별 값 + −1/+1 / #16: LogScale 표시 스케일(−80~80 dB)
+  const [gainSw, setGainSw]           = $s(pre.gainSw != null ? pre.gainSw : 12);
+  const [gainDigital, setGainDigital] = $s(pre.gainDigital != null ? pre.gainDigital : 8);
+  const [gainAnalog, setGainAnalog]   = $s(pre.gainAnalog != null ? pre.gainAnalog : 8);
+  const [logScale, setLogScale]       = $s(pre.logScale || false);
+  const [logScaleVal, setLogScaleVal] = $s(pre.logScaleVal != null ? pre.logScaleVal : 0);
+  const adjGain = (setter) => (delta) => setter(v => Math.max(0, Math.min(80, v + delta)));
+  // #17: PRF — 재질 기준 권장값 prefill, 항상 수정 가능 (상속 토글 폐지)
+  const [prf, setPrf] = $s(pre.prf != null ? pre.prf : null);
+  // #18: TCG (시간 보정 이득) — DAC 선도 대체. 후면 에코 진폭 균일화(64ch 자동 두께 모니터링 적합)
+  const [tcgOn, setTcgOn]       = $s(pre.tcgOn || false);
+  const [tcgPoints, setTcgPoints] = $s(pre.tcgPoints != null ? pre.tcgPoints : 0);
 
   // v15.0: 교정 시험편 — 영점·음속 측정의 기준 시편. 표준시험편 선택 시 두께 자동 prefill.
   // v15.3: optgroup 분류 — 표준시험편(국제 코드 공인) / 비교시험편(자체 제작 · 검사체 동일 재질 + 인공 결함)
@@ -1089,7 +1098,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const setRefKindTab = (kind) => {
     setRefKind(kind);
     if (kind === "standard") { if (STANDARD_BLOCKS[refBlock]?.category !== "standard") setRefBlock("iiw-v1"); }
-    else { setRefBlockRaw("custom"); }
+    else { setRefBlockRaw("custom"); setRefThickness(pre.nominalThk != null ? pre.nominalThk : 10); }  // #13: 비교시험편 두께 = 검사체 공칭 두께(고정)
   };
   const canMeasureWithRef = refThickness > 0;
   // 측정값 → 가장 가까운 표준 음속과 비교
@@ -1115,7 +1124,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   // v20.0: 재질 선택 → 표준 종파 음속 prefill (측정으로 정밀화 가능). 경사각 채널은 횡파 음속 별도 측정
   // v20.0: PRF 자동 산출 — 공칭 두께 × 재질 (window.calcPRF). 자동 OFF 시 수동값 사용
   const prfCalc  = window.calcPRF(nominalThk || 10, material);
-  const prfValue = autoPRF ? prfCalc.prf : prfManual;
+  const prfValue = prf != null ? prf : prfCalc.prf;   // #17: 재질 기준 권장값 default, 수정 시 prf state 사용
 
   // 차트 범위 0~50μs → 0~100% width
   const toPct = (us) => Math.max(0, Math.min(100, (us / 50) * 100));
@@ -1180,16 +1189,17 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
 
   // ───── 진행 체크리스트 (자동 계산) ─────
   // v16.1: Wedge 측정 항목 제거 — Wedge 각도는 측정 불가, 좌측 채널 정보 input(wedgeAngle)으로 처리
+  // #12: 순서 — 채널 정보 / Gain / Gate A / Gate B / 영점 / 음속
   const checklist = [
-    { key: "info",   label: "채널 정보 입력",  done: !!(channel && serial && target) },
-    { key: "vel",    label: "음속 측정",        done: velocity.value != null },
-    { key: "zero",   label: "영점 측정",        done: zero.value != null },
-    { key: "gain",   label: "Gain 설정",        done: gain.value != null },
+    { key: "info",   label: "채널 정보 입력",  done: !!(productName && serial && target) },
+    { key: "gain",   label: "Gain 설정",        done: gainSw != null },
     { key: "gateA",  label: "Gate A 설정",      done: aOn },
     { key: "gateB",  label: "Gate B 설정",      done: bOn },
+    { key: "zero",   label: "영점 측정",        done: zero.value != null },
+    { key: "vel",    label: "음속 측정",        done: velocity.value != null },
   ];
   const requiredDone = checklist.filter(c => !c.optional).every(c => c.done);
-  const canAddOnly  = !!(channel && serial && target);
+  const canAddOnly  = !!(productName && channel && serial && target);
   const canAddStart = requiredDone;
 
   // ───── mock 측정 동작 ─────
@@ -1208,10 +1218,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
     if (!canMeasureWithRef) return;
     setZero({ value: 2.13, unit: "μs" });
   };
-  const adjustGain   = (delta) => setGain(g => ({ ...g, value: Math.max(0, Math.min(80, g.value + delta)) }));
-
-  // 교정 cell 컴포넌트 — v15.0: disabled + hint(표준 비교) prop 지원
-  function CalibCell({ label, state, onMeasure, isGain, disabled, hint }) {
+  // 교정 cell 컴포넌트 — 음속·영점 측정용 (Gain은 #14로 별도 Gain 설정 섹션으로 분리)
+  function CalibCell({ label, state, onMeasure, disabled, hint }) {
     const filled = state.value != null;
     return (
       <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
@@ -1223,32 +1231,37 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
           <div style={{ flex: 1, font: "700 18px/1 var(--font-kr)", letterSpacing: ".02em", color: filled ? "var(--content-high)" : "var(--content-low)" }}>
             {filled ? `${state.value} ${state.unit}` : `--- ${state.unit}`}
           </div>
-          {isGain ? (
-            <div style={{ display: "flex", gap: 4 }}>
-              <button className="erut-btn erut-btn--default erut-btn--sm" style={{ minWidth: 28, padding: "4px 8px" }} onClick={() => adjustGain(-1)}>−1</button>
-              <button className="erut-btn erut-btn--default erut-btn--sm" style={{ minWidth: 28, padding: "4px 8px" }} onClick={() => adjustGain(+1)}>+1</button>
-            </div>
-          ) : (
-            <button
-              className={"erut-btn erut-btn--sm " + (disabled ? "erut-btn--disabled" : "erut-btn--default")}
-              disabled={disabled}
-              onClick={onMeasure}
-              title={disabled ? "교정 시험편 두께를 먼저 입력하세요" : undefined}
-            >
-              {filled ? "재측정" : "측정"}
-            </button>
-          )}
+          <button
+            className={"erut-btn erut-btn--sm " + (disabled ? "erut-btn--disabled" : "erut-btn--default")}
+            disabled={disabled}
+            onClick={onMeasure}
+            title={disabled ? "교정 시험편 두께를 먼저 입력하세요" : undefined}
+          >
+            {filled ? "재측정" : "측정"}
+          </button>
         </div>
         {hint && (
           <div style={{ marginTop: 6, font: "700 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: hint.tone }}>
             {hint.text}
           </div>
         )}
-        {!isGain && disabled && !filled && (
+        {disabled && !filled && (
           <div style={{ marginTop: 6, font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
             ◯ 교정 시험편 두께 입력 필요
           </div>
         )}
+      </div>
+    );
+  }
+  // #6: Gain 1행 (라벨 + 값 input + −1/+1)
+  function GainRow({ label, value, setter }) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ width: 64, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{label}</span>
+        <input className="erut-field" type="number" min="0" max="80" step="1" value={value} onChange={(e) => setter(Math.max(0, Math.min(80, parseInt(e.target.value, 10) || 0)))} style={{ flex: 1, minWidth: 0, height: 30, padding: "4px 8px", fontSize: 12 }}/>
+        <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>dB</span>
+        <button className="erut-btn erut-btn--default erut-btn--sm" style={{ minWidth: 28, padding: "4px 8px" }} onClick={() => adjGain(setter)(-1)}>−1</button>
+        <button className="erut-btn erut-btn--default erut-btn--sm" style={{ minWidth: 28, padding: "4px 8px" }} onClick={() => adjGain(setter)(+1)}>+1</button>
       </div>
     );
   }
@@ -1357,15 +1370,22 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
           <>
             <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-low)" }}>
               <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 10 }}>채널 정보</div>
+              {/* #19: 기존 채널 설정 불러오기 — 선택 시 설정 복사 후 '선택하기'로 리셋 */}
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>기존 채널 설정 불러오기</div>
+                <select className="erut-field" value={loadFrom} onChange={(e) => { /* mockup: 선택 채널 설정을 폼으로 복사 후 셀렉트 리셋 */ setLoadFrom(""); }} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
+                  <option value="">선택하기</option>
+                  <option value="ch01">CH 01 · PIPE-A-204</option>
+                  <option value="ch02">CH 02 · PIPE-A-204</option>
+                  <option value="ch25">CH 25 · TANK-B-101</option>
+                </select>
+                <div style={{ font: "400 9px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>선택한 채널의 설정을 현재 폼으로 복사합니다. 복사 후 다시 '선택하기'로 돌아갑니다.</div>
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {/* #11: 제품명 — 탐촉자 제품/모델명 (구 채널 번호 자리) */}
                 <div>
-                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>채널 번호 <span style={{ color: "var(--system-error)" }}>*</span></div>
-                  <select className="erut-field" value={channel} onChange={(e) => setChannel(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
-                    <option value="">선택하세요</option>
-                    <option value="65">65 (다음 빈 슬롯)</option>
-                    <option value="16">16 (현재 미등록)</option>
-                    <option value="manual">직접 입력...</option>
-                  </select>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>제품명 <span style={{ color: "var(--system-error)" }}>*</span></div>
+                  <input className="erut-field" value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="예: Olympus A430S-SB" style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
                 </div>
                 <div>
                   <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>Serial 번호 (SN) <span style={{ color: "var(--system-error)" }}>*</span></div>
@@ -1389,25 +1409,6 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                   <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>검사체 공칭 두께 (mm) <span style={{ color: "var(--content-low)" }}>(검사 대상 상속)</span></div>
                   <input className="erut-field is-disabled" type="number" value={nominalThk} readOnly disabled style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
                   <div style={{ font: "400 9px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>검사 대상([6])에서 상속. 재질과 함께 권장 PRF 산출 기준.</div>
-                </div>
-                {/* v20.0: 탐촉자 종류 프리셋 폐기 → 탐촉자 주파수 개별 수동 입력 (시리얼 자동 인식 X) */}
-                <div>
-                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>탐촉자 주파수 (MHz) <span style={{ color: "var(--system-error)" }}>*</span></div>
-                  <input className="erut-field" type="number" min="0.5" max="20" step="0.25" value={freqMHz} onChange={(e) => setFreqMHz(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
-                </div>
-                {/* v20.0: 진동자 크기·형식 개별 수동 입력 */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                  <div>
-                    <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>진동자 크기 (mm) <span style={{ color: "var(--system-error)" }}>*</span></div>
-                    <input className="erut-field" type="number" min="1" max="50" step="0.5" value={elementMm} onChange={(e) => setElementMm(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
-                  </div>
-                  <div>
-                    <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>진동자 형식</div>
-                    <select className="erut-field" value={elementShape} onChange={(e) => setElementShape(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
-                      <option value="원형">원형</option>
-                      <option value="사각">사각</option>
-                    </select>
-                  </div>
                 </div>
                 {/* v15.3: Wedge 각도 — 수직(90°) 기본값. 90° 미만은 경사각 */}
                 <div>
@@ -1516,6 +1517,24 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
               </div>
             )}
           </div>
+          {/* #10: 채널 번호 + 탐촉자 주파수 — A-scan 하단으로 이동 */}
+          {!isEdit && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 8 }}>
+              <div>
+                <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>채널 번호 <span style={{ color: "var(--system-error)" }}>*</span></div>
+                <select className="erut-field" value={channel} onChange={(e) => setChannel(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
+                  <option value="">선택하세요</option>
+                  <option value="65">65 (다음 빈 슬롯)</option>
+                  <option value="16">16 (현재 미등록)</option>
+                  <option value="manual">직접 입력...</option>
+                </select>
+              </div>
+              <div>
+                <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>탐촉자 주파수 (MHz) <span style={{ color: "var(--system-error)" }}>*</span></div>
+                <input className="erut-field" type="number" min="0.5" max="20" step="0.25" value={freqMHz} onChange={(e) => setFreqMHz(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* v14.1: 교정 측정 + Gate 설정 2열 배치 (가로로 나란히) */}
@@ -1554,51 +1573,64 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                     <input className="erut-field is-disabled" value={material} disabled style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
                   </div>
                   <div>
-                    <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>두께 (mm) <span style={{ color: "var(--system-error)" }}>*</span></div>
-                    <input className="erut-field" type="number" step="0.1" value={refThickness} onChange={(e) => setRefThickness(parseFloat(e.target.value) || 0)} placeholder="절차서 두께" style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                    <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 3 }}>두께 (mm) <span style={{ color: "var(--content-low)" }}>(검사체 동일)</span></div>
+                    <input className="erut-field is-disabled" type="number" value={nominalThk} readOnly disabled style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
                   </div>
                 </div>
               )}
               <div style={{ marginTop: 6, font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-                음속 = 2 × 두께(mm) × 1000 / ToF(μs). {refKind === "standard" ? "표준시험편 선택 시 두께 자동 채움." : "비교시험편 = 검사체 동일 재질·인공 결함. 절차서 두께 입력."}
+                음속 = 2 × 두께(mm) × 1000 / ToF(μs). {refKind === "standard" ? "표준시험편 선택 시 두께 자동 채움(수정 가능)." : "비교시험편 = 검사체 동일 재질·두께 + 인공 결함. 두께는 검사체와 동일(고정)."}
               </div>
             </div>
-            {/* v16.1: Wedge 카드 제거 — 측정 불가, 좌측 channel 정보 input 사용. 1×3 grid (음속·영점·Gain) */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+            {/* 음속·영점 (Gain은 #14로 우측 Gate 위 'Gain 설정' 섹션으로 분리) */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <CalibCell label="음속"         state={velocity} onMeasure={measureVel}  disabled={!canMeasureWithRef} hint={velHint}/>
               <CalibCell label="영점 (Zero)"  state={zero}     onMeasure={measureZero} disabled={!canMeasureWithRef}/>
-              <CalibCell label="Gain"         state={gain}     isGain={true}/>
             </div>
-            {/* v20.0: PRF (재질·공칭두께 자동 산출 + override) + DAC 선도 (교정 메타·진폭보정 기준 — 판정은 웹) */}
+            {/* #17 PRF (재질 기준 기본값 prefill · 항상 수정 가능) + #18 TCG (DAC 대체) */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
               <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>PRF</span>
-                  <window.Toggle checked={autoPRF} onChange={setAutoPRF} size="sm" label="상속"/>
-                </div>
-                <input className={"erut-field" + (autoPRF ? " is-disabled" : "")} type="number" min="1" step="1" disabled={autoPRF} value={autoPRF ? prfValue : prfManual} onChange={(e) => setPrfManual(parseInt(e.target.value, 10) || 0)} style={{ width: "100%", height: 34, padding: "4px 8px", fontSize: 15, fontWeight: 700 }}/>
-                <div style={{ marginTop: 6, font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: autoPRF ? "var(--system-success)" : "var(--system-caution)" }}>
-                  {autoPRF ? `검사 대상 기준 상속 — ${material.split(" ")[0]} · ${nominalThk}mm 권장 ${prfValue.toLocaleString()} Hz` : "채널 override (수동 입력)"}
+                <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 6 }}>PRF <span style={{ fontWeight: 400, color: "var(--content-low)" }}>(Hz)</span></div>
+                <input className="erut-field" type="number" min="1" step="1" value={prfValue} onChange={(e) => setPrf(parseInt(e.target.value, 10) || 0)} style={{ width: "100%", height: 34, padding: "4px 8px", fontSize: 15, fontWeight: 700 }}/>
+                <div style={{ marginTop: 6, font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+                  재질·공칭두께 기준 권장 {prfCalc.prf.toLocaleString()} Hz ({material.split(" ")[0]} · {nominalThk}mm) — 기본 입력, 언제든 수정 가능.
                 </div>
               </div>
               <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>DAC 선도 <span style={{ fontWeight: 400, color: "var(--content-low)" }}>(거리-진폭 보정)</span></span>
-                  <window.Toggle checked={dacOn} onChange={setDacOn} size="sm" label="사용"/>
+                  <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>TCG <span style={{ fontWeight: 400, color: "var(--content-low)" }}>(시간 보정 이득)</span></span>
+                  <window.Toggle checked={tcgOn} onChange={setTcgOn} size="sm" label="사용"/>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ flex: 1, font: "700 13px/1.2 var(--font-kr)", letterSpacing: ".02em", color: dacPoints > 0 ? "var(--content-high)" : "var(--content-low)" }}>
-                    {dacPoints > 0 ? `기준점 ${dacPoints}개` : "미설정 — 기준점 0"}
+                  <div style={{ flex: 1, font: "700 13px/1.2 var(--font-kr)", letterSpacing: ".02em", color: tcgPoints > 0 ? "var(--content-high)" : "var(--content-low)" }}>
+                    {tcgPoints > 0 ? `기준점 ${tcgPoints}개 (시간·dB)` : "미설정 — 기준점 0"}
                   </div>
-                  <button className={"erut-btn erut-btn--default erut-btn--sm" + (dacOn ? "" : " erut-btn--disabled")} disabled={!dacOn} onClick={() => setDacPoints(n => n + 1)}>기준점 추가</button>
+                  <button className={"erut-btn erut-btn--default erut-btn--sm" + (tcgOn ? "" : " erut-btn--disabled")} disabled={!tcgOn} onClick={() => setTcgPoints(n => n + 1)}>기준점 추가</button>
                 </div>
-                <div style={{ marginTop: 6, font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>Amp 정규화 기준으로 저장. 결함 크기 판정은 웹 서비스.</div>
+                <div style={{ marginTop: 6, font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>시간대별 Gain 보정으로 후면 에코 진폭 균일화 — 두께 범위 전반 일관된 Amp 기준.</div>
               </div>
             </div>
           </div>
 
-          {/* Gate 설정 (Gate A / Gate B stack) */}
+          {/* 우측 열: #14 Gain 설정(Gate 위) + Gate 설정 */}
           <div>
+            {/* #6/#16: Gain 설정 — 소프트웨어·디지털·아날로그 개별 값(input+−1/+1) + LogScale 표시 스케일 */}
+            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 8 }}>Gain 설정</div>
+            <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px", marginBottom: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+              <GainRow label="소프트웨어" value={gainSw} setter={setGainSw}/>
+              <GainRow label="디지털" value={gainDigital} setter={setGainDigital}/>
+              <GainRow label="아날로그" value={gainAnalog} setter={setGainAnalog}/>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, paddingTop: 8, borderTop: "1px solid var(--border-low)" }}>
+                <label onClick={() => setLogScale(v => !v)} style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", flexShrink: 0 }}>
+                  <span className="erut-cb"><span className={"erut-cb__box" + (logScale ? " is-on" : "")}></span></span>
+                  LogScale
+                </label>
+                <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>−80</span>
+                <input type="range" min="-80" max="80" step="1" value={logScaleVal} onChange={(e) => setLogScaleVal(parseInt(e.target.value, 10))} style={{ flex: 1, minWidth: 0, accentColor: "var(--brand-primary)" }}/>
+                <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>80</span>
+              </div>
+            </div>
+            {/* Gate 설정 (Gate A / Gate B stack) */}
             <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 8 }}>Gate 설정</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <GateInputs name="Gate A — 1차 반사" color="var(--system-error)" gate={gateA} onChange={setA}/>
@@ -1611,17 +1643,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
 
       {/* ───── 하단 sticky 액션 바 — v14.0 모드별 분기 ───── */}
       <div style={{ gridRow: 3, gridColumn: "1 / -1", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 24px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
-        {!isEdit ? (
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>적용 범위</span>
-            <select className="erut-field" style={{ height: 30, padding: "4px 8px", fontSize: 12 }}>
-              <option>단일 채널 (CH 09)</option>
-              <option>같은 검사 대상 (PIPE-A · 24ch)</option>
-              <option>전체 64채널</option>
-            </select>
-            <span style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>여러 채널 = 공통 설정 일괄 적용 · SN은 채널별 입력</span>
-          </div>
-        ) : <span/>}
+        {/* #19: '적용 범위' 폐지 — 설정 불러오기는 좌측 패널 최상단 셀렉트로 이동 */}
+        <span/>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onBack}>취소</button>
           {isEdit ? (
@@ -1630,11 +1653,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
               <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onSaveAndMeasure}>저장 + 측정 시작</button>
             </>
           ) : (
-            <>
-              <button className="erut-btn erut-btn--default erut-btn--sm" disabled={!canAddOnly}>임시 저장</button>
-              <button className={"erut-btn erut-btn--default erut-btn--sm" + (canAddOnly ? "" : " erut-btn--disabled")} disabled={!canAddOnly} onClick={onAddOnly}>추가만</button>
-              <button className={"erut-btn erut-btn--emphasis erut-btn--sm" + (canAddStart ? "" : " erut-btn--disabled")} disabled={!canAddStart} onClick={onAddAndStart}>추가 + 측정 시작</button>
-            </>
+            /* #15: '임시 저장'·'추가만' 삭제, '추가 + 측정 시작'→'추가' */
+            <button className={"erut-btn erut-btn--emphasis erut-btn--sm" + (canAddOnly ? "" : " erut-btn--disabled")} disabled={!canAddOnly} onClick={onAddOnly}>추가</button>
           )}
         </div>
       </div>
