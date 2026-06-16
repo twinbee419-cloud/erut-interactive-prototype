@@ -372,7 +372,7 @@ window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
               >
                 {/* v22.0: 프로젝트 상태 태그(진행중/완료/검토) 삭제 — 최근 시각·카운트로 충분, 검토는 웹 책임과 충돌 */}
                 <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "flex-start" }}>
-                  <span style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>시작일 {p.startDate}</span>
+                  <span style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>생성일 {p.startDate}</span>
                 </div>
                 <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{p.name}</div>
                 <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{p.place}</div>
@@ -398,7 +398,7 @@ window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
 
 // =================== Modal · 새 프로젝트 만들기 ===================
 window.NewProjectModal = function NewProjectModal({ onCreate, onClose }) {
-  // 시작일·프로젝트 코드는 생성 시점에 자동 부여 (입력 불가). 담당 검사자·산업·표준은 웹에서 관리.
+  // 생성일·프로젝트 코드는 생성 시점에 자동 부여 (입력 불가). 담당 검사자·산업·표준은 웹에서 관리.
   const autoStartDate = "2026-06-16";        // 생성 버튼 클릭 시점 자동 기록
   const autoCode = "a3f29c1e-7b84-4d2f-9e10-5c8b1f2a6d04"; // UUID 자동 부여 (수정 불가)
   const [form, setForm] = $s({ name: "", place: "", note: "" });
@@ -441,7 +441,7 @@ window.NewProjectModal = function NewProjectModal({ onCreate, onClose }) {
       <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", paddingBottom: 6, borderBottom: "1px solid var(--border-low)" }}>자동 부여</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 14 }}>
         <div>
-          {label("시작일")}
+          {label("생성일")}
           <input className="erut-field is-disabled" value={autoStartDate} readOnly tabIndex={-1} style={{ width: "100%" }}/>
           {hint("생성 시점 자동 기록")}
         </div>
@@ -627,7 +627,7 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
               <span style={{ font: "700 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{proj.name}</span>
             </div>
             <div style={{ font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 6 }}>
-              시작일 {proj.startDate}{proj.note ? ` · ${proj.note}` : ""}
+              생성일 {proj.startDate}{proj.note ? ` · ${proj.note}` : ""}
             </div>
           </div>
           {/* 장비 요약 카운터 (프로젝트명과 동일 크기) — 패널 헤더에서 이동 */}
@@ -758,7 +758,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
     { label: "SN (시리얼)",   value: "MCF-2024-001" },
     { label: "IP 주소",       value: "192.168.1.100" },
     { label: "활성 채널",     value: "64 / 64 CH", emphasis: true },
-    { label: "마지막 통신",   value: "실시간 (0.3s)", success: true },
+    { label: "마지막 데이터 송신일시", value: "2026-06-16 13:00", success: true },
   ];
 
   return (
@@ -836,12 +836,6 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
               <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
               연결됨
             </span>
-            {bSt === "measuring" && (
-              <span className="erut-pill" style={{ padding: "2px 8px", fontSize: 11, lineHeight: 1, background: "linear-gradient(rgba(34,133,239,0.12),rgba(34,133,239,0.12)), var(--surface-subtle-2)", color: "var(--content-emphasis)", borderColor: "var(--border-emphasis)" }}>
-                <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
-                측정 중
-              </span>
-            )}
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {/* MC보드 단위 측정 제어 — idle=측정 시작 / measuring=측정 중지 (일시정지 폐기) */}
@@ -1010,7 +1004,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
             );
           })()}
           {/* v18.1: 보고서 출력 버튼은 MC보드 정보 옆 '진단/로그' 왼쪽으로 이동 (단위 일관성) */}
-          <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%", marginTop: 8 }} onClick={() => onStartMeasure && onStartMeasure(selected)}>[11] 실시간 전체 화면 ↗</button>
+          <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%", marginTop: 8 }} onClick={() => onStartMeasure && onStartMeasure(selected)}>A-scan 스캔 상세보기 ↗</button>
         </div>
       </div>
 
@@ -2430,7 +2424,7 @@ function SettingsSectionHeader({ title, desc }) {
 function SettingsGeneral() {
   const [startScreen, setStartScreen] = $s("last");
   const [sound, setSound] = $s(true);
-  const [sendCycle, setSendCycle] = $s("3600");
+  const [sendCycle, setSendCycle] = $s(30);
   return (
     <>
       <SettingsSectionHeader title="일반" desc="앱의 기본 동작과 표시 방식을 설정합니다."/>
@@ -2464,13 +2458,11 @@ function SettingsGeneral() {
             <span className="erut-toggle__label erut-toggle__label--sm">{sound ? "활성" : "비활성"}</span>
           </label>
         </SettingsRow>
-        <SettingsRow label="데이터 송신 주기" hint="MC보드가 측정 데이터를 서버로 전송하는 간격. 감육은 장기 진행이라 긴 주기로 충분. 측정 주파수(PRF)와는 별개.">
-          <select className="erut-field" value={sendCycle} onChange={(e) => setSendCycle(e.target.value)} style={{ width: 240 }}>
-            <option value="3600">1시간 (기본)</option>
-            <option value="10800">3시간</option>
-            <option value="21600">6시간</option>
-            <option value="43200">12시간</option>
-          </select>
+        <SettingsRow label="데이터 송신 주기" hint="MC보드가 측정 데이터를 서버로 전송하는 간격. 감육은 장기 진행이라 짧을 필요 없음. 측정 주파수(PRF)와는 별개.">
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input className="erut-field" type="number" min="1" step="1" value={sendCycle} onChange={(e) => setSendCycle(parseInt(e.target.value, 10) || 0)} style={{ width: 120 }}/>
+            <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--content-medium)" }}>분</span>
+          </div>
         </SettingsRow>
       </div>
     </>
@@ -3514,12 +3506,12 @@ function buildTargetForm(target) {
   if (!target) target = {};
   // MOCK.targets desc를 파싱하기 어려우니 PIPE-A-204 기본값으로 시뮬레이션
   const defaults = {
-    "PIPE-A-204": { code: "SK-ULSN-PA204", shape: "배관",         od: 300,  th: 10, idim: 280, length: 6000, allow: "2.0 mm", material: "탄소강 (S355)",    fluid: "고온 스팀",       std: "KS B 0817", temp: 380, press: 4.2 },
-    "TANK-B-101": { code: "SK-ULSN-TB101", shape: "탱크 (구형)",  od: 1500, th: 14, idim: 1472,length: 0,    allow: "3.0 mm", material: "스테인레스 (316L)",fluid: "가스 — 수소",    std: "ASME Sec.V", temp: 25,  press: 8.0 },
-    "VESSEL-C-301": { code: "SK-ULSN-VC301", shape: "탱크 (원통형)", od: 800, th: 12, idim: 776, length: 400,  allow: "2.5 mm", material: "스테인레스 (304)", fluid: "액체 — 화학약품", std: "API 510",   temp: 120, press: 2.0 },
-    "FLANGE-D-08": { code: "SK-ULSN-FD08",  shape: "플랜지",      od: 200,  th: 18, idim: 164, length: 0,    allow: "3.0 mm", material: "탄소강 (S355)",    fluid: "고온 스팀",       std: "KS B 0817",  temp: 200, press: 3.5 },
-    "DOME-E-12":   { code: "SK-ULSN-DE12",  shape: "Dome 헤드",   od: 1200, th: 15, idim: 1170,length: 0,    allow: "3.0 mm", material: "탄소강 (S355)",    fluid: "액체 — 원유",    std: "API 510",   temp: 60,  press: 1.5 },
-    "WELD-F-22":   { code: "SK-ULSN-WF22",  shape: "용접부",      od: 0,    th: 12, idim: 0,   length: 800,  allow: "2.0 mm", material: "탄소강 (S355)",    fluid: "고온 스팀",       std: "KS B 0817",  temp: 350, press: 4.0 },
+    "PIPE-A-204": { code: "SK-ULSN-PA204", shape: "배관",         od: 300,  th: 10, idim: 280, length: 6000, allow: "2.0", material: "탄소강 (S355)",    fluid: "고온 스팀",       std: "KS B 0817", temp: 380, press: 4.2 },
+    "TANK-B-101": { code: "SK-ULSN-TB101", shape: "탱크 (구형)",  od: 1500, th: 14, idim: 1472,length: 0,    allow: "3.0", material: "스테인레스 (316L)",fluid: "가스 — 수소",    std: "ASME Sec.V", temp: 25,  press: 8.0 },
+    "VESSEL-C-301": { code: "SK-ULSN-VC301", shape: "탱크 (원통형)", od: 800, th: 12, idim: 776, length: 400,  allow: "2.5", material: "스테인레스 (304)", fluid: "액체 — 화학약품", std: "API 510",   temp: 120, press: 2.0 },
+    "FLANGE-D-08": { code: "SK-ULSN-FD08",  shape: "플랜지",      od: 200,  th: 18, idim: 164, length: 0,    allow: "3.0", material: "탄소강 (S355)",    fluid: "고온 스팀",       std: "KS B 0817",  temp: 200, press: 3.5 },
+    "DOME-E-12":   { code: "SK-ULSN-DE12",  shape: "Dome 헤드",   od: 1200, th: 15, idim: 1170,length: 0,    allow: "3.0", material: "탄소강 (S355)",    fluid: "액체 — 원유",    std: "API 510",   temp: 60,  press: 1.5 },
+    "WELD-F-22":   { code: "SK-ULSN-WF22",  shape: "용접부",      od: 0,    th: 12, idim: 0,   length: 800,  allow: "2.0", material: "탄소강 (S355)",    fluid: "고온 스팀",       std: "KS B 0817",  temp: 350, press: 4.0 },
   };
   const d = defaults[target.id] || defaults["PIPE-A-204"];
   return {
@@ -3598,11 +3590,11 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   // v9.27 Wave B fix: 프리셋 데이터에 실제 form 매핑 추가 — '불러오기' 시 input field 자동 적용
   const presets = [
     { id: "p1", name: "탄소강 배관 6~12mm @ 고온 스팀", params: "5 MHz · 28 dB · Pulser 200V · PRF 2,000 Hz · DAC ON", uses: 12, last: "2026-05-19", applied: true,
-      data: { shape: "배관", th: "10", od: "300", material: "탄소강 (S355)", fluid: "고온 스팀", std: "KS B 0817", temp: "380", press: "4.2", allow: "2.0 mm" } },
+      data: { shape: "배관", th: "10", od: "300", material: "탄소강 (S355)", fluid: "고온 스팀", std: "KS B 0817", temp: "380", press: "4.2", allow: "2.0" } },
     { id: "p2", name: "탄소강 배관 표준 (범용)",         params: "5 MHz · 26 dB · Pulser 180V · PRF 2,000 Hz",          uses: 28, last: "2026-05-21", applied: false,
-      data: { shape: "배관", th: "8",  od: "200", material: "탄소강 (S355)", fluid: "액체 — 물",   std: "KS B 0817", temp: "25",  press: "1.0", allow: "1.5 mm" } },
+      data: { shape: "배관", th: "8",  od: "200", material: "탄소강 (S355)", fluid: "액체 — 물",   std: "KS B 0817", temp: "25",  press: "1.0", allow: "1.5" } },
     { id: "p3", name: "탄소강 고압 배관 (압력 ≥ 4 MPa)", params: "2.25 MHz · 32 dB · TCG ON · PRF 1,000 Hz",            uses:  5, last: "2026-05-15", applied: false,
-      data: { shape: "배관", th: "14", od: "400", material: "탄소강 (S355)", fluid: "고온 스팀", std: "ASME Sec.V", temp: "350", press: "5.5", allow: "3.0 mm" } },
+      data: { shape: "배관", th: "14", od: "400", material: "탄소강 (S355)", fluid: "고온 스팀", std: "ASME Sec.V", temp: "350", press: "5.5", allow: "3.0" } },
   ];
 
   const formLabel = (txt, req) => (
@@ -3748,8 +3740,11 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             <input className="erut-field" value={form.length} onChange={(e) => setField("length", e.target.value)} style={{ width: "100%" }}/>
           </div>
           <div>
-            {formLabel("허용 감육 (mm 또는 %)")}
-            <input className="erut-field" value={form.allow} onChange={(e) => setField("allow", e.target.value)} style={{ width: "100%" }}/>
+            {formLabel("허용 감육")}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input className="erut-field" type="number" min="0" step="0.1" value={form.allow} onChange={(e) => setField("allow", e.target.value)} style={{ flex: 1, minWidth: 0 }}/>
+              <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--content-medium)" }}>mm</span>
+            </div>
           </div>
 
           {sectionHeader("소재 · 유체 · 운영 환경")}

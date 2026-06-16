@@ -150,9 +150,7 @@ function App() {
     // 프로젝트 저장 — [0]에서 비활성, [1]부터 활성 (구 '다른 이름으로 저장'). 저장은 30초 자동 + 페이지 내 명시 버튼 병행
     { label: "프로젝트 저장", shortcut: "Ctrl+Shift+S", disabled: screen === "project" },
     { divider: true },
-    // v18.0: [파일] 보고서 출력 → 채널 측정 보고서 모달 (selectedTarget 기준 prefill, 첫 채널 초기 선택)
-    { label: "보고서 출력", shortcut: "Ctrl+P", onClick: () => setReportDialog({ deviceId: "MCuF-001", initialChannel: null }) },
-    { divider: true },
+    // v18.0: 보고서 출력은 toolbar로 일원화 — 파일 메뉴 항목 삭제(중복). Ctrl+P 단축키는 유지.
     { label: "종료", shortcut: "Alt+F4" },
   ];
   const deviceMenu = [
@@ -170,7 +168,7 @@ function App() {
   // 툴바: 홈 / 보고서 / 진단. 보고서=장비 컨텍스트 전용. 진단=장비 컨텍스트 + [1] 메인(전체 보드 로그). 이전·알림·breadcrumb은 Toolbar 별도 슬롯.
   const hasDevice = ["device", "realtime", "commission"].includes(screen);
   const tools = [
-    { key: "home",   label: "메인 페이지", icon: <window.EIcon.Home/> },
+    { key: "home",   label: "홈 (프로젝트 선택)", icon: <window.EIcon.Home/> },
     { key: "report", label: "보고서 출력", icon: <window.EIcon.Report/>, disabled: !hasDevice },
     { key: "diag",   label: "진단 / 로그", icon: <window.EIcon.Diag/>,   disabled: !(hasDevice || screen === "main") },
   ];
@@ -270,7 +268,7 @@ function App() {
 
   const handleToolPick = (k) => {
     setToolKey(k);
-    if (k === "home")   goto("main");
+    if (k === "home")   goto("project");
     if (k === "report") setReportDialog({ deviceId: "MCuF-001", initialChannel: null });
     if (k === "diag")   setShowDiag(true);
   };
