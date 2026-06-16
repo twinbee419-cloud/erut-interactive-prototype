@@ -282,8 +282,9 @@ window.ChannelGrid = function ChannelGrid({
           if (isSel) clsParts.push("is-active");
           if (isFocus) clsParts.push("is-focused");
           if (hasDefect) clsParts.push("is-defect"); // 셀 dim 제외 로직용 (시각 표시는 코너 마커)
-          // v9.30: breathe 애니메이션은 감육 → 교정 상태로 이전
+          // v9.30: breathe — 교정 필요(red) 우선 / 그 외 신호 약함·나쁨(orange) breathe. (#21, [2] 한정)
           if (needsCalibration) clsParts.push("is-needs-calibration");
+          else if (!isRealtime && (warn || err)) clsParts.push("is-signal-warn");
 
           // v9.10: 다른 카드의 정상 채널만 dim 0.6 (감육 채널은 유지). 카드 미선택 시 1.0
           // v9.29 Wave D: multi-select 지원 — 선택된 카드 외 정상 채널만 dim
@@ -349,13 +350,17 @@ window.ChannelGrid = function ChannelGrid({
       {/* v9.32: 하단 범례 — '교정 필요' (breathe) + '선택됨' 인라인 (좌측 정렬) */}
       {showDefectLegend && (() => {
         const needsCalibCount = cells.filter(c => c.calibrationStatus === "uncalibrated" || c.calibrationStatus === "expired").length;
+        const signalWarnCount = cells.filter(c => c.sensor && (c.sensor.state === "warn" || c.sensor.state === "err")).length;
         return (
           <div style={{ display: "flex", gap: 14, marginTop: 4, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
               <span style={{ position: "relative", width: 12, height: 12, border: "1px solid var(--border-medium)" }}><span style={{ position: "absolute", top: 0, left: 0, width: 0, height: 0, borderTop: "7px solid var(--system-error)", borderRight: "7px solid transparent" }}/></span>감육 검출 {detectCount}
             </span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-              <span style={{ width: 12, height: 12, background: "rgba(107,124,155,0.32)", border: "1px solid var(--content-low)" }}/>교정 필요 {needsCalibCount}
+              <span style={{ width: 12, height: 12, background: "rgba(255,0,94,0.30)", border: "1px solid var(--system-error)" }}/>교정 필요 {needsCalibCount}
+            </span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <span style={{ width: 12, height: 12, background: "rgba(255,146,0,0.30)", border: "1px solid var(--system-caution)" }}/>신호 약함·나쁨 {signalWarnCount}
             </span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
               <span style={{ width: 12, height: 12, background: "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-subtle-2)", border: "1px solid var(--border-emphasis)" }}/>선택됨

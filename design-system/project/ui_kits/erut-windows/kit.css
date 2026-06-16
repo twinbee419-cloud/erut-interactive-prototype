@@ -517,15 +517,24 @@
   pointer-events: none;
 }
 
-/* ---------- v15.2: 교정 필요 셀 — content-low(회색-블루) breathe ----------
-   "F6 측정 시작 차단 = 사용 불가(disabled)" 의미 매핑. 신호 약함(caution dot)과 색축 분리.
-   액션 버튼은 caution 유지(어포던스) → 셀=상태(회색), 버튼=주의(오렌지) 분리.
-   defect 색상이 동시에 있을 경우 needs-calibration이 우선 (animation override). */
+/* ---------- #21: 신호 약함·나쁨 셀 — orange(caution) breathe ----------
+   [2] 장비 상세 셀에서 신호 상태(약함·나쁨) 강조. 교정 필요(red)보다 우선순위 낮음(JSX else-if).
+   감육 검출은 코너 삼각 마커(형태)로 구분. */
+.erut-ch-cell.is-signal-warn{
+  --calib-fill-low:    rgba(255,146,0,0.10);
+  --calib-fill-high:   rgba(255,146,0,0.30);
+  --calib-border-low:  rgba(255,146,0,0.45);
+  --calib-border-high: rgba(255,146,0,1.00);
+  animation: erut-calib-breathe 1.6s ease-in-out infinite;
+}
+/* ---------- #21: 교정 필요 셀 — red(error) breathe ----------
+   측정 신뢰성 전제 미충족(F6 차단) = 조치 필요 → red. 감육 검출(red 코너 마커)과 형태로 구분.
+   (v15.2 회색-블루 → red 변경) */
 .erut-ch-cell.is-needs-calibration{
-  --calib-fill-low:    rgba(107,124,155,0.10);
-  --calib-fill-high:   rgba(107,124,155,0.32);
-  --calib-border-low:  rgba(107,124,155,0.45);
-  --calib-border-high: rgba(107,124,155,1.00);
+  --calib-fill-low:    rgba(255,0,94,0.10);
+  --calib-fill-high:   rgba(255,0,94,0.30);
+  --calib-border-low:  rgba(255,0,94,0.45);
+  --calib-border-high: rgba(255,0,94,1.00);
   animation: erut-calib-breathe 1.6s ease-in-out infinite;
 }
 @keyframes erut-calib-breathe {
