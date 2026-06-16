@@ -212,8 +212,8 @@ window.MOCK = {
   ],
   // [4] 장비 연결 설정 — MC보드 리스트 (main slide 9 매칭)
   mcBoards: [
-    { id: "MCF-2024-001", alias: "주력 장비", ip: "10.10.1.5",    port: 8080, channels: 64, freq: 5,  firmware: "v2.4.1", state: "connected", note: "영점 정상 · 지연 4 ms" },
-    { id: "MCF-2024-002", alias: "보조 장비", ip: "192.168.0.45", port: 8080, channels: 32, freq: 10, firmware: "v2.3.8", state: "warn",      note: "영점 편차 CH 7 · CH 43" },
+    { id: "MCF-2024-001", alias: "주력 장비", ip: "10.10.1.5",    port: 8080, channels: 64, freq: 5,  firmware: "v2.4.1", state: "connected", note: "지연 4 ms · 정상" },
+    { id: "MCF-2024-002", alias: "보조 장비", ip: "192.168.0.45", port: 8080, channels: 32, freq: 10, firmware: "v2.3.8", state: "warn",      note: "응답 지연 28 ms (높음)" },
     { id: "MCF-2024-003", alias: "예비",     ip: "192.168.0.46", port: 8080, channels: 64, freq: 5,  firmware: "v2.4.1", state: "offline",   note: "연결 끊김 (10분 전)" },
   ],
   // v12.0: 교정 필요 채널 (uncalibrated: 신규 추가 후 미진행 + expired: 주기 초과 만료) — DeviceDetail breathe 셀과 동일 소스
@@ -3191,7 +3191,7 @@ function MCBoardList({ onAdd, onEdit }) {
       </div>
 
       {/* v8.8: 2컬럼 레이아웃 (MQTT 설정 페이지 매칭) — 좌: MC보드 리스트 / 우: 영점 검증 요약 */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
+      <div style={{ display: "block" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {boards.map((b, idx) => {
           const isSelected = idx === 0; // 첫 카드 = 선택 시뮬레이션
@@ -3236,32 +3236,6 @@ function MCBoardList({ onAdd, onEdit }) {
         })}
       </div>
 
-      {/* 영점 색검증 요약 (선택 보드) — v8.8: 2컬럼 우측으로 이동 */}
-      <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "16px 18px", alignSelf: "start" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-          <div>
-            <h3 style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>선택 보드 채널 영점 — {boards[0].id}</h3>
-            <p style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4, marginBottom: 0 }}>참조 블록 측정 후 색으로 일치성 검증. 황·적색 채널은 재측정 필요.</p>
-          </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            <button className="erut-btn erut-btn--default erut-btn--sm">전체 영점 재측정</button>
-            <button className="erut-btn erut-btn--subtle erut-btn--sm">CH ID 등록</button>
-          </div>
-        </div>
-        {/* 64ch 압축 색바 — ch 7 warn, ch 16 err, ch 43 warn */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(32, 1fr)", gap: 2, padding: "8px 0" }}>
-          {Array.from({ length: 64 }).map((_, i) => {
-            const ch = i + 1;
-            const color = ch === 16 ? "var(--system-error)" : (ch === 7 || ch === 43) ? "var(--system-caution)" : "var(--system-success)";
-            return <div key={ch} style={{ height: 14, background: color }}/>;
-          })}
-        </div>
-        <div style={{ display: "flex", gap: 18, marginTop: 8, font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-          <div><span style={{ display: "inline-block", width: 10, height: 10, background: "var(--system-success)", verticalAlign: "middle", marginRight: 4 }}/>정상 61</div>
-          <div><span style={{ display: "inline-block", width: 10, height: 10, background: "var(--system-caution)", verticalAlign: "middle", marginRight: 4 }}/>편차 2 (CH 7 · 43)</div>
-          <div><span style={{ display: "inline-block", width: 10, height: 10, background: "var(--system-error)", verticalAlign: "middle", marginRight: 4 }}/>오류 1 (CH 16)</div>
-        </div>
-      </div>
       </div>
     </>
   );
