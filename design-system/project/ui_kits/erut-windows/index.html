@@ -44,12 +44,11 @@ const TITLE_BY_SCREEN = {
   realtime:  "ERUT - Ultrasonic Monitoring System  ·  MCuF-001 · 실시간 스캔 · 3개 대상 · 세션 #047",
   manage:    "ERUT - Ultrasonic Monitoring System  ·  검사 대상 관리",
   settings:  "ERUT - Ultrasonic Monitoring System  ·  장비 연결 설정",
-  // v18.0: report 스크린 라우팅 폐기 — 모달 전환 (제목은 잔여 라우팅 호환용 dead code, 실제 사용 없음)
-  history:   "ERUT - Ultrasonic Monitoring System  ·  검사 이력 관리",
+  // v18.0: report 스크린 라우팅 폐기 — 모달 전환
 };
 
-// Screens where the device is "connected" (status bar green LEDs) — v18.0: "report" 제거
-const CONNECTED_SCREENS = new Set(["main", "device", "commission", "realtime", "manage", "settings", "history"]);
+// Screens where the device is "connected" (status bar green LEDs) — v18.0: "report" 제거 / v27: "history" 폐기
+const CONNECTED_SCREENS = new Set(["main", "device", "commission", "realtime", "manage", "settings"]);
 
 function App() {
   const [screen, setScreen]                   = useState("project");
@@ -135,7 +134,7 @@ function App() {
   function closeMenus() { setMenuOpen(null); setActiveMenu(null); }
   function goto(s) { closeMenus(); setScreen(s); }
   // toolbar 내비게이션 — 이전(back) + breadcrumb(우측 끝)
-  const BACK_TO = { main: "project", device: "main", realtime: "device", commission: "device", settings: "main", manage: "main", history: "main" };
+  const BACK_TO = { main: "project", device: "main", realtime: "device", commission: "device", settings: "main", manage: "main" };
   const goBack = () => { const t = BACK_TO[screen]; if (t) goto(t); };
   const BREADCRUMB = {
     project:    [{ label: "프로젝트 선택", current: true }],
@@ -145,15 +144,12 @@ function App() {
     commission: [{ label: "메인" }, { label: "장비 상세" }, { label: "채널 설정", current: true }],
     settings:   [{ label: "메인" }, { label: "장비 연결 설정", current: true }],
     manage:     [{ label: "메인" }, { label: "검사 대상 관리", current: true }],
-    history:    [{ label: "메인" }, { label: "검사 이력", current: true }],
   };
 
   const fileMenu = [
     // 프로젝트 저장 — [0]에서 비활성, [1]부터 활성 (구 '다른 이름으로 저장'). 저장은 30초 자동 + 페이지 내 명시 버튼 병행
     { label: "프로젝트 저장", shortcut: "Ctrl+Shift+S", disabled: screen === "project" },
     { divider: true },
-    // v9.25: 검사 이력 메뉴 (Ctrl+D)
-    { label: "검사 이력", shortcut: "Ctrl+D", onClick: () => goto("history") },
     // v18.0: [파일] 보고서 출력 → 채널 측정 보고서 모달 (selectedTarget 기준 prefill, 첫 채널 초기 선택)
     { label: "보고서 출력", shortcut: "Ctrl+P", onClick: () => setReportDialog({ deviceId: "MCuF-001", initialChannel: null }) },
     { divider: true },
@@ -171,12 +167,12 @@ function App() {
     { label: "전체 측정 중지", shortcut: "F7" },
   ];
 
-  // 툴바: 홈 / 보고서 / 진단 (보고서·진단은 장비 컨텍스트에서만 활성). 이전·알림·breadcrumb은 Toolbar 별도 슬롯.
+  // 툴바: 홈 / 보고서 / 진단. 보고서=장비 컨텍스트 전용. 진단=장비 컨텍스트 + [1] 메인(전체 보드 로그). 이전·알림·breadcrumb은 Toolbar 별도 슬롯.
   const hasDevice = ["device", "realtime", "commission"].includes(screen);
   const tools = [
     { key: "home",   label: "메인 페이지", icon: <window.EIcon.Home/> },
     { key: "report", label: "보고서 출력", icon: <window.EIcon.Report/>, disabled: !hasDevice },
-    { key: "diag",   label: "진단 / 로그", icon: <window.EIcon.Diag/>,   disabled: !hasDevice },
+    { key: "diag",   label: "진단 / 로그", icon: <window.EIcon.Diag/>,   disabled: !(hasDevice || screen === "main") },
   ];
 
   // v8.5: [1-1] 대시보드 폐기. v14.0: [3] Gate 설정 폐기 → [4-3-1] commission 통합
@@ -209,13 +205,11 @@ function App() {
       if (e.key === "Escape") { closeMenus(); setShowNewProject(false); setShowCalibStartDialog(false); return; }
       // v12.0: F6 측정 시작 — 교정 미통과 채널 있으면 차단 다이얼로그
       if (e.key === "F6") { e.preventDefault(); tryStartMeasurement(); }
-      // v9.25: Ctrl+D → 검사 이력 / Ctrl+P → 보고서
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") { e.preventDefault(); goto("history"); }
       // v18.0: Ctrl+P → 보고서 출력 모달 (screen 라우팅 폐기)
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") { e.preventDefault(); setReportDialog({ deviceId: "MCuF-001", initialChannel: null }); }
       if (screen === "realtime") {
-        // F7 측정 중지 시 [7] 검사 이력으로 자동 진입 (일시정지 폐기 — Space 핸들러 제거)
-        if (e.key === "F7") { e.preventDefault(); setMeasureState("stopped"); goto("history"); }
+        // F7 측정 중지 시 [2] 장비 상세로 복귀 (일시정지 폐기 — Space 핸들러 제거 / v27: [7] 검사 이력 폐기)
+        if (e.key === "F7") { e.preventDefault(); setMeasureState("stopped"); goto("device"); }
       }
     };
     window.addEventListener("keydown", onKey);
@@ -335,8 +329,6 @@ function App() {
             onBoardControl={controlBoard}
             onAddDevice={() => { setSettingsInitialSubView("mc-add"); goto("settings"); }}
             onOpenDevice={() => { setSelectedChannel(null); goto("device"); }}
-            onChangeProject={() => goto("project")}
-            onOpenHistory={() => goto("history")}
           />
         )}
         {/* v8.5: [1-1] dashboard 라우트 폐기 — MC보드 자산 중심 모델 */}
@@ -411,17 +403,10 @@ function App() {
             elapsed={elapsed}
             setElapsed={setElapsed}
             onBack={() => goto("device")}
-            onStop={() => goto("history")}
+            onStop={() => goto("device")}
           />
         )}
-        {/* v18.0: [18] 보고서는 풀스크린 → 모달로 전환. screen === "report" 라우팅 제거 (ReportGenerator는 deprecated 보존) */}
-        {/* v9.25: [7] 검사 이력 관리 — v18.0: 보고서 진입을 모달로 변경 */}
-        {screen === "history" && (
-          <window.InspectionHistory
-            onBack={() => goto("main")}
-            onSelectReport={(sid) => setReportDialog({ deviceId: "MCuF-001", initialChannel: null })}
-          />
-        )}
+        {/* v18.0: [18] 보고서는 풀스크린 → 모달로 전환. v27: [7] 검사 이력 화면 폐기(라우팅·메뉴·진입 전면 제거) */}
 
         {/* 새 프로젝트 모달 */}
         {showNewProject && (
@@ -446,7 +431,7 @@ function App() {
           />
         )}
         {/* 진단/로그 모달 — toolbar 전역 트리거 (구 [2] DeviceDetail 내부 → App 승격) */}
-        {showDiag && <window.DiagnosticsModal onClose={() => setShowDiag(false)}/>}
+        {showDiag && <window.DiagnosticsModal projectScope={screen === "main"} onClose={() => setShowDiag(false)}/>}
 
         {/* v12.0: 측정 시작 차단 다이얼로그 (F6 / 툴바 play 공통) — default 일괄 재교정 */}
         {showCalibStartDialog && (
@@ -538,7 +523,7 @@ function App() {
           footer={(
             <>
               <window.Button variant="subtle" size="sm" onClick={() => setShowRecovery(false)}>취소</window.Button>
-              <window.Button variant="default" size="sm" onClick={() => { setShowRecovery(false); setPickedProject({ id: "sk-ulsan", name: "SK에너지 울산 #2 라인" }); setSelectedTarget("PIPE-A-204"); goto("history"); }}>[7] 검사 이력으로 이동</window.Button>
+              <window.Button variant="default" size="sm" onClick={() => { setShowRecovery(false); setPickedProject({ id: "sk-ulsan", name: "SK에너지 울산 #2 라인" }); setSelectedTarget("PIPE-A-204"); goto("device"); }}>[2] 장비 상세로 이동</window.Button>
               <window.Button variant="emphasis" size="sm" onClick={() => { setShowRecovery(false); setPickedProject({ id: "sk-ulsan", name: "SK에너지 울산 #2 라인" }); setSelectedTarget("PIPE-A-204"); setMeasureState("measuring"); goto("realtime"); }}>[11] 측정 계속</window.Button>
             </>
           )}

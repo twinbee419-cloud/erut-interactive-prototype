@@ -90,6 +90,8 @@ window.MOCK = {
     name: "SK에너지 울산 #2 라인",
     desc: "고온 스팀 배관 정기 검사 · 검사자 김검사 · 2026-Q2",
     owner: "김검사",
+    startDate: "2026-06-16",
+    note: "RFCC 배관 정기검사 · 감육 집중 구간",
     savedAt: "2026-05-22 09:42",
     autoSave: true,
   },
@@ -105,9 +107,9 @@ window.MOCK = {
   ],
   // 3 MCuF devices — matches ServiceFlow_Analysis SLIDE 5 device panel (lines 1158-1246)
   devices: [
-    { id: "MCuF-001", ip: "192.168.1.100", state: "measuring", activeCh: 64, totalCh: 64, dataRate: "2,048 msg/s", lastComm: null },
-    { id: "MCuF-002", ip: "192.168.1.101", state: "idle",      activeCh: 16, totalCh: 64, dataRate: null,           lastComm: null },
-    { id: "MCuF-003", ip: "192.168.1.102", state: "offline",   activeCh: null, totalCh: 64, dataRate: null,         lastComm: "10분 전" },
+    { id: "MCuF-001", ip: "192.168.1.100", state: "measuring", activeCh: 64, totalCh: 64, dataSent: "1.2 GB", lastSent: "2026-06-16 13:00" },
+    { id: "MCuF-002", ip: "192.168.1.101", state: "idle",      activeCh: 16, totalCh: 64, dataSent: "—",      lastSent: "—" },
+    { id: "MCuF-003", ip: "192.168.1.102", state: "offline",   activeCh: null, totalCh: 64, dataSent: "320 MB", lastSent: "2026-06-16 12:50" },
   ],
   // 8 fixed sensors on PIPE-A-204 (Z range 0~6000mm, θ 0~360°)
   sensors: [
@@ -369,9 +371,8 @@ window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
                 onClick={() => onPick && onPick(p.id)}
               >
                 {/* v22.0: 프로젝트 상태 태그(진행중/완료/검토) 삭제 — 최근 시각·카운트로 충분, 검토는 웹 책임과 충돌 */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "flex-start" }}>
                   <span style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>시작일 {p.startDate}</span>
-                  <span style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>{p.time}</span>
                 </div>
                 <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{p.name}</div>
                 <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{p.place}</div>
@@ -539,7 +540,7 @@ function MiniPill({ children, tone = "neutral", ledColor }) {
   );
 }
 
-window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevice, onOpenDevice, onChangeProject, onOpenHistory }) {
+window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevice, onOpenDevice }) {
   const proj = window.MOCK.project;
   const devices = window.MOCK.devices;
   // v22.1: 보드별 측정 상태 (공유 state) — 없으면 MOCK 기본값
@@ -570,7 +571,7 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
           </div>
           <MiniPill tone="pillLED" ledColor={isOffline ? "red" : "green"}>{isOffline ? "연결 끊김" : "연결됨"}</MiniPill>
         </div>
-        {/* 중단: 활성 채널 + 데이터율/마지막 통신 */}
+        {/* 중단: 활성 채널 + 데이터 송신량 + 마지막 데이터 송신일시 */}
         <div style={{ display: "flex", gap: 18, padding: "10px 0 8px", marginTop: 10, borderTop: "1px solid var(--border-low)" }}>
           <div>
             <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>활성 채널</div>
@@ -579,13 +580,13 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
               <span style={{ fontSize: 11, color: "var(--content-low)", fontWeight: 400 }}>&nbsp;/&nbsp;{d.totalCh} CH</span>
             </div>
           </div>
+          <div>
+            <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>데이터 송신량</div>
+            <div style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{d.dataSent || "—"}</div>
+          </div>
           <div style={{ flex: 1 }}>
-            <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>
-              {isOffline ? "마지막 통신" : "데이터율"}
-            </div>
-            <div style={{ font: isOffline ? "700 12px/1 var(--font-kr)" : "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: isOffline ? "var(--system-error)" : "var(--content-medium)" }}>
-              {d.dataRate || d.lastComm || "—"}
-            </div>
+            <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>마지막 데이터 송신일시</div>
+            <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: isOffline ? "var(--system-error)" : "var(--content-medium)" }}>{d.lastSent || "—"}</div>
           </div>
         </div>
         {/* 하단: 액션 버튼 */}
@@ -595,14 +596,14 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
             <div style={{ display: "flex", gap: 6 }}>
               <button className="erut-btn erut-btn--default erut-btn--sm" style={{ background: "var(--system-error)", color: "var(--on-primary)", borderColor: "var(--system-error)", display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 중지 (F7)" onClick={() => onBoardControl && onBoardControl(d.id, "stop")}>
                 <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><rect x="2" y="2" width="8" height="8"/></svg>
-                중지
+                측정 중지
               </button>
             </div>
           )}
           {st === "idle" && (
             <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} onClick={() => onBoardControl && onBoardControl(d.id, "start")}>
               <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><polygon points="3,2 10,6 3,10"/></svg>
-              시작
+              측정 시작
             </button>
           )}
           {isOffline && (
@@ -624,15 +625,18 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
             <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
               <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>프로젝트</span>
               <span style={{ font: "700 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{proj.name}</span>
-              <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onChangeProject}>변경 ↗</button>
             </div>
-            <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 6 }}>
-              마지막 저장 {proj.savedAt}{proj.autoSave ? " · 자동 저장 활성" : ""}
+            <div style={{ font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 6 }}>
+              시작일 {proj.startDate}{proj.note ? ` · ${proj.note}` : ""} · 마지막 저장 {proj.savedAt}
             </div>
           </div>
-          {/* v9.25: '검사 이력' 버튼 신규 (텍스트만, 아이콘 없음) */}
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onOpenHistory}>검사 이력</button>
+          {/* 장비 요약 카운터 (프로젝트명과 동일 크기) — 패널 헤더에서 이동 */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <span style={{ font: "400 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>연결 <strong style={{ fontWeight: 700, color: "var(--system-success)" }}>{connectedCount}</strong> / {devices.length}</span>
+            <span style={{ width: 1, height: 14, background: "var(--border-medium)" }}/>
+            <span style={{ font: "400 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>측정 중 <strong style={{ fontWeight: 700, color: "var(--brand-primary)" }}>{measuringCount}</strong></span>
+            <span style={{ width: 1, height: 14, background: "var(--border-medium)" }}/>
+            <span style={{ font: "400 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>활성 채널 <strong style={{ fontWeight: 700, color: "var(--brand-primary)" }}>{activeChTotal}</strong> / {totalChTotal}</span>
           </div>
         </div>
         {/* Tab */}
@@ -649,20 +653,13 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
       <div style={{ padding: "20px 40px", flex: 1, overflow: "auto" }}>
         {/* ▼ 장비 연결 상태 패널 ▼ */}
         <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "14px 18px", marginBottom: 20 }}>
-          {/* 헤더 라인 (요약 카운터) */}
+          {/* 헤더 라인 — 요약 카운터는 상단 프로젝트 정보로 이동(#6) */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
-              <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>연결된 장비</h3>
+              <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>등록된 장비</h3>
               <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>총 {devices.length}대 등록</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>연결 <strong style={{ fontWeight: 700, color: "var(--system-success)" }}>{connectedCount}</strong> / {devices.length}대</span>
-              <span style={{ width: 1, height: 12, background: "var(--border-medium)" }}/>
-              <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>측정 중 <strong style={{ fontWeight: 700, color: "var(--brand-primary)" }}>{measuringCount}</strong>대</span>
-              <span style={{ width: 1, height: 12, background: "var(--border-medium)" }}/>
-              <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>활성 채널 <strong style={{ fontWeight: 700, color: "var(--brand-primary)" }}>{activeChTotal}</strong> / {totalChTotal}</span>
-              <button className="erut-btn erut-btn--default erut-btn--sm" style={{ marginLeft: 8 }} onClick={onAddDevice}>+ 장비 추가</button>
-            </div>
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onAddDevice}>+ 장비 추가</button>
           </div>
           {/* 3 장비 mini-card grid */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
@@ -1654,20 +1651,22 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
 // =================== v8.8: 진단 / 로그 모달 (좌측 탭 메뉴 + 우측 콘텐츠) ===================
 // v17.0: 5탭 → 4탭. 하드웨어 진단(유지) + 통신(신규) + 교정 이력(유지) + 측정 에러(에러+측정 통합).
 //        이벤트 기반 → 수치 기반 raw data 전환. 인라인 펼침 + '상세 →' 버튼 폐기.
-window.DiagnosticsModal = function DiagnosticsModal({ onClose }) {
-  const [tab, setTab] = $s("hw"); // hw / comm / calib / err
-  const tabs = [
+// projectScope: [1] 메인에서 진입 시 true — 하드웨어 진단(보드 개별) 제외, 등록된 전체 MC보드 로그 통합 표시.
+window.DiagnosticsModal = function DiagnosticsModal({ onClose, projectScope = false }) {
+  const allTabs = [
     { id: "hw",    label: "하드웨어 진단" },
     { id: "comm",  label: "통신 로그" },
     { id: "calib", label: "교정 이력" },
     { id: "err",   label: "측정 로그" },
   ];
+  const tabs = projectScope ? allTabs.filter(t => t.id !== "hw") : allTabs;
+  const [tab, setTab] = $s(projectScope ? "comm" : "hw"); // hw / comm / calib / err
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 1100, maxHeight: "90vh", background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
         {/* v8.8: 헤더 — titlebar 컬러 통일 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderBottom: "1px solid var(--border-medium)", background: "var(--content-medium)" }}>
-          <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>진단 / 로그 — MCuF-001</div>
+          <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>{projectScope ? "진단 / 로그 — 등록된 전체 MC보드" : "진단 / 로그 — MCuF-001"}</div>
           <button onClick={onClose} aria-label="닫기" style={{ background: "transparent", border: "none", color: "var(--content-inverse)", cursor: "pointer", padding: 4, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><window.EIcon.Close size={14}/></button>
         </div>
         {/* 본문 (좌: 탭 메뉴 / 우: 콘텐츠) */}
@@ -2073,12 +2072,11 @@ function DiagMeasErrorLog() {
 
 // =================== Modal · [8] 환경 설정 (v10.0 신규 — 메뉴바 [설정] + 툴바 gear 공통 진입) ===================
 window.SettingsModal = function SettingsModal({ onClose }) {
-  // v19.0: 'pc' 카테고리 신설 (6개) — 신설 강조로 기본 활성
-  const [cat, setCat] = $s("pc"); // general / shortcuts / autosave / report / calibration / pc
+  // v19.0: 'pc' 카테고리 신설 — 신설 강조로 기본 활성. v27: 자동 저장 카테고리 삭제(passive 기능화).
+  const [cat, setCat] = $s("pc"); // general / shortcuts / report / calibration / pc
   const cats = [
     { id: "general",     label: "일반" },
     { id: "shortcuts",   label: "단축키" },
-    { id: "autosave",    label: "자동 저장" },
     { id: "report",      label: "보고서 기본값" },
     { id: "calibration", label: "교정 정책" },
     { id: "pc",          label: "PC 정보" },
@@ -2111,7 +2109,6 @@ window.SettingsModal = function SettingsModal({ onClose }) {
           <div style={{ padding: "18px 24px", overflowY: "auto" }}>
             {cat === "general"     && <SettingsGeneral/>}
             {cat === "shortcuts"   && <SettingsShortcuts/>}
-            {cat === "autosave"    && <SettingsAutosave/>}
             {cat === "report"      && <SettingsReport/>}
             {cat === "calibration" && <SettingsCalibration/>}
             {cat === "pc"          && <SettingsPcInfo/>}
@@ -2429,6 +2426,7 @@ function SettingsSectionHeader({ title, desc }) {
 function SettingsGeneral() {
   const [startScreen, setStartScreen] = $s("last");
   const [sound, setSound] = $s(true);
+  const [sendCycle, setSendCycle] = $s("3600");
   return (
     <>
       <SettingsSectionHeader title="일반" desc="앱의 기본 동작과 표시 방식을 설정합니다."/>
@@ -2462,6 +2460,14 @@ function SettingsGeneral() {
             <span className="erut-toggle__label erut-toggle__label--sm">{sound ? "활성" : "비활성"}</span>
           </label>
         </SettingsRow>
+        <SettingsRow label="데이터 송신 주기" hint="MC보드가 측정 데이터를 서버로 전송하는 간격. 감육은 장기 진행이라 긴 주기로 충분. 측정 주파수(PRF)와는 별개.">
+          <select className="erut-field" value={sendCycle} onChange={(e) => setSendCycle(e.target.value)} style={{ width: 240 }}>
+            <option value="3600">1시간 (기본)</option>
+            <option value="10800">3시간</option>
+            <option value="21600">6시간</option>
+            <option value="43200">12시간</option>
+          </select>
+        </SettingsRow>
       </div>
     </>
   );
@@ -2473,7 +2479,6 @@ function SettingsShortcuts() {
     ["측정 중지",       "F7"],
     ["프로젝트 불러오기", "Ctrl+O"],
     ["프로젝트 저장",   "Ctrl+Shift+S"],
-    ["검사 이력",       "Ctrl+D"],
     ["보고서 출력",     "Ctrl+P"],
     ["메뉴 닫기 · 모달 닫기", "Esc"],
   ];
@@ -2488,37 +2493,6 @@ function SettingsShortcuts() {
             <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ justifySelf: "end" }}>변경</button>
           </div>
         ))}
-      </div>
-    </>
-  );
-}
-
-function SettingsAutosave() {
-  const [interval, setIntervalSec] = $s("30");
-  return (
-    <>
-      <SettingsSectionHeader title="자동 저장" desc="측정 중 데이터 손실을 방지하기 위한 자동 저장 주기와 저장 위치입니다."/>
-      <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: "16px 24px", alignItems: "start" }}>
-        <SettingsRow label="자동 저장 주기" hint="짧을수록 안전하나 디스크 부하 증가. 기본 30초 권장.">
-          <select className="erut-field" value={interval} onChange={(e) => setIntervalSec(e.target.value)} style={{ width: 240 }}>
-            <option value="10">10초</option>
-            <option value="30">30초 (기본)</option>
-            <option value="60">1분</option>
-            <option value="300">5분</option>
-          </select>
-        </SettingsRow>
-        <SettingsRow label="데이터 폴더 경로" hint="C-SCAN/A-SCAN 바이너리(.bin)와 세션 메타데이터가 저장되는 위치.">
-          <div style={{ display: "flex", gap: 8 }}>
-            <input className="erut-field" defaultValue="C:\\ERUT_Data\\" style={{ flex: 1 }}/>
-            <button className="erut-btn erut-btn--default erut-btn--sm">변경...</button>
-          </div>
-        </SettingsRow>
-        <SettingsRow label="저장 실패 시 동작">
-          <select className="erut-field" defaultValue="retry" style={{ width: 240 }}>
-            <option value="retry">3회 재시도 후 경고</option>
-            <option value="warn">즉시 경고</option>
-          </select>
-        </SettingsRow>
       </div>
     </>
   );
@@ -2626,7 +2600,7 @@ function SettingsPcInfo() {
     <>
       <SettingsSectionHeader title="PC 정보" desc="미니 PC를 탐촉자·MC 보드와 동일하게 자산 관리. 사용자는 별칭(alias)만 입력, UUID와 자동 메타는 시스템이 수집. 다중 PC 운영·MQTT 라우팅·보고서 추적성·장애 진단의 기반."/>
       <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: "16px 24px", alignItems: "start" }}>
-        <SettingsRow label="PC 별칭 (alias)" hint="언제든 변경 가능. 보고서·검사 이력·진단 로그에 자동 반영. 한글 가능.">
+        <SettingsRow label="PC 별칭 (alias)" hint="언제든 변경 가능. 보고서·진단 로그에 자동 반영. 한글 가능.">
           <input className="erut-field" value={alias} onChange={(e) => setAlias(e.target.value)} style={{ width: 320 }}/>
         </SettingsRow>
 
@@ -4184,122 +4158,3 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
 // 코드는 archive/ERUT_ServiceFlow_FixedProbe_v17.2.html에 보존. office 후처리 보고서 요구 재발생 시 복원.
 // 현재는 라우팅에서 빠져있어 실제 표시되지 않음 (index.html screen === "report" 제거됨).
 
-// =================== Screen · [7] INSPECTION HISTORY (v9.25 신규) ===================
-// 메인 HTML SLIDE 16 [7] 검사 이력 관리 페이지 구현
-// 진입: 메뉴바 [파일] > 검사 이력 (Ctrl+D) / [1] 메인 헤더 버튼 / [11] 측정 중지(F7) 자동 진입
-window.InspectionHistory = function InspectionHistory({ onBack, onSelectReport }) {
-  const [search, setSearch] = $s("");
-  const [period, setPeriod] = $s("최근 30일");
-  const [statusFilter, setStatusFilter] = $s("모든 교정상태");
-  const [selectedId, setSelectedId] = $s("SES-2026-047");
-  const [checked, setChecked] = $s(new Set(["SES-2026-047"]));
-
-  // v22.5: '결함'→'최소 두께'(감육 KPI), '판정'→'교정 상태'(측정 신뢰성). 판정·결함 등급은 웹 책임. size=용량
-  const sessions = [
-    { id: "SES-2026-047", target: "PIPE-A-204",   inspector: "김검사 · Lv.II",  date: "2026-05-21 14:23", minThk: "7.2 mm", minThkColor: "var(--system-error)",   size: "340 MB", calib: "유효",    calibColor: "var(--system-success)" },
-    { id: "SES-2026-046", target: "TANK-B-101",   inspector: "이검사 · Lv.III", date: "2026-05-20 09:12", minThk: "9.6 mm", minThkColor: "var(--system-success)", size: "128 MB", calib: "유효",    calibColor: "var(--system-success)" },
-    { id: "SES-2026-045", target: "VESSEL-C-301", inspector: "김검사 · Lv.II",  date: "2026-05-19 16:48", minThk: "8.4 mm", minThkColor: "var(--system-caution)", size: "96 MB",  calib: "만료 2ch", calibColor: "var(--system-caution)" },
-    { id: "SES-2026-044", target: "WELD-F-22",    inspector: "박검사 · Lv.II",  date: "2026-05-19 11:02", minThk: "6.1 mm", minThkColor: "var(--system-error)",   size: "412 MB", calib: "유효",    calibColor: "var(--system-success)" },
-    { id: "SES-2026-043", target: "PIPE-A-204",   inspector: "김검사 · Lv.II",  date: "2026-05-18 14:21", minThk: "8.0 mm", minThkColor: "var(--system-caution)", size: "298 MB", calib: "유효",    calibColor: "var(--system-success)" },
-    { id: "SES-2026-042", target: "FLANGE-D-08",  inspector: "이검사 · Lv.III", date: "2026-05-18 10:33", minThk: "9.8 mm", minThkColor: "var(--system-success)", size: "82 MB",  calib: "유효",    calibColor: "var(--system-success)" },
-  ];
-
-  const filtered = sessions.filter(s => !search || s.id.includes(search) || s.target.includes(search) || s.inspector.includes(search));
-  const totalSize = sessions.reduce((acc, s) => acc + parseInt(s.size), 0);
-
-  const toggleCheck = (id) => setChecked(prev => {
-    const next = new Set(prev);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    return next;
-  });
-
-  // v19.0: 측정 PC 컬럼 추가 (검사자 다음, 140px 고정)
-  const cols = "50px 140px 1fr 1fr 140px 1fr 80px 100px 130px 100px";
-  const cellHead = { padding: "12px 10px", font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" };
-  const cellRow  = { padding: "14px 10px", font: "400 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" };
-
-  return (
-    <div className="erut-page-enter" style={{ padding: "20px 40px", display: "grid", gridTemplateRows: "auto 1fr auto", rowGap: 16, height: "100%" }}>
-
-      {/* 필터 바 */}
-      <div style={{ display: "flex", gap: 10, alignItems: "center", padding: 12, background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)" }}>
-        <input className="erut-field" placeholder="세션 ID · 검사 대상 · 검사자 검색" value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1 }}/>
-        <select className="erut-field" value={period} onChange={(e) => setPeriod(e.target.value)} style={{ width: 160 }}>
-          <option>최근 30일</option>
-          <option>최근 7일</option>
-          <option>오늘</option>
-          <option>최근 3개월</option>
-          <option>전체</option>
-        </select>
-        <select className="erut-field" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ width: 140 }}>
-          <option>모든 교정상태</option>
-          <option>유효</option>
-          <option>만료 포함</option>
-        </select>
-        <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => { setSearch(""); setPeriod("최근 30일"); setStatusFilter("모든 교정상태"); }}>필터 초기화</button>
-      </div>
-
-      {/* 테이블 */}
-      <div style={{ border: "1px solid var(--border-medium)", background: "var(--surface-base)", overflowY: "auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: cols, background: "var(--surface-subtle-1)", borderBottom: "1px solid var(--border-medium)", position: "sticky", top: 0 }}>
-          <div style={cellHead}/>
-          <div style={cellHead}>세션 ID</div>
-          <div style={cellHead}>검사 대상</div>
-          <div style={cellHead}>검사자</div>
-          <div style={cellHead}>측정 PC</div>
-          <div style={cellHead}>시작 시각</div>
-          <div style={cellHead}>최소두께</div>
-          <div style={cellHead}>용량</div>
-          <div style={cellHead}>교정 상태</div>
-          <div style={cellHead}/>
-        </div>
-        {filtered.map(s => {
-          const isSel = s.id === selectedId;
-          const isChk = checked.has(s.id);
-          return (
-            <div
-              key={s.id}
-              onClick={() => setSelectedId(s.id)}
-              style={{
-                display: "grid", gridTemplateColumns: cols, alignItems: "center",
-                borderBottom: "1px solid var(--border-low)",
-                background: isSel ? "linear-gradient(rgba(34,133,239,0.06),rgba(34,133,239,0.06)), var(--surface-base)" : "var(--surface-base)",
-                borderLeft: isSel ? "3px solid var(--brand-primary)" : "3px solid transparent",
-                cursor: "pointer",
-              }}
-            >
-              <div style={cellRow} onClick={(e) => { e.stopPropagation(); toggleCheck(s.id); }}>
-                <span className={"erut-cb__box" + (isChk ? " is-on" : "")} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                  {isChk && <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="#FFFFFF" strokeWidth="2"><polyline points="3,8 7,12 13,4"/></svg>}
-                </span>
-              </div>
-              <div style={{ ...cellRow, fontFamily: "'Consolas', monospace", color: isSel ? "var(--brand-primary)" : "var(--content-high)", fontWeight: isSel ? 700 : 400 }}>{s.id}</div>
-              <div style={cellRow}>{s.target}</div>
-              <div style={cellRow}>{s.inspector}</div>
-              <div style={cellRow}>{(window.MOCK.sessionPcAlias && window.MOCK.sessionPcAlias[s.id]) || "—"}</div>
-              <div style={cellRow}>{s.date}</div>
-              <div style={cellRow}><span style={{ color: s.minThkColor, fontWeight: 700 }}>{s.minThk}</span></div>
-              <div style={cellRow}>{s.size}</div>
-              <div style={cellRow}><span style={{ color: s.calibColor, fontWeight: 700 }}>{s.calib}</span></div>
-              <div style={cellRow}>
-                {isSel && <button className="erut-btn erut-btn--default erut-btn--sm" style={{ padding: "4px 8px" }} onClick={(e) => { e.stopPropagation(); }}>선택됨</button>}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* 하단 액션 */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ font: "400 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-          총 {sessions.length}개 세션 · {checked.size}개 선택됨 · {totalSize} MB
-        </div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <button className="erut-btn erut-btn--default erut-btn--m">CSV 내보내기</button>
-          <button className="erut-btn erut-btn--default erut-btn--m">바이너리 (.cscan)</button>
-          <button className="erut-btn erut-btn--emphasis erut-btn--m" onClick={() => onSelectReport && onSelectReport(selectedId)}>보고서 생성 →</button>
-        </div>
-      </div>
-    </div>
-  );
-};
