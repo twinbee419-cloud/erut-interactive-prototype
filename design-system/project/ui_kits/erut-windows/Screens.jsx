@@ -627,7 +627,7 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
               <span style={{ font: "700 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{proj.name}</span>
             </div>
             <div style={{ font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 6 }}>
-              시작일 {proj.startDate}{proj.note ? ` · ${proj.note}` : ""} · 마지막 저장 {proj.savedAt}
+              시작일 {proj.startDate}{proj.note ? ` · ${proj.note}` : ""}
             </div>
           </div>
           {/* 장비 요약 카운터 (프로젝트명과 동일 크기) — 패널 헤더에서 이동 */}
@@ -1691,9 +1691,9 @@ window.DiagnosticsModal = function DiagnosticsModal({ onClose, projectScope = fa
           {/* 우측 콘텐츠 (탭별) */}
           <div style={{ padding: "18px 24px", overflowY: "auto" }}>
             {tab === "hw"    && <DiagHardware/>}
-            {tab === "comm"  && <DiagCommLog/>}
-            {tab === "calib" && <DiagCalibHistory/>}
-            {tab === "err"   && <DiagMeasErrorLog/>}
+            {tab === "comm"  && <DiagCommLog projectScope={projectScope}/>}
+            {tab === "calib" && <DiagCalibHistory projectScope={projectScope}/>}
+            {tab === "err"   && <DiagMeasErrorLog projectScope={projectScope}/>}
           </div>
         </div>
         {/* v8.8: footer — 닫기 단일 버튼 (다른 모달과 일관성) */}
@@ -1759,15 +1759,15 @@ function DiagHardware() {
 
 // 다른 탭 placeholder
 // v9.18 (NDT 1.4): 교정 이력 탭 강화 — 채널별 마지막 교정 + 경과일
-function DiagCalibHistory() {
-  // mock 데이터 — 실제는 sensor.lastCalibration 기준
+function DiagCalibHistory({ projectScope = false }) {
+  // mock 데이터 — 실제는 sensor.lastCalibration 기준. board: [1] 진입 시 MC보드 식별.
   const rows = [
-    { ch: "CH 04", date: "2025-11-20", days: 191, status: "경과" },
-    { ch: "CH 07", date: "2026-02-10", days: 108, status: "정상" },
-    { ch: "CH 09", date: "2025-11-15", days: 196, status: "경과" },
-    { ch: "CH 12", date: "2025-11-25", days: 186, status: "경과" },
-    { ch: "CH 18", date: "2026-03-05", days: 85,  status: "정상" },
-    { ch: "CH 22", date: "2026-04-12", days: 47,  status: "정상" },
+    { ch: "CH 04", board: "MCuF-001", date: "2025-11-20", days: 191, status: "경과" },
+    { ch: "CH 07", board: "MCuF-001", date: "2026-02-10", days: 108, status: "정상" },
+    { ch: "CH 09", board: "MCuF-002", date: "2025-11-15", days: 196, status: "경과" },
+    { ch: "CH 12", board: "MCuF-002", date: "2025-11-25", days: 186, status: "경과" },
+    { ch: "CH 18", board: "MCuF-003", date: "2026-03-05", days: 85,  status: "정상" },
+    { ch: "CH 22", board: "MCuF-003", date: "2026-04-12", days: 47,  status: "정상" },
   ];
   return (
     <>
@@ -1780,6 +1780,7 @@ function DiagCalibHistory() {
         <thead>
           <tr style={{ borderBottom: "1px solid var(--border-medium)", textAlign: "left", color: "var(--content-low)", fontWeight: 700 }}>
             <th style={{ padding: "8px 6px" }}>채널</th>
+            {projectScope && <th style={{ padding: "8px 6px" }}>MC보드</th>}
             <th style={{ padding: "8px 6px" }}>마지막 교정일</th>
             <th style={{ padding: "8px 6px" }}>경과일</th>
             <th style={{ padding: "8px 6px" }}>상태</th>
@@ -1789,6 +1790,7 @@ function DiagCalibHistory() {
           {rows.map(r => (
             <tr key={r.ch} style={{ borderBottom: "1px solid var(--border-low)" }}>
               <td style={{ padding: "8px 6px", fontWeight: 700, color: "var(--content-high)" }}>{r.ch}</td>
+              {projectScope && <td style={{ padding: "8px 6px", fontWeight: 700, color: "var(--content-high)" }}>{r.board}</td>}
               <td style={{ padding: "8px 6px", color: "var(--content-medium)" }}>{r.date}</td>
               <td style={{ padding: "8px 6px", color: r.days > 180 ? "var(--system-caution)" : "var(--content-medium)", fontWeight: r.days > 180 ? 700 : 400 }}>{r.days}일</td>
               <td style={{ padding: "8px 6px", color: r.days > 180 ? "var(--system-caution)" : "var(--system-success)", fontWeight: 700 }}>{r.status}</td>
@@ -1945,18 +1947,18 @@ function DiagLogTable({ columns, rows, getKey }) {
 }
 
 // ─────────────────────── 탭 #1: 통신 로그 (v17.0 신규 — 3구간 통합) ───────────────────────
-function DiagCommLog() {
+function DiagCommLog({ projectScope = false }) {
   const [period, setPeriod] = $s("7d");
   const [kind, setKind] = $s("all");
   const [search, setSearch] = $s("");
 
-  // mock — Error_Code_Spec_v2.0 카탈로그 정합 (E5xx/E6xx/E7xx)
+  // mock — Error_Code_Spec_v2.0 카탈로그 정합 (E5xx/E6xx/E7xx). board: [1] 진입 시 어느 MC보드 로그인지 식별.
   const allRows = [
-    { id: 1, ts: "06-09 10:42:18.412", link: "probe-mc", latency: 3.2,  packetLoss: 0.0,  dataRate: 2048, status: "ok" },
-    { id: 2, ts: "06-09 10:42:18.456", link: "mc-pc",    latency: 12,   packetLoss: 0.2,  dataRate: 2043, status: "ok" },
-    { id: 3, ts: "06-09 10:42:18.789", link: "pc-mqtt",  latency: 38,   packetLoss: 0.0,  dataRate: 2048, status: "ok" },
-    { id: 4, ts: "06-08 14:12:03.220", link: "mc-pc",    latency: 5200, packetLoss: 12.4, dataRate: 1792, status: "warn" },
-    { id: 5, ts: "06-08 09:32:11.052", link: "pc-mqtt",  latency: null, packetLoss: 100,  dataRate: 0,    status: "error" },
+    { id: 1, ts: "06-09 10:42:18.412", board: "MCuF-001", link: "probe-mc", latency: 3.2,  packetLoss: 0.0,  dataRate: 2048, status: "ok" },
+    { id: 2, ts: "06-09 10:42:18.456", board: "MCuF-001", link: "mc-pc",    latency: 12,   packetLoss: 0.2,  dataRate: 2043, status: "ok" },
+    { id: 3, ts: "06-09 10:42:18.789", board: "MCuF-002", link: "pc-mqtt",  latency: 38,   packetLoss: 0.0,  dataRate: 2048, status: "ok" },
+    { id: 4, ts: "06-08 14:12:03.220", board: "MCuF-002", link: "mc-pc",    latency: 5200, packetLoss: 12.4, dataRate: 1792, status: "warn" },
+    { id: 5, ts: "06-08 09:32:11.052", board: "MCuF-003", link: "pc-mqtt",  latency: null, packetLoss: 100,  dataRate: 0,    status: "error" },
   ];
 
   const linkLabel = (l) => l === "probe-mc" ? "탐촉자 ↔ MC" : l === "mc-pc" ? "MC ↔ 미니 PC" : "미니 PC ↔ 서버 MQTT";
@@ -1979,6 +1981,7 @@ function DiagCommLog() {
 
   const columns = [
     { key: "ts", label: "시각", width: 150, cellStyle: { color: "var(--content-medium)", fontVariantNumeric: "tabular-nums" } },
+    ...(projectScope ? [{ key: "board", label: "MC보드", width: 110, render: (r) => <span style={{ color: "var(--content-high)", fontWeight: 700 }}>{r.board}</span> }] : []),
     { key: "link", label: "구간", width: 170, render: (r) => <span style={{ color: "var(--content-high)", fontWeight: 700 }}>{linkLabel(r.link)}</span> },
     numCol("latency", "지연 (ms)", 100),
     numCol("packetLoss", "패킷 손실 (%)", 110),
@@ -2011,17 +2014,17 @@ function DiagCommLog() {
 
 // ─────────────────────── 탭: 측정 로그 (시각·채널·Amp·ToF·두께 raw) ───────────────────────
 // 측정값 raw 로그. 측정 에러(E1xx)는 알림 센터로 전달 — 본 탭은 에러 코드 열 없음.
-function DiagMeasErrorLog() {
+function DiagMeasErrorLog({ projectScope = false }) {
   const [period, setPeriod] = $s("7d");
   const [kind, setKind] = $s("all");
   const [search, setSearch] = $s("");
 
-  // mock — Error_Code_Spec_v2.0 (E1xx 측정)
+  // mock — Error_Code_Spec_v2.0 (E1xx 측정). board: [1] 진입 시 MC보드 식별.
   const allRows = [
-    { id: 1, ts: "06-09 10:42:18.412", channel: 22, amp: 98.4, tof: 3.32, thickness: 9.84, code: "E101", codeMsg: "ADC saturation", ampTone: "error" },
-    { id: 2, ts: "06-09 10:15:02.108", channel: 49, amp: 8.2,  tof: null, thickness: null, code: "E115", codeMsg: "신호 검출 실패 (부착력 저하)", ampTone: "caution" },
-    { id: 3, ts: "06-09 09:58:31.022", channel: 62, amp: 0.0,  tof: null, thickness: null, code: "E120", codeMsg: "채널 미연결", ampTone: "error" },
-    { id: 4, ts: "06-08 17:21:09.654", channel: 4,  amp: 94.0, tof: 2.64, thickness: 7.8, code: "E108", codeMsg: "Amp Threshold 초과 (Critical)", ampTone: "caution" },
+    { id: 1, ts: "06-09 10:42:18.412", board: "MCuF-001", channel: 22, amp: 98.4, tof: 3.32, thickness: 9.84, code: "E101", codeMsg: "ADC saturation", ampTone: "error" },
+    { id: 2, ts: "06-09 10:15:02.108", board: "MCuF-002", channel: 49, amp: 8.2,  tof: null, thickness: null, code: "E115", codeMsg: "신호 검출 실패 (부착력 저하)", ampTone: "caution" },
+    { id: 3, ts: "06-09 09:58:31.022", board: "MCuF-002", channel: 62, amp: 0.0,  tof: null, thickness: null, code: "E120", codeMsg: "채널 미연결", ampTone: "error" },
+    { id: 4, ts: "06-08 17:21:09.654", board: "MCuF-003", channel: 4,  amp: 94.0, tof: 2.64, thickness: 7.8, code: "E108", codeMsg: "Amp Threshold 초과 (Critical)", ampTone: "caution" },
   ];
 
   const filtered = allRows.filter(r => {
@@ -2041,6 +2044,7 @@ function DiagMeasErrorLog() {
 
   const columns = [
     { key: "ts", label: "시각", width: 150, cellStyle: { color: "var(--content-medium)", fontVariantNumeric: "tabular-nums" } },
+    ...(projectScope ? [{ key: "board", label: "MC보드", width: 110, render: (r) => <span style={{ color: "var(--content-high)", fontWeight: 700 }}>{r.board}</span> }] : []),
     { key: "channel", label: "채널", width: 80, render: (r) => <span style={{ color: "var(--content-high)", fontWeight: 700 }}>CH {String(r.channel).padStart(2, "0")}</span> },
     { key: "amp", label: "Amp (% FSH)", width: 110, align: "right", render: (r) => numCell(r.amp, r.ampTone) },
     { key: "tof", label: "ToF (μs)", width: 100, align: "right", render: (r) => numCell(r.tof, r.tof == null ? "error" : null) },
