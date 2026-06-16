@@ -76,15 +76,15 @@ window.EquipmentConnect = function EquipmentConnect({ onContinue }) {
 window.MOCK = {
   // 9 recent projects for [0] ProjectPicker
   recentProjects: [
-    { id: "sk-ulsan",   name: "SK에너지 울산 #2 라인",        place: "울산 정유공장 · 김검사",        time: "오늘 14:23",  status: "진행 중", statusT: "running", targets: 12, sessions: 8,  defects: 4, defectT: "err" },
-    { id: "kw-boryeong",name: "한국수자원공사 보령댐",         place: "보령 본댐 · 이검사",            time: "2일 전",      status: "완료",    statusT: "done",    targets: 6,  sessions: 12, defects: 0, defectT: "ok"  },
-    { id: "doosan",     name: "두산에너빌리티 창원 본관",       place: "창원 본관 #3 라인 · 박검사",     time: "1주 전",      status: "검토",    statusT: "warn",    targets: 3,  sessions: 4,  defects: 1, defectT: "warn" },
-    { id: "soil",       name: "S-Oil 온산공장",                place: "온산 RFCC 라인 · 김검사",        time: "2주 전",      status: "완료",    statusT: "done",    targets: 9,  sessions: 14, defects: 3, defectT: "err" },
-    { id: "samsung",    name: "삼성E&A 평택 공장",            place: "평택 #1 압력 라인 · 이검사",     time: "3주 전",      status: "완료",    statusT: "done",    targets: 5,  sessions: 7,  defects: 0, defectT: "ok"  },
-    { id: "gs",         name: "GS칼텍스 여수 #1",             place: "여수 정유 #1 라인 · 박검사",     time: "1개월 전",    status: "완료",    statusT: "done",    targets: 8,  sessions: 11, defects: 2, defectT: "warn" },
-    { id: "hanwha",     name: "한화토탈에너지스 대산",          place: "대산 LNG 라인 · 김검사",         time: "1.5개월 전",  status: "완료",    statusT: "done",    targets: 10, sessions: 15, defects: 0, defectT: "ok"  },
-    { id: "hyundai",    name: "현대오일뱅크 충남",            place: "서산 정유 #2 라인 · 이검사",     time: "2개월 전",    status: "검토",    statusT: "warn",    targets: 7,  sessions: 10, defects: 3, defectT: "err" },
-    { id: "lotte",      name: "롯데케미칼 여수",              place: "여수 석유화학 NCC · 박검사",     time: "3개월 전",    status: "완료",    statusT: "done",    targets: 6,  sessions: 9,  defects: 1, defectT: "warn" },
+    { id: "sk-ulsan",   name: "SK에너지 울산 #2 라인",        place: "울산 정유공장 #2 라인",     startDate: "2026-06-16", note: "RFCC 배관 정기검사 · 감육 집중 구간",  time: "오늘 14:23",  status: "진행 중", statusT: "running", targets: 12, sessions: 8,  defects: 4, defectT: "err" },
+    { id: "kw-boryeong",name: "한국수자원공사 보령댐",         place: "보령 본댐",                 startDate: "2026-06-14", note: "수문 게이트 강판 감육 점검",          time: "2일 전",      status: "완료",    statusT: "done",    targets: 6,  sessions: 12, defects: 0, defectT: "ok"  },
+    { id: "doosan",     name: "두산에너빌리티 창원 본관",       place: "창원 본관 #3 라인",         startDate: "2026-06-09", note: "터빈 케이싱 배관",                    time: "1주 전",      status: "검토",    statusT: "warn",    targets: 3,  sessions: 4,  defects: 1, defectT: "warn" },
+    { id: "soil",       name: "S-Oil 온산공장",                place: "온산 RFCC 라인",            startDate: "2026-06-02", note: "정유 라인 정기검사",                  time: "2주 전",      status: "완료",    statusT: "done",    targets: 9,  sessions: 14, defects: 3, defectT: "err" },
+    { id: "samsung",    name: "삼성E&A 평택 공장",            place: "평택 #1 압력 라인",         startDate: "2026-05-26", note: "압력용기 신규 도입 초기 검사",        time: "3주 전",      status: "완료",    statusT: "done",    targets: 5,  sessions: 7,  defects: 0, defectT: "ok"  },
+    { id: "gs",         name: "GS칼텍스 여수 #1",             place: "여수 정유 #1 라인",         startDate: "2026-05-16", note: "",                                    time: "1개월 전",    status: "완료",    statusT: "done",    targets: 8,  sessions: 11, defects: 2, defectT: "warn" },
+    { id: "hanwha",     name: "한화토탈에너지스 대산",          place: "대산 LNG 라인",             startDate: "2026-05-01", note: "LNG 저온 배관",                       time: "1.5개월 전",  status: "완료",    statusT: "done",    targets: 10, sessions: 15, defects: 0, defectT: "ok"  },
+    { id: "hyundai",    name: "현대오일뱅크 충남",            place: "서산 정유 #2 라인",         startDate: "2026-04-16", note: "감육 의심 구간 재검",                 time: "2개월 전",    status: "검토",    statusT: "warn",    targets: 7,  sessions: 10, defects: 3, defectT: "err" },
+    { id: "lotte",      name: "롯데케미칼 여수",              place: "여수 석유화학 NCC",         startDate: "2026-03-16", note: "NCC 정기검사",                        time: "3개월 전",    status: "완료",    statusT: "done",    targets: 6,  sessions: 9,  defects: 1, defectT: "warn" },
   ],
   project: {
     name: "SK에너지 울산 #2 라인",
@@ -369,11 +369,13 @@ window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
                 onClick={() => onPick && onPick(p.id)}
               >
                 {/* v22.0: 프로젝트 상태 태그(진행중/완료/검토) 삭제 — 최근 시각·카운트로 충분, 검토는 웹 책임과 충돌 */}
-                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "flex-start" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                  <span style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>시작일 {p.startDate}</span>
                   <span style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>{p.time}</span>
                 </div>
                 <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{p.name}</div>
                 <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{p.place}</div>
+                {p.note && <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.note}</div>}
                 <div style={{ display: "flex", gap: 12, paddingTop: 10, borderTop: "1px solid var(--border-low)", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
                   <span>검사 대상 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.targets}</strong></span>
                   <span>세션 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.sessions}</strong></span>
@@ -395,14 +397,12 @@ window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
 
 // =================== Modal · 새 프로젝트 만들기 ===================
 window.NewProjectModal = function NewProjectModal({ onCreate, onClose }) {
-  const [form, setForm] = $s({
-    name: "", place: "", inspector: "",
-    startDate: "2026-05-26", endDate: "",
-    industry: "선택 안 함", standard: "선택 안 함",
-    code: "", note: "",
-  });
+  // 시작일·프로젝트 코드는 생성 시점에 자동 부여 (입력 불가). 담당 검사자·산업·표준은 웹에서 관리.
+  const autoStartDate = "2026-06-16";        // 생성 버튼 클릭 시점 자동 기록
+  const autoCode = "a3f29c1e-7b84-4d2f-9e10-5c8b1f2a6d04"; // UUID 자동 부여 (수정 불가)
+  const [form, setForm] = $s({ name: "", place: "", note: "" });
   const setField = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const valid = form.name && form.place && form.inspector;
+  const valid = form.name && form.place;
 
   const footer = (
     <>
@@ -410,7 +410,7 @@ window.NewProjectModal = function NewProjectModal({ onCreate, onClose }) {
         <span style={{ color: "var(--system-error)" }}>*</span> 필수 항목
       </span>
       <window.Button variant="subtle" size="sm" onClick={onClose}>닫기</window.Button>
-      <window.Button variant={valid ? "emphasis" : "disabled"} size="sm" onClick={valid ? () => onCreate(form) : undefined}>프로젝트 생성 → [1] 메인</window.Button>
+      <window.Button variant={valid ? "emphasis" : "disabled"} size="sm" onClick={valid ? () => onCreate({ ...form, startDate: autoStartDate, code: autoCode }) : undefined}>프로젝트 생성 → [1] 메인</window.Button>
     </>
   );
 
@@ -418,6 +418,9 @@ window.NewProjectModal = function NewProjectModal({ onCreate, onClose }) {
     <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>
       {txt}{req && <span style={{ color: "var(--system-error)", marginLeft: 4 }}>*</span>}
     </div>
+  );
+  const hint = (txt) => (
+    <div style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4 }}>{txt}</div>
   );
 
   return (
@@ -428,52 +431,30 @@ window.NewProjectModal = function NewProjectModal({ onCreate, onClose }) {
         {label("프로젝트명", true)}
         <input className="erut-field" value={form.name} onChange={(e) => setField("name", e.target.value)} placeholder="예: 울산 #2 라인 2026 정기검사" style={{ width: "100%" }}/>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div>
+        {label("검사 장소", true)}
+        <input className="erut-field" value={form.place} onChange={(e) => setField("place", e.target.value)} placeholder="예: 울산 정유공장 #2 라인" style={{ width: "100%" }}/>
+      </div>
+
+      {/* 자동 부여 정보 */}
+      <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", paddingBottom: 6, borderBottom: "1px solid var(--border-low)" }}>자동 부여</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 14 }}>
         <div>
-          {label("검사 장소", true)}
-          <input className="erut-field" value={form.place} onChange={(e) => setField("place", e.target.value)} placeholder="예: 울산 정유공장 #2 라인" style={{ width: "100%" }}/>
+          {label("시작일")}
+          <input className="erut-field is-disabled" value={autoStartDate} readOnly tabIndex={-1} style={{ width: "100%" }}/>
+          {hint("생성 시점 자동 기록")}
         </div>
         <div>
-          {label("담당 검사자", true)}
-          <input className="erut-field" value={form.inspector} onChange={(e) => setField("inspector", e.target.value)} placeholder="예: 김검사 (ASNT Lv.II)" style={{ width: "100%" }}/>
+          {label("프로젝트 코드")}
+          <input className="erut-field is-disabled" value={autoCode} readOnly tabIndex={-1} style={{ width: "100%" }}/>
+          {hint("UUID 자동 부여 · 수정 불가")}
         </div>
       </div>
 
-      {/* 선택 정보 */}
-      <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", paddingBottom: 6, borderBottom: "1px solid var(--border-low)" }}>선택 정보</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <div>
-          {label("시작 예정일")}
-          <input className="erut-field" value={form.startDate} onChange={(e) => setField("startDate", e.target.value)} style={{ width: "100%" }}/>
-        </div>
-        <div>
-          {label("종료 예정일")}
-          <input className="erut-field" value={form.endDate} onChange={(e) => setField("endDate", e.target.value)} placeholder="YYYY-MM-DD" style={{ width: "100%" }}/>
-        </div>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <div>
-          {label("산업 분류")}
-          <select className="erut-field" value={form.industry} onChange={(e) => setField("industry", e.target.value)} style={{ width: "100%" }}>
-            <option>선택 안 함</option><option>석유화학</option><option>원전 (SMR 포함)</option><option>수소</option><option>조선</option><option>반도체</option>
-          </select>
-        </div>
-        <div>
-          {label("기본 적용 표준")}
-          <select className="erut-field" value={form.standard} onChange={(e) => setField("standard", e.target.value)} style={{ width: "100%" }}>
-            <option>선택 안 함</option><option>KS B 0817</option><option>ASME Sec.V</option><option>API 510</option><option>NACE MR0175</option>
-          </select>
-        </div>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 14 }}>
-        <div>
-          {label("프로젝트 코드")}
-          <input className="erut-field" value={form.code} onChange={(e) => setField("code", e.target.value)} placeholder="사내 관리 코드" style={{ width: "100%" }}/>
-        </div>
-        <div>
-          {label("비고")}
-          <input className="erut-field" value={form.note} onChange={(e) => setField("note", e.target.value)} placeholder="자유 입력" style={{ width: "100%" }}/>
-        </div>
+      {/* 비고 */}
+      <div>
+        {label("비고")}
+        <textarea className="erut-field" value={form.note} onChange={(e) => setField("note", e.target.value)} placeholder="자유 입력" rows={4} style={{ width: "100%", resize: "vertical", minHeight: 88, font: "400 14px/1.5 var(--font-kr)", letterSpacing: ".02em" }}/>
       </div>
     </window.Modal>
   );
@@ -646,7 +627,7 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
               <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onChangeProject}>변경 ↗</button>
             </div>
             <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 6 }}>
-              담당자 {proj.owner} · 마지막 저장 {proj.savedAt}{proj.autoSave ? " · 자동 저장 활성" : ""}
+              마지막 저장 {proj.savedAt}{proj.autoSave ? " · 자동 저장 활성" : ""}
             </div>
           </div>
           {/* v9.25: '검사 이력' 버튼 신규 (텍스트만, 아이콘 없음) */}
