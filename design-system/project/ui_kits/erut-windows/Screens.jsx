@@ -1028,6 +1028,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const pre = prefilledChannel || {};
   // #2 recal: 재교정 대상 채널 목록 + 현재 선택 채널
   const [selectedRecal, setSelectedRecal] = $s((recalChannels[0] && (recalChannels[0].id || recalChannels[0])) || null);
+  // #1: A-scan 하단 탭 — 교정 측정 / Gain·Gate 설정
+  const [calibTab, setCalibTab] = $s("calib");
 
   // ───── 채널 정보 state — edit 모드 시 prefilledChannel로 초기화 ─────
   const [channel, setChannel] = $s(pre.channel || "");
@@ -1309,6 +1311,20 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
 
       {/* ───── 좌측 sticky 패널 (320px) — v14.0: 모드별 분기 ───── */}
       <div style={{ gridRow: 2, gridColumn: 1, background: "var(--surface-subtle-1)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column", overflowY: "auto", minHeight: 0 }}>
+        {/* #2: 채널 번호 — 좌측 패널 최상단 (전 모드 공통). new=선택 / edit·recal=현재 채널 readonly */}
+        <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-low)" }}>
+          <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>채널 번호 {mode === "new" && <span style={{ color: "var(--system-error)" }}>*</span>}</div>
+          {mode === "new" ? (
+            <select className="erut-field" value={channel} onChange={(e) => setChannel(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
+              <option value="">선택하세요</option>
+              <option value="65">65 (다음 빈 슬롯)</option>
+              <option value="16">16 (현재 미등록)</option>
+              <option value="manual">직접 입력...</option>
+            </select>
+          ) : (
+            <input className="erut-field is-disabled" value={"CH " + String((isRecal ? selectedRecal : (pre.channel || channel)) || "").replace(/\D/g, "").padStart(2, "0")} readOnly tabIndex={-1} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+          )}
+        </div>
         {isRecal ? (
           // ─── RECAL 모드(#2 일괄 재교정): 재교정 대상 채널 카드 + 진행 체크리스트 ───
           <>
@@ -1585,21 +1601,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
               </div>
             )}
           </div>
-          {/* #10: 채널 번호 + 탐촉자 주파수 — A-scan 하단 (전 모드 공통). new=선택 / edit·recal=기존 채널 readonly */}
+          {/* 탐촉자 주파수 — A-scan 하단 (채널 번호는 #2로 좌측 최상단 이동) */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 8 }}>
-            <div>
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>채널 번호 {mode === "new" && <span style={{ color: "var(--system-error)" }}>*</span>}</div>
-              {mode === "new" ? (
-                <select className="erut-field" value={channel} onChange={(e) => setChannel(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
-                  <option value="">선택하세요</option>
-                  <option value="65">65 (다음 빈 슬롯)</option>
-                  <option value="16">16 (현재 미등록)</option>
-                  <option value="manual">직접 입력...</option>
-                </select>
-              ) : (
-                <input className="erut-field is-disabled" value={"CH " + String((isRecal ? selectedRecal : (pre.channel || channel)) || "").replace(/\D/g, "").padStart(2, "0")} readOnly tabIndex={-1} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
-              )}
-            </div>
             <div>
               <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>탐촉자 주파수 (MHz) {mode === "new" && <span style={{ color: "var(--system-error)" }}>*</span>}</div>
               <input className="erut-field" type="number" min="0.5" max="20" step="0.25" value={freqMHz} onChange={(e) => setFreqMHz(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
@@ -1607,9 +1610,12 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
           </div>
         </div>
 
-        {/* v14.1: 교정 측정 + Gate 설정 2열 배치 (가로로 나란히) */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-          {/* 교정 측정 (내부 2×2 grid 유지) — v15.0: 상단에 교정 시험편 카드 추가 (v15.3 표기 정리) */}
+        {/* #1: A-scan 하단 탭 — 교정 측정 / Gain·Gate 설정 */}
+        <div className="erut-tabs" style={{ marginBottom: 4 }}>
+          <button className={"erut-tab" + (calibTab === "calib" ? " is-active" : "")} onClick={() => setCalibTab("calib")}>교정 측정</button>
+          <button className={"erut-tab" + (calibTab === "gaingate" ? " is-active" : "")} onClick={() => setCalibTab("gaingate")}>Gain 설정 + Gate 설정</button>
+        </div>
+        {calibTab === "calib" && (
           <div>
             <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 8 }}>교정 측정</div>
             {/* v15.0 교정 시험편 — 영점·음속 측정의 기준 시편 */}
@@ -1682,9 +1688,11 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
             </div>
           </div>
 
-          {/* 우측 열: #14 Gain 설정(Gate 위) + Gate 설정 */}
-          <div>
+        )}
+        {calibTab === "gaingate" && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
             {/* #6/#16: Gain 설정 — 소프트웨어·디지털·아날로그 개별 값(input+−1/+1) + LogScale 표시 스케일 */}
+            <div>
             <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 8 }}>Gain 설정</div>
             <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px", marginBottom: 14, display: "flex", flexDirection: "column", gap: 8 }}>
               <GainRow label="소프트웨어" value={gainSw} setter={setGainSw}/>
@@ -1700,7 +1708,9 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                 <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>80</span>
               </div>
             </div>
-            {/* Gate 설정 (Gate A / Gate B stack) */}
+            </div>
+            {/* Gate 설정 (Gate A / Gate B stack) — 우측 열 */}
+            <div>
             <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 8 }}>Gate 설정</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <GateInputs name="Gate A — 1차 반사" color="var(--system-error)" gate={gateA} onChange={setA}/>
@@ -1708,6 +1718,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
             </div>
           </div>
         </div>
+        )}
         {/* v20.1: 하단 '교정 검증'(구 시편 확인) 제거 — 64ch 고정 구조에서 채널별 검증 비현실 + 탱크 벽 검증은 감육과 혼동. 음속 velHint + 교정 시험편이 정확도 anchor. 공칭 두께는 채널 정보로 승격(PRF 입력) */}
       </div>
 
