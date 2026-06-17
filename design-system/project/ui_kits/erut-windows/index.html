@@ -93,6 +93,7 @@ function App() {
 
   // v14.0: commission 화면 진입 모드 — "new" (탐촉자 추가) / "edit" ([2]에서 이 채널 설정 편집)
   const [commissionMode, setCommissionMode] = useState("new");
+  const [recalChannels, setRecalChannels]   = useState([]);  // #2: 일괄 재교정 대상 채널 ([4-3-1] recal 모드)
   useEffect(() => {
     if (screen !== "commission") setCommissionMode("new");
   }, [screen]);
@@ -337,6 +338,8 @@ function App() {
             onAddTarget={() => { setManageInitialMode("new"); goto("manage"); }}
             onEditTarget={(name) => { setSelectedTarget(name); setManageInitialMode("edit"); goto("manage"); }}
             onAddSensor={() => { setCommissionMode("new"); goto("commission"); }}
+            /* #2: 일괄 재교정 → [4-3-1] recal 모드 라우팅 */
+            onBatchRecal={(chs) => { setRecalChannels(chs || []); setCommissionMode("recal"); goto("commission"); }}
             /* v18.1: 보고서 출력 — MC보드 단위 진입 + 클릭된 채널 prefill (MC보드 정보 옆 버튼) */
             onOpenReport={(channel) => setReportDialog({ deviceId: "MCuF-001", initialChannel: channel })}
           />
@@ -363,6 +366,7 @@ function App() {
               { name: "TANK-B-101" },
               { name: "VESSEL-C-301" },
             ]}
+            recalChannels={recalChannels}
             onBack={() => goto("device")}
             onAddOnly={() => goto("device")}
             onAddAndStart={() => { setSelectedChannel("ch65"); goto("realtime"); }}

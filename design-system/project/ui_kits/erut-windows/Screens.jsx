@@ -675,7 +675,7 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
 };
 
 // =================== Screen · [2] DEVICE DETAIL ===================
-window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targetId, focusChannel, onBack, onStartMeasure, onEditChannel, onAddTarget, onEditTarget, onAddSensor, onOpenReport }) {
+window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targetId, focusChannel, onBack, onStartMeasure, onEditChannel, onAddTarget, onEditTarget, onAddSensor, onOpenReport, onBatchRecal }) {
   // v14.0: onOpenGate → onEditChannel — Gate/교정 분리 폐기, commission(edit 모드) 단일 진입점
   // v18.0: onOpenReport 신규 — 우측 채널 패널 "보고서 출력" 버튼 → ReportExportDialog 모달
   // v22.1: 배너 측정 제어 인터랙션 — 이 화면의 MC보드(mockup: MCuF-001) 상태를 공유 boardStates에서 도출
@@ -687,8 +687,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
   const [focusActive, setFocusActive] = $s(!!focusChannel);
   // v9.35: showAddSensor 폐기 → 풀스크린 ChannelCommissioning 페이지로 라우팅
   // v14.0: 단일 채널 교정/Gate 진입 → commission(edit 모드)으로 라우팅. 일괄 재교정만 모달 유지.
-  const [showRecalibration, setShowRecalibration] = $s(false);  // 일괄 재교정 마법사 모달 trigger
-  const [recalibChannels, setRecalibChannels]     = $s([]);
+  // #2: 일괄 재교정 → [4-3-1] recal 모드 라우팅(onBatchRecal). 구 CalibrationWizard 모달 폐기.
   // v9.29 Wave D: 검사 대상 multi-select (array of names). 재클릭 = 토글 해제
   const [selectedTargetSet, setSelectedTargetSet] = $s([]);
 
@@ -884,7 +883,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
                 <button
                   className="erut-btn erut-btn--default erut-btn--sm"
                   style={{ color: "var(--system-caution)", borderColor: "var(--system-caution)" }}
-                  onClick={() => { setRecalibChannels(needsCalibChannels.map(c => c.id)); setShowRecalibration(true); }}
+                  onClick={() => onBatchRecal && onBatchRecal(needsCalibChannels)}
                   title={`교정 주기 초과 또는 미진행 ${needsCalibChannels.length}채널 일괄 재교정`}
                 >
                   일괄 재교정
@@ -1012,15 +1011,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
 
       {/* v9.35 Wave E+F: 탐촉자 추가 + 교정을 한 화면으로 통합 → 풀스크린 [4-3-1] ChannelCommissioning 페이지로 라우팅 */}
 
-      {/* v14.0: 일괄 재교정 마법사 — 다채널 wizard. 단일 채널 교정은 commission(edit 모드)로 통합되어 별도 trigger 폐기 */}
-      {showRecalibration && (
-        <window.CalibrationWizard
-          mode="recalibration"
-          channelList={recalibChannels}
-          onClose={() => setShowRecalibration(false)}
-          onComplete={() => setShowRecalibration(false)}
-        />
-      )}
+      {/* #2: 일괄 재교정은 [4-3-1] recal 모드로 라우팅(onBatchRecal) — DeviceDetail 내 모달 폐기 */}
 
       {/* 진단/로그 모달은 App(toolbar)에서 전역 렌더 */}
     </div>
@@ -1030,11 +1021,13 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
 // =================== v9.35 Wave E+F: 채널 Commissioning 풀스크린 페이지 ===================
 // 옵션 C — 채널 추가 + 교정(음속/영점/Gain/PRF/DAC) + Gate를 한 화면에 통합. (v20.1: 교정 검증 섹션 제거)
 // 좌측 320px sticky: 채널 정보 + 진행 체크리스트. 우측 메인: A-scan + 4 sections.
-window.ChannelCommissioning = function ChannelCommissioning({ deviceName, targets, onBack, onAddOnly, onAddAndStart, mode = "new", prefilledChannel, onSave, onSaveAndMeasure, onRemove }) {
-  // v14.0: mode "new" (신규 추가 — 기존) / "edit" (운영 중 채널 편집 — 신규)
-  // edit 모드: prefilledChannel로 state 초기화, 체크리스트 hide, 좌측 패널 = 채널 메타+마지막 교정+액션, 하단 toolbar = 저장/저장+측정/제거
+window.ChannelCommissioning = function ChannelCommissioning({ deviceName, targets, onBack, onAddOnly, onAddAndStart, mode = "new", prefilledChannel, onSave, onSaveAndMeasure, onRemove, recalChannels = [] }) {
+  // mode: "new"(신규 추가) / "edit"(운영 중 채널 편집) / "recal"(#2 일괄 재교정 — [4-3-2] CalibrationWizard 대체)
   const isEdit = mode === "edit";
+  const isRecal = mode === "recal";
   const pre = prefilledChannel || {};
+  // #2 recal: 재교정 대상 채널 목록 + 현재 선택 채널
+  const [selectedRecal, setSelectedRecal] = $s((recalChannels[0] && (recalChannels[0].id || recalChannels[0])) || null);
 
   // ───── 채널 정보 state — edit 모드 시 prefilledChannel로 초기화 ─────
   const [channel, setChannel] = $s(pre.channel || "");
@@ -1316,7 +1309,53 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
 
       {/* ───── 좌측 sticky 패널 (320px) — v14.0: 모드별 분기 ───── */}
       <div style={{ gridRow: 2, gridColumn: 1, background: "var(--surface-subtle-1)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column", overflowY: "auto", minHeight: 0 }}>
-        {isEdit ? (
+        {isRecal ? (
+          // ─── RECAL 모드(#2 일괄 재교정): 재교정 대상 채널 카드 + 진행 체크리스트 ───
+          <>
+            <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-low)" }}>
+              <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 10 }}>재교정 대상 채널 <span style={{ color: "var(--system-caution)" }}>{recalChannels.length}</span></div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {recalChannels.map((rc) => {
+                  const id = (rc && (rc.id || rc)) || "";
+                  const num = String(id).replace(/\D/g, "").padStart(2, "0");
+                  const tname = (rc && rc.targetName) || "—";
+                  const status = (rc && rc.calibrationStatus) || "expired";
+                  const dates = (window.MOCK && window.MOCK.lastCalibrationDate) || {};
+                  const last = dates["ch" + num] || dates[id];
+                  const sel = selectedRecal === id;
+                  const statusLabel = status === "uncalibrated" ? "미교정" : "주기 초과";
+                  return (
+                    <div key={id} onClick={() => setSelectedRecal(id)} style={{
+                      padding: "8px 10px", cursor: "pointer",
+                      background: sel ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "var(--surface-base)",
+                      border: sel ? "1px solid var(--border-emphasis)" : "1px solid var(--border-medium)",
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                        <span style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: sel ? "var(--content-emphasis)" : "var(--content-high)" }}>CH {num}</span>
+                        <span style={{ font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-caution)" }}>{statusLabel}</span>
+                      </div>
+                      <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>{tname} · 마지막 교정 {last || "—"}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div style={{ padding: "14px 16px" }}>
+              <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 10 }}>진행 체크리스트 <span style={{ color: "var(--content-low)", fontWeight: 400 }}>(CH {String(selectedRecal || "").replace(/\D/g, "").padStart(2, "0")})</span></div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {checklist.filter(c => c.key !== "info").map(c => (
+                  <div key={c.key} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0" }}>
+                    <span style={{ width: 14, height: 14, borderRadius: "50%", border: c.done ? "none" : "1.5px solid var(--border-medium)", background: c.done ? "var(--system-success)" : "transparent", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {c.done && <svg width="9" height="9" viewBox="0 0 9 9"><path d="M1.5 4.5 L3.5 6.5 L7.5 2" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                    </span>
+                    <span style={{ font: c.done ? "700 12px/1.3 var(--font-kr)" : "400 12px/1.3 var(--font-kr)", letterSpacing: ".02em", color: c.done ? "var(--content-high)" : "var(--content-medium)" }}>{c.label}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--border-low)", font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>◯ 채널 카드를 선택해 우측에서 재교정 → 모든 대상 완료 후 '재교정 완료'.</div>
+            </div>
+          </>
+        ) : isEdit ? (
           // ─── EDIT 모드: 채널 정보(편집 가능) + 마지막 교정일 + 액션 카드 ───  (#1: 좌측 패널 항목 편집 가능)
           <>
             <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-low)" }}>
@@ -1542,8 +1581,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
               </div>
             )}
           </div>
-          {/* #10: 채널 번호 + 탐촉자 주파수 — A-scan 하단으로 이동 */}
-          {!isEdit && (
+          {/* #10: 채널 번호 + 탐촉자 주파수 — A-scan 하단 (new 모드 전용 — recal은 좌측 카드로 선택) */}
+          {mode === "new" && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 8 }}>
               <div>
                 <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>채널 번호 <span style={{ color: "var(--system-error)" }}>*</span></div>
@@ -1669,10 +1708,15 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
       {/* ───── 하단 sticky 액션 바 — v14.0 모드별 분기 ───── */}
       <div style={{ gridRow: 3, gridColumn: "1 / -1", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 24px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
         {/* #19: '적용 범위' 폐지 — 설정 불러오기는 좌측 패널 최상단 셀렉트로 이동 */}
-        <span/>
+        {isRecal
+          ? <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>일괄 재교정 진행 — 대상 <span style={{ color: "var(--system-caution)" }}>{recalChannels.length}</span>채널</span>
+          : <span/>}
         <div style={{ display: "flex", gap: 8 }}>
           <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onBack}>취소</button>
-          {isEdit ? (
+          {isRecal ? (
+            /* #2 recal: 재교정 완료 */
+            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onBack}>재교정 완료</button>
+          ) : isEdit ? (
             <>
               <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onSave}>저장</button>
               <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onSaveAndMeasure}>저장 + 측정 시작</button>
