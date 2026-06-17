@@ -3749,38 +3749,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             <input className="erut-field" value={form.note} onChange={(e) => setField("note", e.target.value)} placeholder="자유 입력" style={{ width: "100%" }}/>
           </div>
 
-          {/* 측정 파라미터 (PRF 자동 계산) */}
-          {sectionHeader("측정 파라미터")}
-          <div style={{ gridColumn: "1 / -1", padding: "10px 14px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)", marginBottom: 4 }}>
-            <div style={{ font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
-              <strong style={{ color: "var(--content-emphasis)", fontWeight: 700 }}>PRF (Pulse Repetition Frequency · 펄스 반복 주파수)</strong> — 초음파를 1초에 몇 번 송신할지 결정. 검사 대상의 두께·소재에 따라 자동 계산되며, 표준 프리셋 적용 시 override됩니다.
-            </div>
-          </div>
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-              <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>PRF (Hz)</div>
-              <window.Toggle checked={autoPRF} onChange={setAutoPRF} size="sm" label="자동 계산"/>
-            </div>
-            <input
-              className="erut-field"
-              value={autoPRF ? prfValue.toLocaleString() : prfManual}
-              onChange={(e) => setPrfManual(parseInt(e.target.value.replace(/,/g, ""), 10) || 0)}
-              disabled={autoPRF}
-              style={{ width: "100%", background: autoPRF ? "var(--surface-subtle-1)" : "var(--surface-base)", color: autoPRF ? "var(--content-low)" : "var(--content-high)" }}
-            />
-            <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: autoPRF ? "var(--system-success)" : "var(--content-low)", marginTop: 4 }}>
-              {autoPRF ? `자동 계산 ON — 두께 ${form.th}mm · ${form.material.split(" ")[0]} 기준 권장값 ${prfValue.toLocaleString()} Hz` : "수동 입력 모드"}
-            </div>
-          </div>
-          <div>
-            {formLabel("계산 근거 (참고)")}
-            <div style={{ padding: "10px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)", font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
-              <div style={{ marginBottom: 4 }}>소재 음속 ({form.material.split(" ")[0]}) : <strong style={{ color: "var(--content-high)" }}>{prfCalc.soundSpeed.toLocaleString()} m/s</strong></div>
-              <div style={{ marginBottom: 4 }}>최대 측정 거리 : 두께 {form.th}mm × 3 = <strong style={{ color: "var(--content-high)" }}>{prfCalc.maxDistMm} mm</strong></div>
-              <div style={{ marginBottom: 4 }}>왕복 시간 (ToF) : <strong style={{ color: "var(--content-high)" }}>{prfCalc.tofUs.toFixed(2)} μs</strong></div>
-              <div style={{ paddingTop: 4, borderTop: "1px solid var(--border-low)", color: "var(--system-success)", fontWeight: 700 }}>→ 권장 PRF {prfCalc.prf.toLocaleString()} Hz (산업 표준 단계)</div>
-            </div>
-          </div>
+          {/* 측정 파라미터(PRF 등) 섹션 삭제 — 측정 파라미터는 [4-3-1] 채널 설정에서 관리(중복 제거) */}
         </div>
 
         {/* v9.27 Wave B: 표준 프리셋 영역을 페이지에서 제거 → 모달로 이동 (상단 '프리셋' 버튼 클릭 시 표시) */}
