@@ -3185,8 +3185,9 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
           <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>{isEdit ? "MC보드 편집" : "MC보드 추가"}</h2>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
+          {/* 업로드 = 항목 일괄 채움(add·edit 공통) / 다운로드 = 기존 보드 설정 내보내기(edit 전용 — add는 다운로드할 Config 없음) */}
           <button className="erut-btn erut-btn--default erut-btn--sm">Config 파일 업로드 ↑</button>
-          <button className="erut-btn erut-btn--default erut-btn--sm">Config 파일 다운로드 ↓</button>
+          {isEdit && <button className="erut-btn erut-btn--default erut-btn--sm">Config 파일 다운로드 ↓</button>}
         </div>
       </div>
 
