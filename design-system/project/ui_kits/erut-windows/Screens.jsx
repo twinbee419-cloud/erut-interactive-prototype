@@ -1874,7 +1874,7 @@ function DiagCalibHistory({ projectScope = false }) {
         <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>교정 이력</h3>
         <button className="erut-btn erut-btn--default erut-btn--sm">CSV 내보내기 ↓</button>
       </div>
-      <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 12 }}>교정 주기 초과 시 측정 신뢰성 의심 — 재교정 권장 (주기는 [8] 설정 → 교정 정책에서 지정)</div>
+      <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 12 }}>교정 주기 초과 시 측정 신뢰성 의심 — 재교정 권장 (주기는 [4-3-1] 채널 설정에서 채널별 지정)</div>
       <table style={{ width: "100%", borderCollapse: "collapse", font: "400 12px/1.4 var(--font-kr)" }}>
         <thead>
           <tr style={{ borderBottom: "1px solid var(--border-medium)", textAlign: "left", color: "var(--content-low)", fontWeight: 700 }}>
@@ -1983,13 +1983,12 @@ window.CalibrationExpiryAlertDialog = function CalibrationExpiryAlertDialog({ ch
             ))}
           </div>
           <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-            알림 시점은 <strong style={{ color: "var(--content-high)" }}>[8] 설정 모달 → 교정 정책</strong>에서 변경할 수 있습니다 (7일 전·1일 전·당일 다중 선택).
+            만료 7일 전·1일 전·당일에 알립니다. 교정 주기는 <strong style={{ color: "var(--content-high)" }}>[4-3-1] 채널 설정</strong>에서 채널별로 지정합니다.
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
           <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onClose}>나중에 확인</button>
           <div style={{ display: "flex", gap: 8 }}>
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onOpenSettings}>교정 정책 설정 →</button>
             <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onRecalibrateAll} autoFocus>일괄 재교정 ({count}ch)</button>
           </div>
         </div>
