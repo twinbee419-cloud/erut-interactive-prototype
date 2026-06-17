@@ -3506,7 +3506,7 @@ window.calcPRF = function(thicknessMm, material) {
 function buildEmptyTargetForm() {
   return {
     name: "",
-    code: "",
+    code: "f0e9d8c7-1a2b-4c3d-8e5f-6a7b8c9d0e1f",
     shape: "",
     od: "",
     th: "",
@@ -3526,12 +3526,12 @@ function buildTargetForm(target) {
   if (!target) target = {};
   // MOCK.targets desc를 파싱하기 어려우니 PIPE-A-204 기본값으로 시뮬레이션
   const defaults = {
-    "PIPE-A-204": { code: "SK-ULSN-PA204", shape: "배관",         od: 300,  th: 10, idim: 280, length: 6000, allow: "2.0", material: "탄소강 (S355)",    fluid: "고온 스팀",       std: "KS B 0817", temp: 380, press: 4.2 },
-    "TANK-B-101": { code: "SK-ULSN-TB101", shape: "탱크 (구형)",  od: 1500, th: 14, idim: 1472,length: 0,    allow: "3.0", material: "스테인레스 (316L)",fluid: "가스 — 수소",    std: "ASME Sec.V", temp: 25,  press: 8.0 },
-    "VESSEL-C-301": { code: "SK-ULSN-VC301", shape: "탱크 (원통형)", od: 800, th: 12, idim: 776, length: 400,  allow: "2.5", material: "스테인레스 (304)", fluid: "액체 — 화학약품", std: "API 510",   temp: 120, press: 2.0 },
-    "FLANGE-D-08": { code: "SK-ULSN-FD08",  shape: "플랜지",      od: 200,  th: 18, idim: 164, length: 0,    allow: "3.0", material: "탄소강 (S355)",    fluid: "고온 스팀",       std: "KS B 0817",  temp: 200, press: 3.5 },
-    "DOME-E-12":   { code: "SK-ULSN-DE12",  shape: "Dome 헤드",   od: 1200, th: 15, idim: 1170,length: 0,    allow: "3.0", material: "탄소강 (S355)",    fluid: "액체 — 원유",    std: "API 510",   temp: 60,  press: 1.5 },
-    "WELD-F-22":   { code: "SK-ULSN-WF22",  shape: "용접부",      od: 0,    th: 12, idim: 0,   length: 800,  allow: "2.0", material: "탄소강 (S355)",    fluid: "고온 스팀",       std: "KS B 0817",  temp: 350, press: 4.0 },
+    "PIPE-A-204": { code: "7c4a8d09-ca37-4f1e-9b21-3e0a1f2c5d10", shape: "배관",         od: 300,  th: 10, idim: 280, length: 6000, allow: "2.0", material: "탄소강 (S355)",    fluid: "고온 스팀",       std: "KS B 0817", temp: 380, press: 4.2 },
+    "TANK-B-101": { code: "b2f1e6a3-8d54-42c7-a019-6c3b7e8f1a22", shape: "탱크 (구형)",  od: 1500, th: 14, idim: 1472,length: 0,    allow: "3.0", material: "스테인레스 (316L)",fluid: "가스 — 수소",    std: "ASME Sec.V", temp: 25,  press: 8.0 },
+    "VESSEL-C-301": { code: "3e9c1d72-5a4b-4e88-bf30-12d7a6c9e433", shape: "탱크 (원통형)", od: 800, th: 12, idim: 776, length: 400,  allow: "2.5", material: "스테인레스 (304)", fluid: "액체 — 화학약품", std: "API 510",   temp: 120, press: 2.0 },
+    "FLANGE-D-08": { code: "a1d8f4b6-2c39-4a7e-8e51-9f0b3c2d6e44",  shape: "플랜지",      od: 200,  th: 18, idim: 164, length: 0,    allow: "3.0", material: "탄소강 (S355)",    fluid: "고온 스팀",       std: "KS B 0817",  temp: 200, press: 3.5 },
+    "DOME-E-12":   { code: "5f2b9c81-7e46-43d2-91a8-0a4e7b1c8d55",  shape: "Dome 헤드",   od: 1200, th: 15, idim: 1170,length: 0,    allow: "3.0", material: "탄소강 (S355)",    fluid: "액체 — 원유",    std: "API 510",   temp: 60,  press: 1.5 },
+    "WELD-F-22":   { code: "9d3e7a14-6b28-4c9f-83b7-2e1f5a0d9c66",  shape: "용접부",      od: 0,    th: 12, idim: 0,   length: 800,  allow: "2.0", material: "탄소강 (S355)",    fluid: "고온 스팀",       std: "KS B 0817",  temp: 350, press: 4.0 },
   };
   const d = defaults[target.id] || defaults["PIPE-A-204"];
   return {
@@ -3570,8 +3570,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   const [saveAsPreset, setSaveAsPreset] = $s(false);
   const [selectedPresetId, setSelectedPresetId] = $s(null);
   const [presetSearch, setPresetSearch] = $s("");   // 프리셋 모달 검색/필터
-  const [presetName, setPresetName]     = $s("");   // 프리셋으로 저장 시 프리셋명 (코드는 PRE-XXX 자동)
-  const [showSavePresetModal, setShowSavePresetModal] = $s(false); // #22: 전용 '프리셋으로 저장' 다이얼로그
+  const [presetName, setPresetName]     = $s("");   // 프리셋으로 저장 시 프리셋명 (프리셋 코드 없음)
   // v9.27 Wave B fix: '+새 검사 대상 추가' 클릭 시 입력 초기화 confirm
   const [showResetConfirm, setShowResetConfirm] = $s(false);
 
@@ -3703,8 +3702,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             {selectedId && (
               <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ color: "var(--system-error)" }}>검사 대상 삭제</button>
             )}
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowPresetModal(true)}>프리셋 불러오기</button>
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => { setPresetName(form.name || ""); setShowSavePresetModal(true); }}>프리셋으로 저장</button>
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowPresetModal(true)}>프리셋</button>
             <button
               className={"erut-btn erut-btn--sm " + (requiredOk ? "erut-btn--emphasis" : "erut-btn--disabled")}
               disabled={!requiredOk}
@@ -3731,7 +3729,8 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
           </div>
           <div>
             {formLabel("코드")}
-            <input className="erut-field" value={form.code} onChange={(e) => setField("code", e.target.value)} style={{ width: "100%" }}/>
+            <input className="erut-field is-disabled" value={form.code} readOnly tabIndex={-1} style={{ width: "100%" }}/>
+            <div style={{ font: "400 9px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>UUID 자동 부여 · 수정 불가</div>
           </div>
           {/* v18.1: 채널 배치 마법사 폐기 — A-scan은 좌표 정보 없음. 도면 thumbnail만 유지 */}
           <div>
@@ -3946,34 +3945,30 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
               ? "변경 사항을 저장하시겠습니까?"
               : "검사 대상을 추가하시겠습니까?"}
           </div>
-        </window.Modal>
-      )}
-
-      {/* #22/#24: 전용 '프리셋으로 저장' 다이얼로그 — 프리셋명 + PRE-XXX 자동 코드 + 기본 정보 제외 */}
-      {showSavePresetModal && (
-        <window.Modal
-          title="프리셋으로 저장"
-          onClose={() => setShowSavePresetModal(false)}
-          footer={(
-            <>
-              <window.Button variant="subtle" size="sm" onClick={() => setShowSavePresetModal(false)}>닫기</window.Button>
-              <window.Button variant={presetName ? "emphasis" : "disabled"} size="sm" onClick={presetName ? () => setShowSavePresetModal(false) : undefined}>저장</window.Button>
-            </>
+          {!isFromPreset && (
+            <div>
+              {/* #1: '프리셋으로 저장' 체크 시 프리셋명 입력 필드 표시 (프리셋 코드 없음) */}
+              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                <span
+                  className={"erut-cb__box" + (saveAsPreset ? " is-on" : "")}
+                  onClick={() => setSaveAsPreset(s => !s)}
+                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                >
+                  {saveAsPreset && <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="#FFFFFF" strokeWidth="2"><polyline points="3,8 7,12 13,4"/></svg>}
+                </span>
+                <span style={{ font: "400 12px/1.2 var(--font-kr)", color: "var(--content-medium)" }}>프리셋으로 저장</span>
+              </label>
+              {saveAsPreset && (
+                <div style={{ marginTop: 10 }}>
+                  <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>프리셋명 <span style={{ color: "var(--system-error)" }}>*</span></div>
+                  <input className="erut-field" value={presetName} onChange={(e) => setPresetName(e.target.value)} placeholder="예: 탄소강 배관 6~12mm @ 고온 스팀" style={{ width: "100%" }}/>
+                  <div style={{ marginTop: 6, font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+                    프리셋에는 형상 · 소재 · 유체 · 운영 환경 · 측정 파라미터만 저장됩니다 (기본 정보 제외).
+                  </div>
+                </div>
+              )}
+            </div>
           )}
-        >
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
-            <div>
-              <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>프리셋명 <span style={{ color: "var(--system-error)" }}>*</span></div>
-              <input className="erut-field" value={presetName} onChange={(e) => setPresetName(e.target.value)} placeholder="예: 탄소강 배관 6~12mm @ 고온 스팀" style={{ width: "100%" }}/>
-            </div>
-            <div>
-              <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>코드 <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>(자동)</span></div>
-              <input className="erut-field is-disabled" value="PRE-014" readOnly tabIndex={-1} style={{ width: "100%" }}/>
-            </div>
-          </div>
-          <div style={{ padding: "10px 12px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)", font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
-            저장 항목: <strong style={{ color: "var(--content-high)" }}>형상 · 소재 · 유체 · 운영 환경 · 측정 파라미터</strong>. 기본 정보(대상명 · MC보드 · 코드)는 제외됩니다. 코드는 <strong style={{ color: "var(--content-high)" }}>PRE-XXX</strong> 형식으로 자동 부여됩니다.
-          </div>
         </window.Modal>
       )}
     </div>
