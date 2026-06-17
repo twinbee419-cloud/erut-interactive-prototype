@@ -1360,11 +1360,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
           <>
             <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-low)" }}>
               <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 10 }}>채널 정보</div>
+              {/* add 모드와 동일 필드·순서 (채널번호·주파수는 A-scan 하단 공통) */}
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <div>
-                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>채널 번호</div>
-                  <input className="erut-field is-disabled" value={"CH " + String(pre.channel || channel || "?").padStart(2, "0")} readOnly tabIndex={-1} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
-                </div>
                 <div>
                   <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>제품명</div>
                   <input className="erut-field" value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="예: Olympus A430S-SB" style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
@@ -1384,12 +1381,20 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                   <input className="erut-field is-disabled" value={material} readOnly disabled style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
                 </div>
                 <div>
-                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>탐촉자 주파수 (MHz)</div>
-                  <input className="erut-field" type="number" min="0.5" max="20" step="0.25" value={freqMHz} onChange={(e) => setFreqMHz(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>검사체 공칭 두께 (mm) <span style={{ color: "var(--content-low)" }}>(검사 대상 상속)</span></div>
+                  <input className="erut-field is-disabled" type="number" value={nominalThk} readOnly disabled style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
                 </div>
                 <div>
                   <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>Wedge 각도 (°)</div>
                   <input className="erut-field" type="number" min="0" max="90" step="0.1" value={wedgeAngle} onChange={(e) => setWedgeAngle(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                </div>
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>교정 주기 (일)</div>
+                  <label onClick={() => setUseGlobalCycle(v => !v)} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 6 }}>
+                    <span className="erut-cb"><span className={"erut-cb__box" + (useGlobalCycle ? " is-on" : "")}></span></span>
+                    기본값 적용 ({globalCycle}일)
+                  </label>
+                  <input className={"erut-field" + (useGlobalCycle ? " is-disabled" : "")} type="number" min="1" step="1" value={useGlobalCycle ? globalCycle : channelCycleDays} onChange={(e) => setChannelCycleDays(parseInt(e.target.value, 10) || 0)} disabled={useGlobalCycle} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
                 </div>
               </div>
             </div>
@@ -1409,7 +1414,6 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                 return (
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em" }}>
                     <div><span style={{ color: "var(--content-low)" }}>마지막 교정</span> <strong style={{ color: "var(--content-high)", fontWeight: 700 }}>{lastDate || "— (미교정)"}</strong></div>
-                    <div><span style={{ color: "var(--content-low)" }}>교정 주기</span> <strong style={{ color: "var(--content-high)", fontWeight: 700 }}>{cycle}일{useGlobalCycle ? " (전역 기본)" : " (채널별)"}</strong></div>
                     {daysAgo != null && <div><span style={{ color: "var(--content-low)" }}>경과</span> <strong style={{ color: tone, fontWeight: 700 }}>{daysAgo}일 전</strong></div>}
                     {daysAgo != null && (
                       <div><span style={{ color: "var(--content-low)" }}>만료까지</span> <strong style={{ color: tone, fontWeight: 700 }}>{expired ? `주기 ${daysAgo - cycle}일 초과` : `${cycle - daysAgo}일 남음`}</strong></div>
@@ -1581,24 +1585,26 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
               </div>
             )}
           </div>
-          {/* #10: 채널 번호 + 탐촉자 주파수 — A-scan 하단 (new 모드 전용 — recal은 좌측 카드로 선택) */}
-          {mode === "new" && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 8 }}>
-              <div>
-                <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>채널 번호 <span style={{ color: "var(--system-error)" }}>*</span></div>
+          {/* #10: 채널 번호 + 탐촉자 주파수 — A-scan 하단 (전 모드 공통). new=선택 / edit·recal=기존 채널 readonly */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 8 }}>
+            <div>
+              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>채널 번호 {mode === "new" && <span style={{ color: "var(--system-error)" }}>*</span>}</div>
+              {mode === "new" ? (
                 <select className="erut-field" value={channel} onChange={(e) => setChannel(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
                   <option value="">선택하세요</option>
                   <option value="65">65 (다음 빈 슬롯)</option>
                   <option value="16">16 (현재 미등록)</option>
                   <option value="manual">직접 입력...</option>
                 </select>
-              </div>
-              <div>
-                <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>탐촉자 주파수 (MHz) <span style={{ color: "var(--system-error)" }}>*</span></div>
-                <input className="erut-field" type="number" min="0.5" max="20" step="0.25" value={freqMHz} onChange={(e) => setFreqMHz(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
-              </div>
+              ) : (
+                <input className="erut-field is-disabled" value={"CH " + String((isRecal ? selectedRecal : (pre.channel || channel)) || "").replace(/\D/g, "").padStart(2, "0")} readOnly tabIndex={-1} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+              )}
             </div>
-          )}
+            <div>
+              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>탐촉자 주파수 (MHz) {mode === "new" && <span style={{ color: "var(--system-error)" }}>*</span>}</div>
+              <input className="erut-field" type="number" min="0.5" max="20" step="0.25" value={freqMHz} onChange={(e) => setFreqMHz(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+            </div>
+          </div>
         </div>
 
         {/* v14.1: 교정 측정 + Gate 설정 2열 배치 (가로로 나란히) */}
