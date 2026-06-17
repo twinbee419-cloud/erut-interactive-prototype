@@ -1317,16 +1317,41 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
       {/* ───── 좌측 sticky 패널 (320px) — v14.0: 모드별 분기 ───── */}
       <div style={{ gridRow: 2, gridColumn: 1, background: "var(--surface-subtle-1)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column", overflowY: "auto", minHeight: 0 }}>
         {isEdit ? (
-          // ─── EDIT 모드: 채널 메타 (readonly 위주) + 마지막 교정일 + 액션 카드 ───
+          // ─── EDIT 모드: 채널 정보(편집 가능) + 마지막 교정일 + 액션 카드 ───  (#1: 좌측 패널 항목 편집 가능)
           <>
             <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-low)" }}>
               <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 10 }}>채널 정보</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em" }}>
-                <div><span style={{ color: "var(--content-low)" }}>채널 번호</span> <strong style={{ color: "var(--content-high)", fontWeight: 700 }}>CH {String(pre.channel || "?").padStart(2, "0")}</strong></div>
-                <div><span style={{ color: "var(--content-low)" }}>Serial (SN)</span> <strong style={{ color: "var(--content-high)", fontWeight: 700 }}>{pre.serial || "—"}</strong></div>
-                <div><span style={{ color: "var(--content-low)" }}>검사 대상</span> <strong style={{ color: "var(--content-emphasis)", fontWeight: 700 }}>{pre.target || "—"}</strong></div>
-                <div><span style={{ color: "var(--content-low)" }}>검사체 재질</span> <strong style={{ color: "var(--content-high)", fontWeight: 700 }}>{pre.material || material}</strong></div>
-                <div><span style={{ color: "var(--content-low)" }}>탐촉자</span> <strong style={{ color: "var(--content-high)", fontWeight: 700 }}>{`${pre.freqMHz || 5} MHz · ${pre.elementShape || "원형"} ${pre.elementMm || 10} mm`}</strong></div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>채널 번호</div>
+                  <input className="erut-field is-disabled" value={"CH " + String(pre.channel || channel || "?").padStart(2, "0")} readOnly tabIndex={-1} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                </div>
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>제품명</div>
+                  <input className="erut-field" value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="예: Olympus A430S-SB" style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                </div>
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>Serial 번호 (SN)</div>
+                  <input className="erut-field" value={serial} onChange={(e) => setSerial(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                </div>
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>검사 대상</div>
+                  <select className="erut-field" value={target} onChange={(e) => setTarget(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}>
+                    {(targets || []).map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>검사체 재질 <span style={{ color: "var(--content-low)" }}>(검사 대상 상속)</span></div>
+                  <input className="erut-field is-disabled" value={material} readOnly disabled style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                </div>
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>탐촉자 주파수 (MHz)</div>
+                  <input className="erut-field" type="number" min="0.5" max="20" step="0.25" value={freqMHz} onChange={(e) => setFreqMHz(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                </div>
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>Wedge 각도 (°)</div>
+                  <input className="erut-field" type="number" min="0" max="90" step="0.1" value={wedgeAngle} onChange={(e) => setWedgeAngle(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                </div>
               </div>
             </div>
             {/* 마지막 교정 / 만료 상태 */}
@@ -2091,12 +2116,9 @@ function DiagMeasErrorLog({ projectScope = false }) {
 // =================== Modal · [8] 환경 설정 (v10.0 신규 — 메뉴바 [설정] + 툴바 gear 공통 진입) ===================
 window.SettingsModal = function SettingsModal({ onClose }) {
   // v19.0: 'pc' 카테고리 신설 — 신설 강조로 기본 활성. v27: 자동 저장 카테고리 삭제(passive 기능화).
-  const [cat, setCat] = $s("pc"); // general / shortcuts / report / calibration / pc
+  const [cat, setCat] = $s("general"); // general / pc (단축키·보고서 기본값·교정 정책 탭 삭제)
   const cats = [
     { id: "general",     label: "일반" },
-    { id: "shortcuts",   label: "단축키" },
-    { id: "report",      label: "보고서 기본값" },
-    { id: "calibration", label: "교정 정책" },
     { id: "pc",          label: "PC 정보" },
   ];
   return (
@@ -2126,9 +2148,6 @@ window.SettingsModal = function SettingsModal({ onClose }) {
           </div>
           <div style={{ padding: "18px 24px", overflowY: "auto" }}>
             {cat === "general"     && <SettingsGeneral/>}
-            {cat === "shortcuts"   && <SettingsShortcuts/>}
-            {cat === "report"      && <SettingsReport/>}
-            {cat === "calibration" && <SettingsCalibration/>}
             {cat === "pc"          && <SettingsPcInfo/>}
           </div>
         </div>
@@ -2442,8 +2461,6 @@ function SettingsSectionHeader({ title, desc }) {
 }
 
 function SettingsGeneral() {
-  const [startScreen, setStartScreen] = $s("last");
-  const [sound, setSound] = $s(true);
   const [sendCycle, setSendCycle] = $s(30);
   return (
     <>
@@ -2460,144 +2477,18 @@ function SettingsGeneral() {
             <option value="en">English (Beta)</option>
           </select>
         </SettingsRow>
-        <SettingsRow label="시작 화면">
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: startScreen === "last" ? "var(--content-high)" : "var(--content-medium)" }} onClick={() => setStartScreen("last")}>
-              <span className="erut-cb"><span className={"erut-cb__box" + (startScreen === "last" ? " is-on" : "")}></span></span>
-              마지막 프로젝트 자동 열기
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: startScreen === "picker" ? "var(--content-high)" : "var(--content-medium)" }} onClick={() => setStartScreen("picker")}>
-              <span className="erut-cb"><span className={"erut-cb__box" + (startScreen === "picker" ? " is-on" : "")}></span></span>
-              [0] 프로젝트 선택 화면
-            </label>
-          </div>
-        </SettingsRow>
-        <SettingsRow label="측정 알림음" hint="감육 검출 · 부착력 저하 시 효과음 재생.">
-          <label className="erut-toggle" onClick={() => setSound(s => !s)}>
-            <span className={"erut-toggle__track" + (sound ? " is-on" : "")}><span className="erut-toggle__thumb"></span></span>
-            <span className="erut-toggle__label erut-toggle__label--sm">{sound ? "활성" : "비활성"}</span>
-          </label>
-        </SettingsRow>
         <SettingsRow label="데이터 송신 주기" hint="MC보드가 측정 데이터를 서버로 전송하는 간격. 감육은 장기 진행이라 짧을 필요 없음. 측정 주파수(PRF)와는 별개.">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <input className="erut-field" type="number" min="1" step="1" value={sendCycle} onChange={(e) => setSendCycle(parseInt(e.target.value, 10) || 0)} style={{ width: 120 }}/>
             <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--content-medium)" }}>분</span>
           </div>
         </SettingsRow>
-      </div>
-    </>
-  );
-}
-
-function SettingsShortcuts() {
-  const shortcuts = [
-    ["측정 시작",       "F6"],
-    ["측정 중지",       "F7"],
-    ["프로젝트 불러오기", "Ctrl+O"],
-    ["프로젝트 저장",   "Ctrl+Shift+S"],
-    ["보고서 출력",     "Ctrl+P"],
-    ["메뉴 닫기 · 모달 닫기", "Esc"],
-  ];
-  return (
-    <>
-      <SettingsSectionHeader title="단축키" desc="자주 쓰는 동작의 단축키를 변경할 수 있습니다. 충돌이 발생하면 경고가 표시됩니다."/>
-      <div style={{ border: "1px solid var(--border-low)" }}>
-        {shortcuts.map(([label, key], i) => (
-          <div key={label} style={{ display: "grid", gridTemplateColumns: "1fr 180px 80px", alignItems: "center", padding: "10px 14px", borderTop: i === 0 ? "none" : "1px solid var(--border-low)" }}>
-            <div style={{ font: "400 12px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{label}</div>
-            <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", padding: "6px 10px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", display: "inline-block", justifySelf: "start" }}>{key}</div>
-            <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ justifySelf: "end" }}>변경</button>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
-function SettingsReport() {
-  return (
-    <>
-      <SettingsSectionHeader title="보고서 기본값" desc="[18] 보고서 자동 생성 시 사전 채워질 기본값입니다."/>
-      <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: "16px 24px", alignItems: "start" }}>
-        <SettingsRow label="출력 형식">
-          <select className="erut-field" defaultValue="pdf" style={{ width: 240 }}>
-            <option value="pdf">PDF (기본)</option>
-            <option value="docx">DOCX (Word 편집 가능)</option>
-          </select>
-        </SettingsRow>
-        <SettingsRow label="회사 로고" hint="보고서 헤더 좌측 상단에 표시. PNG/JPG, 권장 300×80px.">
+        {/* #7: 보고서 저장 경로 — [18] 채널 측정 보고서(PDF) 기본 저장 위치 */}
+        <SettingsRow label="보고서 저장 경로" hint="[18] 채널 측정 보고서(PDF)가 저장되는 기본 위치.">
           <div style={{ display: "flex", gap: 8 }}>
-            <input className="erut-field" defaultValue="(로고 미등록)" disabled style={{ flex: 1 }}/>
-            <button className="erut-btn erut-btn--default erut-btn--sm">파일 선택...</button>
+            <input className="erut-field" defaultValue="C:\\ERUT_Reports" style={{ flex: 1 }}/>
+            <button className="erut-btn erut-btn--default erut-btn--sm">변경...</button>
           </div>
-        </SettingsRow>
-        <SettingsRow label="검사자 기본 정보" hint="신규 세션 생성 시 사전 채워질 검사자 이름·자격·소속.">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <input className="erut-field" placeholder="이름 (예: 김검사)"/>
-            <input className="erut-field" placeholder="자격 (예: ASNT Lv.II)"/>
-            <input className="erut-field" placeholder="소속" style={{ gridColumn: "1 / -1" }}/>
-          </div>
-        </SettingsRow>
-        <SettingsRow label="적용 표준 기본값" hint="신규 세션 생성 시 사전 선택될 NDT 표준.">
-          <select className="erut-field" defaultValue="none" style={{ width: 240 }}>
-            <option value="none">선택 안 함</option>
-            <option value="ks">KS B 0817</option>
-            <option value="asme">ASME Sec.V</option>
-            <option value="api">API 510</option>
-            <option value="nace">NACE MR0175</option>
-          </select>
-        </SettingsRow>
-      </div>
-    </>
-  );
-}
-
-// v16.0 신설: 교정 정책 카테고리. 기본 교정 주기·만료 전 알림 시점·앱 시작 시 알림·상태바 배지 4개 설정 항목.
-function SettingsCalibration() {
-  const g = (window.MOCK && window.MOCK.calibrationPolicy) || {};
-  const [cycle, setCycle]      = $s(g.defaultCycleDays != null ? g.defaultCycleDays : 180);
-  const [alert7, setAlert7]    = $s(g.alert7DaysBefore !== false);
-  const [alert1, setAlert1]    = $s(g.alert1DayBefore  !== false);
-  const [alertD, setAlertD]    = $s(g.alertOnDueDay    !== false);
-  const [startupAlert, setStartupAlert] = $s(g.startupAlertDialog !== false);
-  const [badge, setBadge]               = $s(g.statusBarBadge    !== false);
-  return (
-    <>
-      <SettingsSectionHeader title="교정 정책" desc="탐촉자 교정 주기와 만료 전 알림 동작을 설정합니다. 절차서·검사체별로 가변. 채널 단위 override는 [4-3-1] 탐촉자 설정에서 가능."/>
-      <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: "16px 24px", alignItems: "start" }}>
-        <SettingsRow label="기본 교정 주기" hint="전역 기본값. 채널별로 다른 주기를 적용하려면 [4-3-1] 탐촉자 설정에서 override.">
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input className="erut-field" type="number" min="1" step="1" value={cycle} onChange={(e) => setCycle(parseInt(e.target.value, 10) || 0)} style={{ width: 100 }}/>
-            <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--content-medium)" }}>일</span>
-          </div>
-        </SettingsRow>
-        <SettingsRow label="만료 전 알림 시점" hint="각 시점에 한 번씩 표시 — 채널당 최대 3회. 만료 후에는 F6 측정 시작 자체가 차단됩니다.">
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <label onClick={() => setAlert7(v => !v)} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>
-              <span className="erut-cb"><span className={"erut-cb__box" + (alert7 ? " is-on" : "")}></span></span>
-              7일 전 알림
-            </label>
-            <label onClick={() => setAlert1(v => !v)} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>
-              <span className="erut-cb"><span className={"erut-cb__box" + (alert1 ? " is-on" : "")}></span></span>
-              1일 전 알림
-            </label>
-            <label onClick={() => setAlertD(v => !v)} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>
-              <span className="erut-cb"><span className={"erut-cb__box" + (alertD ? " is-on" : "")}></span></span>
-              당일 (D-Day) 알림
-            </label>
-          </div>
-        </SettingsRow>
-        <SettingsRow label="앱 시작 시 알림" hint="앱 시작 시 알림 시점에 도달한 채널이 있으면 다이얼로그 표시. OFF 시 상태바 배지로만 알림.">
-          <label className="erut-toggle" onClick={() => setStartupAlert(v => !v)}>
-            <span className={"erut-toggle__track" + (startupAlert ? " is-on" : "")}><span className="erut-toggle__thumb"></span></span>
-            <span className="erut-toggle__label erut-toggle__label--sm">{startupAlert ? "활성" : "비활성"}</span>
-          </label>
-        </SettingsRow>
-        <SettingsRow label="교정 알림 종 배지" hint='메뉴바 알림 센터(종)에 교정 임박/만료 채널을 알림으로 표시. (v21.0: 상태바 배지 → 통합 알림 센터로 흡수)'>
-          <label className="erut-toggle" onClick={() => setBadge(v => !v)}>
-            <span className={"erut-toggle__track" + (badge ? " is-on" : "")}><span className="erut-toggle__thumb"></span></span>
-            <span className="erut-toggle__label erut-toggle__label--sm">{badge ? "활성" : "비활성"}</span>
-          </label>
         </SettingsRow>
       </div>
     </>
@@ -2608,7 +2499,6 @@ function SettingsCalibration() {
 function SettingsPcInfo() {
   const pc = (window.MOCK && window.MOCK.pcInfo) || {};
   const [alias, setAlias] = $s(pc.alias || "");
-  const [showInStatusBar, setShowInStatusBar] = $s(pc.showAliasInStatusBar === true);
   const copyUuid = () => {
     if (navigator.clipboard && pc.uuid) navigator.clipboard.writeText(pc.uuid);
   };
@@ -2620,21 +2510,14 @@ function SettingsPcInfo() {
           <input className="erut-field" value={alias} onChange={(e) => setAlias(e.target.value)} style={{ width: 320 }}/>
         </SettingsRow>
 
-        <SettingsRow label="UUID" hint="첫 실행 시 1회 자동 생성. OS 재설치 / PC 교체 시 새로 생성됨. 사용자 수정 불가 (서버 식별자).">
+        <SettingsRow label="PC 고유키" hint="첫 실행 시 1회 자동 생성. OS 재설치 / PC 교체 시 새로 생성됨. 사용자 수정 불가 (서버 식별자).">
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <input className="erut-field" value={pc.uuid || ""} readOnly style={{ width: 340, fontFamily: "'Consolas', monospace", fontSize: 11, background: "var(--surface-subtle-1)", color: "var(--content-medium)" }}/>
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={copyUuid} title="UUID 복사" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={copyUuid} title="PC 고유키 복사" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="9" y="9" width="13" height="13" rx="1"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               복사
             </button>
           </div>
-        </SettingsRow>
-
-        <SettingsRow label="상태바에 alias 표시" hint='기본 OFF. ON 시 상태바 우측에 "PC: {alias}" 표시 — 다중 PC 운영 환경에서 즉시 식별 가능.'>
-          <label className="erut-toggle" onClick={() => setShowInStatusBar(v => !v)}>
-            <span className={"erut-toggle__track" + (showInStatusBar ? " is-on" : "")}><span className="erut-toggle__thumb"></span></span>
-            <span className="erut-toggle__label erut-toggle__label--sm">{showInStatusBar ? "활성" : "비활성"}</span>
-          </label>
         </SettingsRow>
 
         <SettingsRow label="자동 수집 메타" hint="앱 시작 시마다 자동 갱신. 사용자 수정 불가. 보안 위험 시 MAC 주소 항목은 [숨김] 가능.">
@@ -2735,7 +2618,7 @@ window.AnimatedAscan = function AnimatedAscan({
 // =================== Screen · [4] EQUIPMENT SETTINGS ===================
 // Layout matches ServiceFlow_Analysis SLIDE 9 [4] 장비 연결 설정 (v2.0).
 // 좌측 사이드 메뉴 (220px) + 우측 콘텐츠 영역. 메뉴 3개:
-//   - mc:    MC보드 연결 (목록 / 추가 / 편집 sub-view)
+//   - mc:    MC보드 설정 (목록 / 추가 / 편집 sub-view)
 //   - mqtt:  MQTT 설정
 //   - probe: 탐촉자 설정 ([4-3-1] 교정 마법사 트리거)
 
@@ -3100,7 +2983,7 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
   const switchMenu = (m) => { setSubView(null); setEditingBoardId(null); setMenu(m); };
 
   const menuItems = [
-    { id: "mc",    label: "MC보드 연결", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="6" width="14" height="12"/><line x1="16" y1="12" x2="20" y2="12"/><line x1="18" y1="10" x2="18" y2="14"/></svg> },
+    { id: "mc",    label: "MC보드 설정", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="6" width="14" height="12"/><line x1="16" y1="12" x2="20" y2="12"/><line x1="18" y1="10" x2="18" y2="14"/></svg> },
     { id: "mqtt",  label: "MQTT 설정",   icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 12a10 10 0 0 1 14 0"/><path d="M8.5 15a5 5 0 0 1 7 0"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg> },
   ];
   // #2: '탐촉자 설정' 메뉴 폐기 — 탐촉자 등록은 [2] +탐촉자 추가 → [4-3-1] ChannelCommissioning (적용 범위로 일괄)
@@ -3151,7 +3034,7 @@ function MCBoardList({ onAdd, onEdit }) {
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
         <div>
-          <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>MC보드 연결</h2>
+          <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>MC보드 설정</h2>
           <p style={{ font: "400 13px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4, marginBottom: 0 }}>IP 직접 입력 방식. 등록 보드 {boards.length}대 · 연결 {boards.filter(b => b.state !== "offline").length}대 · 오프라인 {boards.filter(b => b.state === "offline").length}대.</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
@@ -3235,7 +3118,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
         <div>
           <div style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 6 }}>
-            <span style={{ cursor: "pointer", color: "var(--content-emphasis)" }} onClick={onCancel}>MC보드 연결</span>
+            <span style={{ cursor: "pointer", color: "var(--content-emphasis)" }} onClick={onCancel}>MC보드 설정</span>
             <span style={{ margin: "0 6px" }}>›</span>
             <span style={{ color: "var(--content-medium)" }}>{isEdit ? `${existing.id} 편집` : "새 보드 추가"}</span>
           </div>

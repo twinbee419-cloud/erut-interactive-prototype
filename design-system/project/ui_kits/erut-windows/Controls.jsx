@@ -321,25 +321,12 @@ window.ChannelGrid = function ChannelGrid({
                 <>
                   {/* v22.6: 감육 검출 마커 — 좌상단 코너(단일·등급 없음) */}
                   {hasDefect && <span className="erut-ch-cell__flaw"/>}
-                  {/* v9.31: 위 = 채널명 + 통신 세기 LED dot / 중 = 검사 대상 / 우하단 = Amp 4-bar 아이콘 */}
+                  {/* v9.31: 위 = 채널명 + 통신 세기 LED dot / 중 = 검사 대상 (#3: Amp 4-bar 아이콘 삭제) */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span className="erut-ch-cell__val">{(c.id || ("ch" + String(c.num).padStart(2, "0"))).toUpperCase().replace("CH", "CH ")}</span>
                     <span style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor, flexShrink: 0 }}/>
                   </div>
-                  <span className="erut-ch-cell__id" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 20 }}>{active ? (c.targetName || "—") : "—"}</span>
-                  {/* 신호 세기 (Amp) — 셀룰러 4-bar 아이콘 (우하단). 0/20/40/60/80 임계로 0~4개 활성 */}
-                  {active && s && s.amp != null && (() => {
-                    const amp = s.amp;
-                    const filled = amp >= 80 ? 4 : amp >= 60 ? 3 : amp >= 40 ? 2 : amp >= 20 ? 1 : 0;
-                    const bars = [{ x: 0, h: 3 }, { x: 4, h: 5 }, { x: 8, h: 7 }, { x: 12, h: 9 }];
-                    return (
-                      <svg width="14" height="9" viewBox="0 0 14 9" style={{ position: "absolute", right: 6, bottom: 4 }} aria-label={`Amp ${amp}%`}>
-                        {bars.map((b, i) => (
-                          <rect key={i} x={b.x} y={9 - b.h} width="2" height={b.h} fill={i < filled ? "var(--content-high)" : "var(--border-medium)"}/>
-                        ))}
-                      </svg>
-                    );
-                  })()}
+                  <span className="erut-ch-cell__id" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{active ? (c.targetName || "—") : "—"}</span>
                 </>
               )}
             </div>

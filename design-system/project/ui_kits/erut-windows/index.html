@@ -157,12 +157,6 @@ function App() {
     // v9.26: '+ 장비 추가' 메뉴바 진입 — [1] '+장비 추가' 버튼과 동일하게 mc-add 모드로 직접 진입
     { label: "+ 장비 추가",     onClick: () => { setSettingsInitialSubView("mc-add"); goto("settings"); } },
     { label: "장비 연결 설정",  onClick: () => goto("settings") },
-    { divider: true },
-    { label: "전체 연결" },
-    { label: "전체 연결 해제" },
-    { divider: true },
-    { label: "전체 측정 시작", shortcut: "F6", onClick: () => goto("realtime") },
-    { label: "전체 측정 중지", shortcut: "F7" },
   ];
 
   // 툴바: 홈 / 보고서 / 진단. 보고서=장비 컨텍스트 전용. 진단=장비 컨텍스트 + [1] 메인(전체 보드 로그). 이전·알림·breadcrumb은 Toolbar 별도 슬롯.
