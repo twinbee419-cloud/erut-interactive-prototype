@@ -1045,12 +1045,9 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const [elementShape, setElementShape] = $s(pre.elementShape || "원형");
   // v15.3: Wedge 각도 — 사용자 입력 각도 (90° = 수직 / 90° 미만 = 경사각). 측정값(wedge state)과 별개
   const [wedgeAngle, setWedgeAngle] = $s(pre.wedgeAngle != null ? pre.wedgeAngle : 90);
-  // v16.0: 교정 주기 (일) — 전역 기본값 적용 vs 채널별 override.
-  // useGlobalCycle = true → [8] 설정의 기본 주기(default 180) 따름 / false → channelCycleDays 직접 입력
-  const globalCycle = (window.MOCK && window.MOCK.calibrationPolicy && window.MOCK.calibrationPolicy.defaultCycleDays) || 180;
-  const [useGlobalCycle, setUseGlobalCycle] = $s(pre.useGlobalCycle !== false);
-  const [channelCycleDays, setChannelCycleDays] = $s(pre.channelCycleDays != null ? pre.channelCycleDays : globalCycle);
-  const effectiveCycle = useGlobalCycle ? globalCycle : channelCycleDays;
+  // 교정 주기 (일) — 기본 180일 표시 + 사용자 수정 가능 (PRF와 동일 패턴, '기본값 적용' 체크박스 폐기 — [8] 교정 정책 탭 삭제)
+  const [channelCycleDays, setChannelCycleDays] = $s(pre.channelCycleDays != null ? pre.channelCycleDays : 180);
+  const effectiveCycle = channelCycleDays;
 
   // ───── 교정 측정 state — edit 모드 시 기존 교정값 prefill ─────
   const [wedge, setWedge]     = $s(pre.wedge    || { value: null, unit: "°" });
@@ -1408,11 +1405,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                 </div>
                 <div>
                   <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>교정 주기 (일)</div>
-                  <label onClick={() => setUseGlobalCycle(v => !v)} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 6 }}>
-                    <span className="erut-cb"><span className={"erut-cb__box" + (useGlobalCycle ? " is-on" : "")}></span></span>
-                    기본값 적용 ({globalCycle}일)
-                  </label>
-                  <input className={"erut-field" + (useGlobalCycle ? " is-disabled" : "")} type="number" min="1" step="1" value={useGlobalCycle ? globalCycle : channelCycleDays} onChange={(e) => setChannelCycleDays(parseInt(e.target.value, 10) || 0)} disabled={useGlobalCycle} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                  <input className="erut-field" type="number" min="1" step="1" value={channelCycleDays} onChange={(e) => setChannelCycleDays(parseInt(e.target.value, 10) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
                 </div>
               </div>
             </div>
@@ -1505,12 +1498,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                 {/* v16.0: 교정 주기 — 전역 기본값(180일) 또는 채널별 override */}
                 <div>
                   <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>교정 주기 (일)</div>
-                  <label onClick={() => setUseGlobalCycle(v => !v)} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 6 }}>
-                    <span className="erut-cb"><span className={"erut-cb__box" + (useGlobalCycle ? " is-on" : "")}></span></span>
-                    기본값 적용 ({globalCycle}일)
-                  </label>
-                  <input className={"erut-field" + (useGlobalCycle ? " is-disabled" : "")} type="number" min="1" step="1" value={useGlobalCycle ? globalCycle : channelCycleDays} onChange={(e) => setChannelCycleDays(parseInt(e.target.value, 10) || 0)} disabled={useGlobalCycle} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
-                  <div style={{ font: "400 9px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>체크 해제 시 채널별 직접 입력. 기본값은 [8] 설정 → 교정 정책에서 변경. 절차서·검사체 환경에 따라 가변 (예: 90일·365일).</div>
+                  <input className="erut-field" type="number" min="1" step="1" value={channelCycleDays} onChange={(e) => setChannelCycleDays(parseInt(e.target.value, 10) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                  <div style={{ font: "400 9px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>기본 180일 — 절차서·검사체 환경에 따라 수정 가능 (예: 90일·365일).</div>
                 </div>
               </div>
             </div>
