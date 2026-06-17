@@ -985,7 +985,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
           <div style={{ font: "400 12px/1.7 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", padding: "12px 0 0", marginTop: 12, borderTop: "1px solid var(--border-low)" }}>
             주파수 5 MHz · Pulser 200V<br/>
             {/* #7: Gain 3종 표시 — [4-3-1]에서 설정한 소프트웨어/디지털/아날로그 */}
-            Gain SW 12 · 디지털 8 · 아날로그 8 dB<br/>
+            Gain SW 12 · Digital 8 · Analog 8 dB<br/>
             영점 정상 · 마지막 측정 {cur.age}
           </div>
 
@@ -1695,9 +1695,9 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
             <div>
             <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 8 }}>Gain 설정</div>
             <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px", marginBottom: 14, display: "flex", flexDirection: "column", gap: 8 }}>
-              <GainRow label="소프트웨어" value={gainSw} setter={setGainSw}/>
-              <GainRow label="디지털" value={gainDigital} setter={setGainDigital}/>
-              <GainRow label="아날로그" value={gainAnalog} setter={setGainAnalog}/>
+              <GainRow label="SW" value={gainSw} setter={setGainSw}/>
+              <GainRow label="Digital" value={gainDigital} setter={setGainDigital}/>
+              <GainRow label="Analog" value={gainAnalog} setter={setGainAnalog}/>
               <div style={{ display: "flex", alignItems: "center", gap: 10, paddingTop: 8, borderTop: "1px solid var(--border-low)" }}>
                 <label onClick={() => setLogScale(v => !v)} style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", flexShrink: 0 }}>
                   <span className="erut-cb"><span className={"erut-cb__box" + (logScale ? " is-on" : "")}></span></span>
