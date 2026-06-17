@@ -1065,6 +1065,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const adjGain = (setter) => (delta) => setter(v => Math.max(0, Math.min(80, v + delta)));
   // #17: PRF — 재질 기준 권장값 prefill, 항상 수정 가능 (상속 토글 폐지)
   const [prf, setPrf] = $s(pre.prf != null ? pre.prf : null);
+  // Pulser 전압(V) — 탐촉자 여기 전압. 펄서-리시버 파라미터(PRF와 함께). [2] 표시값의 설정처.
+  const [pulser, setPulser] = $s(pre.pulser != null ? pre.pulser : 200);
   // #18: TCG (시간 보정 이득) — DAC 선도 대체. 후면 에코 진폭 균일화(64ch 자동 두께 모니터링 적합)
   const [tcgOn, setTcgOn]       = $s(pre.tcgOn || false);
   const [tcgPoints, setTcgPoints] = $s(pre.tcgPoints != null ? pre.tcgPoints : 0);
@@ -1663,14 +1665,22 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
               <CalibCell label="음속"         state={velocity} onMeasure={measureVel}  disabled={!canMeasureWithRef} hint={velHint}/>
               <CalibCell label="영점 (Zero)"  state={zero}     onMeasure={measureZero} disabled={!canMeasureWithRef}/>
             </div>
-            {/* #17 PRF (재질 기준 기본값 prefill · 항상 수정 가능) + #18 TCG (DAC 대체) */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+            {/* #17 PRF + Pulser 전압 + #18 TCG (DAC 대체) */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 10 }}>
               <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
                 <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 6 }}>PRF <span style={{ fontWeight: 400, color: "var(--content-low)" }}>(Hz)</span></div>
                 <input className="erut-field" type="number" min="1" step="1" value={prfValue} onChange={(e) => setPrf(parseInt(e.target.value, 10) || 0)} style={{ width: "100%", height: 34, padding: "4px 8px", fontSize: 15, fontWeight: 700 }}/>
                 <div style={{ marginTop: 6, font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
                   재질·공칭두께 기준 권장 {prfCalc.prf.toLocaleString()} Hz ({material.split(" ")[0]} · {nominalThk}mm) — 기본 입력, 언제든 수정 가능.
                 </div>
+              </div>
+              {/* Pulser 전압 — 탐촉자 여기 전압. [2] 채널 메타 'Pulser N V' 표시의 설정처 */}
+              <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
+                <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 6 }}>Pulser 전압 <span style={{ fontWeight: 400, color: "var(--content-low)" }}>(V)</span></div>
+                <select className="erut-field" value={pulser} onChange={(e) => setPulser(parseInt(e.target.value, 10))} style={{ width: "100%", height: 34, padding: "4px 8px", fontSize: 15, fontWeight: 700 }}>
+                  <option value="100">100 V</option><option value="150">150 V</option><option value="200">200 V</option><option value="300">300 V</option><option value="400">400 V</option>
+                </select>
+                <div style={{ marginTop: 6, font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>탐촉자 여기 전압 — 높을수록 침투↑·분해능↓.</div>
               </div>
               <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
