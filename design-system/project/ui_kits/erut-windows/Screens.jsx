@@ -306,7 +306,7 @@ window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
   const projects = window.MOCK.recentProjects;
   const filtered = projects.filter(p =>
     (typeFilter === "all" || p.type === typeFilter) &&
-    (!query || p.name.includes(query) || p.place.includes(query))
+    (!query || p.name.includes(query) || (p.note || "").includes(query))
   );
 
   const statusColor = (t) =>
@@ -366,7 +366,7 @@ window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
               </button>
             </div>
           </div>
-          <window.Field value={query} onChange={setQuery} placeholder="프로젝트명 · 장소 검색" width={320}/>
+          <window.Field value={query} onChange={setQuery} placeholder="프로젝트명 · 비고 검색" width={320}/>
         </div>
 
         {/* 카드 그리드 3×3 */}
@@ -390,8 +390,7 @@ window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
                   <span style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>생성일 {p.startDate}</span>
                 </div>
                 <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{p.name}</div>
-                <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{p.place}</div>
-                {p.note && <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.note}</div>}
+                {p.note && <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.note}</div>}
                 <div style={{ display: "flex", gap: 12, paddingTop: 10, borderTop: "1px solid var(--border-low)", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
                   <span>검사 대상 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.targets}</strong></span>
                   <span>세션 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.sessions}</strong></span>
@@ -416,9 +415,9 @@ window.NewProjectModal = function NewProjectModal({ onCreate, onClose }) {
   // 생성일·프로젝트 코드는 생성 시점에 자동 부여 (입력 불가). 담당 검사자·산업·표준은 웹에서 관리.
   const autoStartDate = "2026-06-16";        // 생성 버튼 클릭 시점 자동 기록
   const autoCode = "a3f29c1e-7b84-4d2f-9e10-5c8b1f2a6d04"; // UUID 자동 부여 (수정 불가)
-  const [form, setForm] = $s({ name: "", place: "", type: "fixed", note: "" });
+  const [form, setForm] = $s({ name: "", type: "fixed", note: "" });
   const setField = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const valid = form.name && form.place && form.type;
+  const valid = form.name && form.type;
 
   const footer = (
     <>
@@ -446,10 +445,6 @@ window.NewProjectModal = function NewProjectModal({ onCreate, onClose }) {
       <div>
         {label("프로젝트명", true)}
         <input className="erut-field" value={form.name} onChange={(e) => setField("name", e.target.value)} placeholder="예: 울산 #2 라인 2026 정기검사" style={{ width: "100%" }}/>
-      </div>
-      <div>
-        {label("검사 장소", true)}
-        <input className="erut-field" value={form.place} onChange={(e) => setField("place", e.target.value)} placeholder="예: 울산 정유공장 #2 라인" style={{ width: "100%" }}/>
       </div>
       <div>
         {label("유형", true)}
