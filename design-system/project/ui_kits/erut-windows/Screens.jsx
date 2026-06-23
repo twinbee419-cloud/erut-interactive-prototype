@@ -1548,7 +1548,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                 ))}
               </div>
               <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--border-low)", font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-                ◯ 필수 항목을 모두 완료하면 "추가 + 측정 시작" 버튼이 활성화됩니다.
+                ◯ 필수 항목을 모두 완료하면 "추가" 버튼이 활성화됩니다.
               </div>
             </div>
           </>
@@ -1752,10 +1752,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
             /* #2 recal: 재교정 완료 */
             <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onBack}>재교정 완료</button>
           ) : isEdit ? (
-            <>
-              <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onSave}>저장</button>
-              <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onSaveAndMeasure}>저장 + 측정 시작</button>
-            </>
+            /* 측정 시작은 MC보드 단위([2] 배너·F6) — 채널 개별 측정 시작 불가하므로 '저장'만 */
+            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onSave}>저장</button>
           ) : (
             /* #15: '임시 저장'·'추가만' 삭제, '추가 + 측정 시작'→'추가' */
             <button className={"erut-btn erut-btn--emphasis erut-btn--sm" + (canAddOnly ? "" : " erut-btn--disabled")} disabled={!canAddOnly} onClick={onAddOnly}>추가</button>
