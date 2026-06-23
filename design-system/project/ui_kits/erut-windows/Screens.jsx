@@ -76,15 +76,15 @@ window.EquipmentConnect = function EquipmentConnect({ onContinue }) {
 window.MOCK = {
   // 9 recent projects for [0] ProjectPicker
   recentProjects: [
-    { id: "sk-ulsan",   name: "SK에너지 울산 #2 라인",        place: "울산 정유공장 #2 라인",     startDate: "2026-06-16", note: "RFCC 배관 정기검사 · 감육 집중 구간",  time: "오늘 14:23",  status: "진행 중", statusT: "running", targets: 12, sessions: 8,  defects: 4, defectT: "err", type: "fixed" },
-    { id: "kw-boryeong",name: "한국수자원공사 보령댐",         place: "보령 본댐",                 startDate: "2026-06-14", note: "수문 게이트 강판 감육 점검",          time: "2일 전",      status: "완료",    statusT: "done",    targets: 6,  sessions: 12, defects: 0, defectT: "ok", type: "fixed"  },
-    { id: "doosan",     name: "두산에너빌리티 창원 본관",       place: "창원 본관 #3 라인",         startDate: "2026-06-09", note: "터빈 케이싱 배관",                    time: "1주 전",      status: "검토",    statusT: "warn",    targets: 3,  sessions: 4,  defects: 1, defectT: "warn", type: "fixed" },
-    { id: "soil",       name: "S-Oil 온산공장",                place: "온산 RFCC 라인",            startDate: "2026-06-02", note: "정유 라인 정기검사",                  time: "2주 전",      status: "완료",    statusT: "done",    targets: 9,  sessions: 14, defects: 3, defectT: "err", type: "fixed" },
-    { id: "samsung",    name: "삼성E&A 평택 공장",            place: "평택 #1 압력 라인",         startDate: "2026-05-26", note: "압력용기 신규 도입 초기 검사",        time: "3주 전",      status: "완료",    statusT: "done",    targets: 5,  sessions: 7,  defects: 0, defectT: "ok", type: "fixed"  },
-    { id: "gs",         name: "GS칼텍스 여수 #1",             place: "여수 정유 #1 라인",         startDate: "2026-05-16", note: "",                                    time: "1개월 전",    status: "완료",    statusT: "done",    targets: 8,  sessions: 11, defects: 2, defectT: "warn", type: "fixed" },
-    { id: "hanwha",     name: "한화토탈에너지스 대산",          place: "대산 LNG 라인",             startDate: "2026-05-01", note: "LNG 저온 배관",                       time: "1.5개월 전",  status: "완료",    statusT: "done",    targets: 10, sessions: 15, defects: 0, defectT: "ok", type: "fixed"  },
-    { id: "hyundai",    name: "현대오일뱅크 충남",            place: "서산 정유 #2 라인",         startDate: "2026-04-16", note: "감육 의심 구간 재검",                 time: "2개월 전",    status: "검토",    statusT: "warn",    targets: 7,  sessions: 10, defects: 3, defectT: "err", type: "fixed" },
-    { id: "lotte",      name: "롯데케미칼 여수",              place: "여수 석유화학 NCC",         startDate: "2026-03-16", note: "NCC 정기검사",                        time: "3개월 전",    status: "완료",    statusT: "done",    targets: 6,  sessions: 9,  defects: 1, defectT: "warn", type: "fixed" },
+    { id: "sk-ulsan",   name: "SK에너지 울산 #2 라인",        startDate: "2026-06-16", note: "RFCC 배관 정기검사 · 감육 집중 구간",  time: "오늘 14:23",  status: "진행 중", statusT: "running", targets: 12, sessions: 8,  defects: 4, defectT: "err", type: "fixed" },
+    { id: "kw-boryeong",name: "한국수자원공사 보령댐",         startDate: "2026-06-14", note: "수문 게이트 강판 감육 점검",          time: "2일 전",      status: "완료",    statusT: "done",    targets: 6,  sessions: 12, defects: 0, defectT: "ok", type: "fixed"  },
+    { id: "doosan",     name: "두산에너빌리티 창원 본관",       startDate: "2026-06-09", note: "터빈 케이싱 배관",                    time: "1주 전",      status: "검토",    statusT: "warn",    targets: 3,  sessions: 4,  defects: 1, defectT: "warn", type: "fixed" },
+    { id: "soil",       name: "S-Oil 온산공장",                startDate: "2026-06-02", note: "정유 라인 정기검사",                  time: "2주 전",      status: "완료",    statusT: "done",    targets: 9,  sessions: 14, defects: 3, defectT: "err", type: "fixed" },
+    { id: "samsung",    name: "삼성E&A 평택 공장",            startDate: "2026-05-26", note: "압력용기 신규 도입 초기 검사",        time: "3주 전",      status: "완료",    statusT: "done",    targets: 5,  sessions: 7,  defects: 0, defectT: "ok", type: "fixed"  },
+    { id: "gs",         name: "GS칼텍스 여수 #1",             startDate: "2026-05-16", note: "",                                    time: "1개월 전",    status: "완료",    statusT: "done",    targets: 8,  sessions: 11, defects: 2, defectT: "warn", type: "fixed" },
+    { id: "hanwha",     name: "한화토탈에너지스 대산",          startDate: "2026-05-01", note: "LNG 저온 배관",                       time: "1.5개월 전",  status: "완료",    statusT: "done",    targets: 10, sessions: 15, defects: 0, defectT: "ok", type: "fixed"  },
+    { id: "hyundai",    name: "현대오일뱅크 충남",            startDate: "2026-04-16", note: "감육 의심 구간 재검",                 time: "2개월 전",    status: "검토",    statusT: "warn",    targets: 7,  sessions: 10, defects: 3, defectT: "err", type: "fixed" },
+    { id: "lotte",      name: "롯데케미칼 여수",              startDate: "2026-03-16", note: "NCC 정기검사",                        time: "3개월 전",    status: "완료",    statusT: "done",    targets: 6,  sessions: 9,  defects: 1, defectT: "warn", type: "fixed" },
   ],
   project: {
     name: "SK에너지 울산 #2 라인",
