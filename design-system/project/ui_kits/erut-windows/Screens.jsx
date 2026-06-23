@@ -393,7 +393,8 @@ window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
                 {p.note && <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.note}</div>}
                 <div style={{ display: "flex", gap: 12, paddingTop: 10, borderTop: "1px solid var(--border-low)", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
                   <span>검사 대상 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.targets}</strong></span>
-                  <span>세션 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.sessions}</strong></span>
+                  {/* 고정형=상시 측정(세션 없음) / 스캔형=이산 검사 → '검사 이력' */}
+                  {p.type === "scan" && <span>검사 이력 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.sessions}</strong></span>}
                   <span>감육 검출 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.defects}</strong></span>
                 </div>
               </div>
