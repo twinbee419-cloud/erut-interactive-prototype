@@ -76,15 +76,15 @@ window.EquipmentConnect = function EquipmentConnect({ onContinue }) {
 window.MOCK = {
   // 9 recent projects for [0] ProjectPicker
   recentProjects: [
-    { id: "sk-ulsan",   name: "SK에너지 울산 #2 라인",        place: "울산 정유공장 #2 라인",     startDate: "2026-06-16", note: "RFCC 배관 정기검사 · 감육 집중 구간",  time: "오늘 14:23",  status: "진행 중", statusT: "running", targets: 12, sessions: 8,  defects: 4, defectT: "err" },
-    { id: "kw-boryeong",name: "한국수자원공사 보령댐",         place: "보령 본댐",                 startDate: "2026-06-14", note: "수문 게이트 강판 감육 점검",          time: "2일 전",      status: "완료",    statusT: "done",    targets: 6,  sessions: 12, defects: 0, defectT: "ok"  },
-    { id: "doosan",     name: "두산에너빌리티 창원 본관",       place: "창원 본관 #3 라인",         startDate: "2026-06-09", note: "터빈 케이싱 배관",                    time: "1주 전",      status: "검토",    statusT: "warn",    targets: 3,  sessions: 4,  defects: 1, defectT: "warn" },
-    { id: "soil",       name: "S-Oil 온산공장",                place: "온산 RFCC 라인",            startDate: "2026-06-02", note: "정유 라인 정기검사",                  time: "2주 전",      status: "완료",    statusT: "done",    targets: 9,  sessions: 14, defects: 3, defectT: "err" },
-    { id: "samsung",    name: "삼성E&A 평택 공장",            place: "평택 #1 압력 라인",         startDate: "2026-05-26", note: "압력용기 신규 도입 초기 검사",        time: "3주 전",      status: "완료",    statusT: "done",    targets: 5,  sessions: 7,  defects: 0, defectT: "ok"  },
-    { id: "gs",         name: "GS칼텍스 여수 #1",             place: "여수 정유 #1 라인",         startDate: "2026-05-16", note: "",                                    time: "1개월 전",    status: "완료",    statusT: "done",    targets: 8,  sessions: 11, defects: 2, defectT: "warn" },
-    { id: "hanwha",     name: "한화토탈에너지스 대산",          place: "대산 LNG 라인",             startDate: "2026-05-01", note: "LNG 저온 배관",                       time: "1.5개월 전",  status: "완료",    statusT: "done",    targets: 10, sessions: 15, defects: 0, defectT: "ok"  },
-    { id: "hyundai",    name: "현대오일뱅크 충남",            place: "서산 정유 #2 라인",         startDate: "2026-04-16", note: "감육 의심 구간 재검",                 time: "2개월 전",    status: "검토",    statusT: "warn",    targets: 7,  sessions: 10, defects: 3, defectT: "err" },
-    { id: "lotte",      name: "롯데케미칼 여수",              place: "여수 석유화학 NCC",         startDate: "2026-03-16", note: "NCC 정기검사",                        time: "3개월 전",    status: "완료",    statusT: "done",    targets: 6,  sessions: 9,  defects: 1, defectT: "warn" },
+    { id: "sk-ulsan",   name: "SK에너지 울산 #2 라인",        place: "울산 정유공장 #2 라인",     startDate: "2026-06-16", note: "RFCC 배관 정기검사 · 감육 집중 구간",  time: "오늘 14:23",  status: "진행 중", statusT: "running", targets: 12, sessions: 8,  defects: 4, defectT: "err", type: "fixed" },
+    { id: "kw-boryeong",name: "한국수자원공사 보령댐",         place: "보령 본댐",                 startDate: "2026-06-14", note: "수문 게이트 강판 감육 점검",          time: "2일 전",      status: "완료",    statusT: "done",    targets: 6,  sessions: 12, defects: 0, defectT: "ok", type: "fixed"  },
+    { id: "doosan",     name: "두산에너빌리티 창원 본관",       place: "창원 본관 #3 라인",         startDate: "2026-06-09", note: "터빈 케이싱 배관",                    time: "1주 전",      status: "검토",    statusT: "warn",    targets: 3,  sessions: 4,  defects: 1, defectT: "warn", type: "fixed" },
+    { id: "soil",       name: "S-Oil 온산공장",                place: "온산 RFCC 라인",            startDate: "2026-06-02", note: "정유 라인 정기검사",                  time: "2주 전",      status: "완료",    statusT: "done",    targets: 9,  sessions: 14, defects: 3, defectT: "err", type: "fixed" },
+    { id: "samsung",    name: "삼성E&A 평택 공장",            place: "평택 #1 압력 라인",         startDate: "2026-05-26", note: "압력용기 신규 도입 초기 검사",        time: "3주 전",      status: "완료",    statusT: "done",    targets: 5,  sessions: 7,  defects: 0, defectT: "ok", type: "fixed"  },
+    { id: "gs",         name: "GS칼텍스 여수 #1",             place: "여수 정유 #1 라인",         startDate: "2026-05-16", note: "",                                    time: "1개월 전",    status: "완료",    statusT: "done",    targets: 8,  sessions: 11, defects: 2, defectT: "warn", type: "fixed" },
+    { id: "hanwha",     name: "한화토탈에너지스 대산",          place: "대산 LNG 라인",             startDate: "2026-05-01", note: "LNG 저온 배관",                       time: "1.5개월 전",  status: "완료",    statusT: "done",    targets: 10, sessions: 15, defects: 0, defectT: "ok", type: "fixed"  },
+    { id: "hyundai",    name: "현대오일뱅크 충남",            place: "서산 정유 #2 라인",         startDate: "2026-04-16", note: "감육 의심 구간 재검",                 time: "2개월 전",    status: "검토",    statusT: "warn",    targets: 7,  sessions: 10, defects: 3, defectT: "err", type: "fixed" },
+    { id: "lotte",      name: "롯데케미칼 여수",              place: "여수 석유화학 NCC",         startDate: "2026-03-16", note: "NCC 정기검사",                        time: "3개월 전",    status: "완료",    statusT: "done",    targets: 6,  sessions: 9,  defects: 1, defectT: "warn", type: "fixed" },
   ],
   project: {
     name: "SK에너지 울산 #2 라인",
@@ -302,10 +302,12 @@ window.MOCK.needsCalibrationChannels = [...window.MOCK.uncalibratedChannels, ...
 // First screen of the app.
 window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
   const [query, setQuery] = $s("");
+  const [typeFilter, setTypeFilter] = $s("all");   // all / fixed / scan(준비 중)
   const projects = window.MOCK.recentProjects;
-  const filtered = query
-    ? projects.filter(p => p.name.includes(query) || p.place.includes(query))
-    : projects;
+  const filtered = projects.filter(p =>
+    (typeFilter === "all" || p.type === typeFilter) &&
+    (!query || p.name.includes(query) || p.place.includes(query))
+  );
 
   const statusColor = (t) =>
     t === "running" ? "var(--content-emphasis)"
@@ -348,9 +350,21 @@ window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
       <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
         {/* 검색 + 헤더 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 22px", borderBottom: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <h3 style={{ font: "700 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>최근 프로젝트</h3>
-            <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>총 9개</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+              <h3 style={{ font: "700 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>최근 프로젝트</h3>
+              <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>총 {projects.length}개</span>
+            </div>
+            {/* 유형 필터 — 스캔형 준비 중 */}
+            <div style={{ display: "flex" }}>
+              {[{ k: "all", label: "전체" }, { k: "fixed", label: "고정형" }].map((t, i) => (
+                <button key={t.k} onClick={() => setTypeFilter(t.k)} style={{ padding: "6px 16px", font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: typeFilter === t.k ? "var(--content-emphasis)" : "var(--content-medium)", background: typeFilter === t.k ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "var(--surface-base)", border: "1px solid " + (typeFilter === t.k ? "var(--border-emphasis)" : "var(--border-medium)"), borderLeft: i === 0 ? undefined : "none", cursor: "pointer" }}>{t.label}</button>
+              ))}
+              <button disabled tabIndex={-1} style={{ padding: "6px 14px", font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", borderLeft: "none", cursor: "not-allowed", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                스캔형
+                <span style={{ padding: "1px 5px", font: "700 9px/1 var(--font-kr)", color: "var(--content-low)", border: "1px solid var(--border-medium)", background: "var(--surface-base)" }}>준비 중</span>
+              </button>
+            </div>
           </div>
           <window.Field value={query} onChange={setQuery} placeholder="프로젝트명 · 장소 검색" width={320}/>
         </div>
@@ -370,8 +384,9 @@ window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
                 }}
                 onClick={() => onPick && onPick(p.id)}
               >
-                {/* v22.0: 프로젝트 상태 태그(진행중/완료/검토) 삭제 — 최근 시각·카운트로 충분, 검토는 웹 책임과 충돌 */}
-                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "flex-start" }}>
+                {/* 유형 배지(고정형/스캔형) + 생성일 */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <span style={{ padding: "2px 7px", font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em", color: p.type === "scan" ? "var(--content-medium)" : "var(--content-emphasis)", border: "1px solid " + (p.type === "scan" ? "var(--border-medium)" : "var(--border-emphasis)"), background: p.type === "scan" ? "var(--surface-subtle-2)" : "linear-gradient(rgba(34,133,239,0.08),rgba(34,133,239,0.08)), var(--surface-base)" }}>{p.type === "scan" ? "스캔형" : "고정형"}</span>
                   <span style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>생성일 {p.startDate}</span>
                 </div>
                 <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{p.name}</div>
@@ -401,9 +416,9 @@ window.NewProjectModal = function NewProjectModal({ onCreate, onClose }) {
   // 생성일·프로젝트 코드는 생성 시점에 자동 부여 (입력 불가). 담당 검사자·산업·표준은 웹에서 관리.
   const autoStartDate = "2026-06-16";        // 생성 버튼 클릭 시점 자동 기록
   const autoCode = "a3f29c1e-7b84-4d2f-9e10-5c8b1f2a6d04"; // UUID 자동 부여 (수정 불가)
-  const [form, setForm] = $s({ name: "", place: "", note: "" });
+  const [form, setForm] = $s({ name: "", place: "", type: "fixed", note: "" });
   const setField = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const valid = form.name && form.place;
+  const valid = form.name && form.place && form.type;
 
   const footer = (
     <>
@@ -435,6 +450,17 @@ window.NewProjectModal = function NewProjectModal({ onCreate, onClose }) {
       <div>
         {label("검사 장소", true)}
         <input className="erut-field" value={form.place} onChange={(e) => setField("place", e.target.value)} placeholder="예: 울산 정유공장 #2 라인" style={{ width: "100%" }}/>
+      </div>
+      <div>
+        {label("유형", true)}
+        <div style={{ display: "flex" }}>
+          <button onClick={() => setField("type", "fixed")} style={{ flex: 1, padding: "10px 0", font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: form.type === "fixed" ? "var(--content-emphasis)" : "var(--content-medium)", background: form.type === "fixed" ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "var(--surface-base)", border: form.type === "fixed" ? "1px solid var(--border-emphasis)" : "1px solid var(--border-medium)", cursor: "pointer" }}>고정형</button>
+          <button disabled tabIndex={-1} style={{ flex: 1, padding: "10px 0", font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", borderLeft: "none", cursor: "not-allowed", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+            스캔형
+            <span style={{ padding: "2px 6px", font: "700 10px/1 var(--font-kr)", color: "var(--content-low)", border: "1px solid var(--border-medium)", background: "var(--surface-base)" }}>준비 중</span>
+          </button>
+        </div>
+        {hint("고정형 = 단일 위치 A-scan · 스캔형 = 이동·B/C-scan(준비 중). 생성 후 변경 불가 — 데이터 모델이 분리됩니다.")}
       </div>
 
       {/* 자동 부여 정보 */}
@@ -618,13 +644,14 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
   return (
     <div className="erut-page-enter" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
 
-      {/* ▼ 프로젝트 헤더 + Tab (통합 패널) ▼ */}
-      <div style={{ background: "var(--surface-subtle-1)", borderBottom: "1px solid var(--border-medium)", padding: "14px 40px 0" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 12 }}>
+      {/* ▼ 프로젝트 헤더 (통합 패널) — 유형은 생성 시 결정, 단일 유형 프로젝트 ▼ */}
+      <div style={{ background: "var(--surface-subtle-1)", borderBottom: "1px solid var(--border-medium)", padding: "14px 40px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
           <div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>프로젝트</span>
               <span style={{ font: "700 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{proj.name}</span>
+              <span style={{ padding: "3px 9px", font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", border: "1px solid var(--border-emphasis)", background: "linear-gradient(rgba(34,133,239,0.08),rgba(34,133,239,0.08)), var(--surface-base)" }}>고정형</span>
             </div>
             <div style={{ font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 6 }}>
               생성일 {proj.startDate}{proj.note ? ` · ${proj.note}` : ""}
@@ -639,17 +666,9 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
             <span style={{ font: "400 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>활성 채널 <strong style={{ fontWeight: 700, color: "var(--brand-primary)" }}>{activeChTotal}</strong> / {totalChTotal}</span>
           </div>
         </div>
-        {/* Tab */}
-        <div style={{ display: "flex", gap: 0, marginTop: 8 }}>
-          <button style={{ padding: "10px 24px", font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", background: "var(--surface-base)", border: "1px solid var(--border-medium)", borderBottom: "1px solid var(--surface-base)", marginBottom: -1, cursor: "pointer" }}>고정형 장비</button>
-          <button style={{ padding: "10px 24px", font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", background: "transparent", border: "none", cursor: "not-allowed", display: "inline-flex", alignItems: "center", gap: 6 }}>
-            스캔형 장비
-            <span style={{ padding: "2px 6px", font: "700 10px/1 var(--font-kr)", color: "var(--content-low)", border: "1px solid var(--border-medium)", background: "var(--surface-subtle-2)" }}>준비 중</span>
-          </button>
-        </div>
       </div>
 
-      {/* ▼ Tab 콘텐츠 (고정형 활성) ▼ */}
+      {/* ▼ 콘텐츠 ▼ */}
       <div style={{ padding: "20px 40px", flex: 1, overflow: "auto" }}>
         {/* ▼ 장비 연결 상태 패널 ▼ */}
         <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "14px 18px", marginBottom: 20 }}>
