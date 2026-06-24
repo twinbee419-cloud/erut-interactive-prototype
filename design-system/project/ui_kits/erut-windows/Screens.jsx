@@ -243,7 +243,7 @@ window.MOCK = {
     { id: "n2", severity: "error",   type: "measure", title: "CH 12 채널 미연결",     detail: "측정 중 신호 손실 (E120)",            actionLabel: "채널 보기", time: "2분 전" },
     { id: "n3", severity: "caution", type: "calib",   title: "CH 09 교정 임박 (D-1)", detail: "1일 후 교정 주기 만료",               actionLabel: "재교정",   time: "10분 전" },
     { id: "n4", severity: "caution", type: "attach",  title: "CH 50 부착력 약함",     detail: "신호 세기 저하 · 부착 상태 점검 권장", actionLabel: "채널 보기", time: "15분 전" },
-    { id: "n5", severity: "info",    type: "comm",    title: "MQTT 재연결됨",          detail: "서버 통신 복구 (10.10.1.20)",         time: "1시간 전", read: true },
+    { id: "n5", severity: "info",    type: "comm",    title: "서버 재연결 · 미전송 송신 완료", detail: "서버 통신 복구 (10.10.1.20) · 끊김 동안 로컬 보관한 미전송 데이터 자동 송신 완료", time: "1시간 전", read: true },
   ],
   // v16.0: 교정 정책 (전역 설정) — [8] 설정 모달에서 변경. 알림 다이얼로그·상태바 배지가 이 값을 참조
   calibrationPolicy: {

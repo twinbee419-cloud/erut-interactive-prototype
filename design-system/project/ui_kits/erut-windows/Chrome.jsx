@@ -142,6 +142,8 @@ window.StatusBar = function StatusBar({
   // v17.1: device 통합 props — mcConnected/mcTotal/measuringCount 집계
   mcConnected = 0, mcTotal = 0, measuringCount = 0,
   mqttConnected = false, version = "v0.0.0.0", calibrationAlert = null,
+  // store-and-forward: 서버(web) 미전송 누적 건수. 끊김=로컬 보관('송신 대기') / 재연결=따라잡기('송신 중')
+  mqttPending = 0,
   // (legacy) deviceConnected — 기존 호출처 호환. true = (1, 1), false = (0, 1)
   deviceConnected,
 }) {
@@ -159,7 +161,13 @@ window.StatusBar = function StatusBar({
       <MeasurementPill measuring={measuringCount} totalConnected={mcConnected}/>
       <span style={{ width: 1, height: 14, background: "var(--border-medium)", alignSelf: "center" }}/>
       <span className="erut-statusbar__text">MQTT :</span>
-      <StatusPill connected={mqttConnected} labelOn="연결됨" labelOff="미연결"/>
+      <StatusPill connected={mqttConnected} labelOn="연결됨" labelOff="끊김"/>
+      {/* store-and-forward 버퍼 상태 — 미전송 누적 시에만 노출 */}
+      {mqttPending > 0 && (
+        <span className="erut-statusbar__text" style={{ color: mqttConnected ? "var(--system-info)" : "var(--system-caution)" }}>
+          {mqttConnected ? `송신 중 ${mqttPending}건` : `송신 대기 ${mqttPending}건`}
+        </span>
+      )}
       <span style={{flex:1}}/>
       {/* v21.0: 교정 임박 배지 제거 → 메뉴바 통합 알림 센터(NotificationCenter)로 흡수. calibrationAlert prop은 back-compat용으로 무시 */}
       <span className="erut-statusbar__text">{version}</span>
