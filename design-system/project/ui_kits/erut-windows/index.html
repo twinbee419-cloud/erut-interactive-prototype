@@ -41,7 +41,7 @@ const TITLE_BY_SCREEN = {
   main:      "ERUT - Ultrasonic Monitoring System  ·  SK에너지 울산 #2 라인",
   device:    "ERUT - Ultrasonic Monitoring System  ·  MCuF-001 (장비 상세)",
   gate:      "ERUT - Ultrasonic Monitoring System  ·  CH 04 Gate 설정",
-  realtime:  "ERUT - Ultrasonic Monitoring System  ·  MCuF-001 · 실시간 스캔 · 3개 대상 · 세션 #047",
+  realtime:  "ERUT - Ultrasonic Monitoring System  ·  MCuF-001 · 실시간 스캔 · 3개 대상",
   manage:    "ERUT - Ultrasonic Monitoring System  ·  검사 대상 관리",
   settings:  "ERUT - Ultrasonic Monitoring System  ·  장비 연결 설정",
   // v18.0: report 스크린 라우팅 폐기 — 모달 전환
@@ -104,7 +104,7 @@ function App() {
     if (screen !== "manage") setManageInitialMode("edit");
   }, [screen]);
 
-  // v18.0: 보고서 출력 모달 — [2] DeviceDetail 채널 패널 "보고서 출력" / [7] InspectionHistory "보고서 출력" / [파일] 메뉴
+  // v18.0: 보고서 출력 모달 — [2] DeviceDetail 채널 패널 "보고서 출력" / [파일] 메뉴
   // v18.1: targetId → deviceId (MC보드 단위 진입)
   const [reportDialog, setReportDialog] = useState(null);   // null | { deviceId, initialChannel }
   const [showDiag, setShowDiag] = useState(false);          // 진단/로그 모달 — toolbar 전역 트리거
@@ -129,7 +129,7 @@ function App() {
     project:    [{ label: "프로젝트 선택", current: true }],
     main:       [{ label: "프로젝트 (" + (pickedProject?.name || "—") + ")" }, { label: "메인", current: true }],
     device:     [{ label: "메인" }, { label: "장비 상세 (MCuF-001)", current: true }],
-    realtime:   [{ label: "메인" }, { label: "장비 상세" }, { label: "실시간 스캔 · 세션 #047", current: true }],
+    realtime:   [{ label: "메인" }, { label: "장비 상세" }, { label: "실시간 스캔", current: true }],
     commission: [{ label: "메인" }, { label: "장비 상세" }, { label: "채널 설정", current: true }],
     settings:   [{ label: "메인" }, { label: "장비 연결 설정", current: true }],
     manage:     [{ label: "메인" }, { label: "검사 대상 관리", current: true }],
@@ -210,7 +210,7 @@ function App() {
     const s = (sec % 60).toString().padStart(2, "0");
     return m + ":" + s;
   };
-  const remaining = Math.max(0, 600 - elapsed); // 10분 기준 세션
+  const remaining = Math.max(0, 600 - elapsed); // 10분 기준 측정
 
   // realtime은 측정 상태(측정 중·경과·잔여) hint, 다른 화면은 단축키 hint
   let toolbarHint;

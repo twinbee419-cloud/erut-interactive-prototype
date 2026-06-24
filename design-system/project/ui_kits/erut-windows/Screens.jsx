@@ -263,7 +263,7 @@ window.MOCK = {
     { id: "CH 45", daysRemaining:  1, lastDate: "2025-12-12", cycleDays: 182 },
     { id: "CH 52", daysRemaining:  0, lastDate: "2025-12-13", cycleDays: 180 },  // 전역 기본
   ],
-  // v19.0: 미니 PC 자산 정보 — alias + UUID + 자동 수집 메타. [8] PC 정보 카테고리 / [18] 보고서 / [7] 이력 / [3] 통신 로그 / 상태바 옵션
+  // v19.0: 미니 PC 자산 정보 — alias + UUID + 자동 수집 메타. [8] PC 정보 카테고리 / [18] 보고서 / [3] 통신 로그 / 상태바 옵션
   pcInfo: {
     alias: "현장 검사 PC #1",                              // 사용자 입력 (변경 가능)
     uuid: "a7f3c2e8-9b4d-4c1f-8e5a-2d6b9f8c1a3e",          // 첫 실행 1회 자동 생성 (readonly)
@@ -3913,7 +3913,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
   // 메인 [11]의 "전체 진행률 · 81/150 라인" 진행 바는 고정형 컨텍스트(라인 스캔 없음)에 부적합하여 제외.
   const [selectedCh, setSelectedCh] = $s(4); // 64ch grid 선택 (main: CH 04)
   const [showAlert, setShowAlert] = $s(true);
-  // v9.18 (NDT 1.4): 세션 시작 시 교정 확인 다이얼로그
+  // v9.18 (NDT 1.4): 측정 시작 시 교정 확인 다이얼로그
   const [showCalibCheck, setShowCalibCheck] = $s(false);
   const [showRecalibration, setShowRecalibration] = $s(false);
   // v9.18 (NDT 1.9): 결함 검증 재측정 — 추후 삭제 가능성
@@ -3965,7 +3965,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>감육 검출 · 감육률 {criticalDefect.thinPct} %</div>
-            <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 2 }}>채널 {criticalDefect.channel} · 측정 두께 {criticalDefect.thickness} mm · 감육량 {criticalDefect.thinMm} mm · 허용 감육 2.0 mm 초과 · 신호 세기 {criticalDefect.amp} %FSH · 정상 · 세션 데이터에 검출 시점 자동 기록</div>
+            <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 2 }}>채널 {criticalDefect.channel} · 측정 두께 {criticalDefect.thickness} mm · 감육량 {criticalDefect.thinMm} mm · 허용 감육 2.0 mm 초과 · 신호 세기 {criticalDefect.amp} %FSH · 정상 · 측정 데이터에 검출 시점 자동 기록</div>
           </div>
           {/* v22.0: '검증 재측정' 삭제 — 고정 연속 모니터링은 채널별 on-demand 재측정 불가(보드 단위 연속 PRF). 확인만. */}
           <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowAlert(false)}>확인 후 계속</button>
@@ -4072,7 +4072,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
         </div>
       </div>
 
-      {/* v9.18 (NDT 1.4): 세션 시작 시 교정 확인 다이얼로그 */}
+      {/* v9.18 (NDT 1.4): 측정 시작 시 교정 확인 다이얼로그 */}
       {showCalibCheck && (
         <window.Modal
           title="측정 시작 전 교정 상태 확인"
