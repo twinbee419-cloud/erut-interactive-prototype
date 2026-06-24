@@ -459,6 +459,7 @@ function App() {
         const mcTotal = deviceConnected ? devices.length : 0;
         const mcConnected = deviceConnected ? devices.filter(d => d.state !== "offline").length : 0;
         const measuringCount = deviceConnected ? devices.filter(d => d.state === "measuring").length : 0;
+        // store-and-forward: mqttPending = 미전송 큐 카운트. 0 고정(미시연) — 백엔드 배선 필요. 사양: dev_handoff/Store_And_Forward_Spec_v1.0.md
         return (
           <window.StatusBar
             mcConnected={mcConnected}
