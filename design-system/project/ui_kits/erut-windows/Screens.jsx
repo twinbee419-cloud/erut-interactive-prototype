@@ -214,9 +214,9 @@ window.MOCK = {
   ],
   // [4] 장비 연결 설정 — MC보드 리스트 (main slide 9 매칭)
   mcBoards: [
-    { id: "MCF-2024-001", alias: "주력 장비", ip: "10.10.1.5",    port: 8080, channels: 64, freq: 5,  firmware: "v2.4.1", state: "connected", note: "지연 4 ms · 정상" },
-    { id: "MCF-2024-002", alias: "보조 장비", ip: "192.168.0.45", port: 8080, channels: 32, freq: 10, firmware: "v2.3.8", state: "warn",      note: "응답 지연 28 ms (높음)" },
-    { id: "MCF-2024-003", alias: "예비",     ip: "192.168.0.46", port: 8080, channels: 64, freq: 5,  firmware: "v2.4.1", state: "offline",   note: "연결 끊김 (10분 전)" },
+    { id: "MCF-2024-001", alias: "주력 장비", ip: "10.10.1.5",    port: 8080, type: "OEM-MCuF", channels: 64, freq: 5,  firmware: "v2.4.1", state: "connected", note: "지연 4 ms · 정상" },
+    { id: "MCF-2024-002", alias: "보조 장비", ip: "192.168.0.45", port: 8080, type: "OEM-MCu",  channels: 32, freq: 10, firmware: "v2.3.8", state: "warn",      note: "응답 지연 28 ms (높음)" },
+    { id: "MCF-2024-003", alias: "예비",     ip: "192.168.0.46", port: 8080, type: "OEM-MCuF", channels: 64, freq: 5,  firmware: "v2.4.1", state: "offline",   note: "연결 끊김 (10분 전)" },
   ],
   // v12.0: 교정 필요 채널 (uncalibrated: 신규 추가 후 미진행 + expired: 주기 초과 만료) — DeviceDetail breathe 셀과 동일 소스
   uncalibratedChannels: ["ch20", "ch33"],
@@ -3178,9 +3178,12 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
   // v9.26: add 모드에서는 통신/채널 수/주파수/샘플링 입력 필드 비움 (default 값 prefill 제거)
   const [timeout, setTimeoutVal] = $s(isEdit ? 5000 : "");
   const [autoReconnect, setAutoReconnect] = $s(true);
+  const [boardType, setBoardType] = $s(existing ? (existing.type || "") : "");
   const [chs, setChs]     = $s(existing ? existing.channels : "");
   const [freq, setFreq]   = $s(existing ? existing.freq : "");
   const [sampling, setSampling] = $s(isEdit ? 100 : "");
+  // MC보드 OEM 모델 유형 (add·edit 공통)
+  const MC_BOARD_TYPES = ["OEM-PA2", "OEM-PAmini", "OEM-MC2", "OEM-MCu", "OEM-PAmax", "OEM-MCuF", "OEM-PAmicro"];
 
   const requiredOk = !!(alias && ip && port);
 
@@ -3242,6 +3245,13 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
         </div>
 
         <div style={{ gridColumn: "1 / -1", font: "700 12px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "12px 0 4px", borderBottom: "1px solid var(--border-low)" }}>보드 사양</div>
+        <div>
+          <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>유형</div>
+          <select className="erut-field" value={boardType} onChange={(e) => setBoardType(e.target.value)} style={{ width: "100%" }}>
+            <option value="">선택하세요</option>
+            {MC_BOARD_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>채널 수</div>
           <input className="erut-field" value={chs} onChange={(e) => setChs(e.target.value)} placeholder="예: 64" style={{ width: "100%" }}/>
