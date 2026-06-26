@@ -34,7 +34,7 @@ const { useState, useEffect } = React;
 // [0] project → [1] main → [1-1] dashboard → [2] device → [11] realtime
 //   (장비 추가: [1] → connect → [1] · failed 시 connect 재진입)
 
-// v8.5: [1-1] dashboard 라우트 폐기 (MC보드 자산 중심 모델)
+// v8.5: [1-1] dashboard 라우트 폐기 (DAQ 자산 중심 모델)
 const TITLE_BY_SCREEN = {
   project:   "ERUT - Ultrasonic Monitoring System",
   connect:   "ERUT - Ultrasonic Monitoring System  ·  장비 연결",
@@ -105,7 +105,7 @@ function App() {
   }, [screen]);
 
   // v18.0: 보고서 출력 모달 — [2] DeviceDetail 채널 패널 "보고서 출력" / [파일] 메뉴
-  // v18.1: targetId → deviceId (MC보드 단위 진입)
+  // v18.1: targetId → deviceId (DAQ 단위 진입)
   const [reportDialog, setReportDialog] = useState(null);   // null | { deviceId, initialChannel }
   const [showDiag, setShowDiag] = useState(false);          // 진단/로그 모달 — toolbar 전역 트리거
 
@@ -311,7 +311,7 @@ function App() {
             onOpenDevice={() => { setSelectedChannel(null); goto("device"); }}
           />
         )}
-        {/* v8.5: [1-1] dashboard 라우트 폐기 — MC보드 자산 중심 모델 */}
+        {/* v8.5: [1-1] dashboard 라우트 폐기 — DAQ 자산 중심 모델 */}
         {screen === "device" && (
           <window.DeviceDetail
             boardStates={boardStates}
@@ -327,7 +327,7 @@ function App() {
             onAddSensor={() => { setCommissionMode("new"); goto("commission"); }}
             /* #2: 일괄 재교정 → [4-3-1] recal 모드 라우팅 */
             onBatchRecal={(chs) => { setRecalChannels(chs || []); setCommissionMode("recal"); goto("commission"); }}
-            /* v18.1: 보고서 출력 — MC보드 단위 진입 + 클릭된 채널 prefill (MC보드 정보 옆 버튼) */
+            /* v18.1: 보고서 출력 — DAQ 단위 진입 + 클릭된 채널 prefill (DAQ 정보 옆 버튼) */
             onOpenReport={(channel) => setReportDialog({ deviceId: "MCuF-001", initialChannel: channel })}
           />
         )}

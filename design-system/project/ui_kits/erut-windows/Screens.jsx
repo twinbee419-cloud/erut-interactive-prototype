@@ -212,7 +212,7 @@ window.MOCK = {
     { id: 2, channel: 7,  amp: 78, tof: 2.70, thickness: 8.0, nominal: 10, thinMm: 2.0, thinPct: 20.0, ampState: "ok"   },
     { id: 3, channel: 38, amp: 41, tof: 2.85, thickness: 8.4, nominal: 10, thinMm: 1.6, thinPct: 16.0, ampState: "warn" },
   ],
-  // [4] 장비 연결 설정 — MC보드 리스트 (main slide 9 매칭)
+  // [4] 장비 연결 설정 — DAQ 리스트 (main slide 9 매칭)
   mcBoards: [
     { id: "MCF-2024-001", alias: "주력 장비", ip: "10.10.1.5",    port: 8080, type: "OEM-MCuF", channels: 64, freq: 5,  firmware: "v2.4.1", state: "connected", note: "지연 4 ms · 정상" },
     { id: "MCF-2024-002", alias: "보조 장비", ip: "192.168.0.45", port: 8080, type: "OEM-MCu",  channels: 32, freq: 10, firmware: "v2.3.8", state: "warn",      note: "응답 지연 28 ms (높음)" },
@@ -682,8 +682,8 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
           </div>
         </div>
 
-        {/* v8.5: 검사 대상 그리드 삭제 — MC보드 자산 중심 모델 */}
-        {/* 검사 대상은 [2] 장비 상세에서 MC보드별로 표시. MC보드 카드 "상세 →" 클릭 → [2] 진입. */}
+        {/* v8.5: 검사 대상 그리드 삭제 — DAQ 자산 중심 모델 */}
+        {/* 검사 대상은 [2] 장비 상세에서 DAQ별로 표시. DAQ 카드 "상세 →" 클릭 → [2] 진입. */}
       </div>
     </div>
   );
@@ -693,7 +693,7 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
 window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targetId, focusChannel, onBack, onStartMeasure, onEditChannel, onAddTarget, onEditTarget, onAddSensor, onOpenReport, onBatchRecal }) {
   // v14.0: onOpenGate → onEditChannel — Gate/교정 분리 폐기, commission(edit 모드) 단일 진입점
   // v18.0: onOpenReport 신규 — 우측 채널 패널 "보고서 출력" 버튼 → ReportExportDialog 모달
-  // v22.1: 배너 측정 제어 인터랙션 — 이 화면의 MC보드(mockup: MCuF-001) 상태를 공유 boardStates에서 도출
+  // v22.1: 배너 측정 제어 인터랙션 — 이 화면의 DAQ(mockup: MCuF-001) 상태를 공유 boardStates에서 도출
   const boardId = "MCuF-001";
   const bSt = (boardStates && boardStates[boardId]) || "measuring";
   const target = window.MOCK.targets.find(t => t.id === targetId) || window.MOCK.targets[0];
@@ -776,10 +776,10 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
   ];
 
   return (
-    // v9.30: MC보드 정보 full-width 배너(row 2) + 검사 대상/64ch/우측 패널 동일 행(row 3)
+    // v9.30: DAQ 정보 full-width 배너(row 2) + 검사 대상/64ch/우측 패널 동일 행(row 3)
     <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "260px 1fr 400px", gridTemplateRows: "0px auto 1fr", alignContent: "start", columnGap: 16, rowGap: 16, padding: "20px 24px 20px 0", height: "100%" }}>
 
-      {/* ───── v9.30: 좌측 검사 대상 세로 리스트 — row 3 col 1 (MC보드 배너 아래) ───── */}
+      {/* ───── v9.30: 좌측 검사 대상 세로 리스트 — row 3 col 1 (DAQ 배너 아래) ───── */}
       <div style={{ gridRow: 3, gridColumn: 1, background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", display: "flex", flexDirection: "column", minHeight: 0 }}>
         <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-medium)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
@@ -841,7 +841,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
         </div>
       </div>
 
-      {/* ───── v9.30: MC보드 정보 — row 2 cols 1-3 (full-width 배너) ───── */}
+      {/* ───── v9.30: DAQ 정보 — row 2 cols 1-3 (full-width 배너) ───── */}
       <div style={{ gridRow: 2, gridColumn: "1 / -1", background: "transparent", border: "1px solid var(--border-medium)", padding: "12px 16px", marginLeft: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
@@ -852,7 +852,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
             </span>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            {/* MC보드 단위 측정 제어 — idle=측정 시작 / measuring=측정 중지 (일시정지 폐기) */}
+            {/* DAQ 단위 측정 제어 — idle=측정 시작 / measuring=측정 중지 (일시정지 폐기) */}
             {bSt === "idle" ? (
               <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 시작 (F6)" onClick={() => onBoardControl && onBoardControl(boardId, "start")}>
                 <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><polygon points="4,2 14,8 4,14"/></svg>측정 시작
@@ -1019,7 +1019,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
               </button>
             );
           })()}
-          {/* v18.1: 보고서 출력 버튼은 MC보드 정보 옆 '진단/로그' 왼쪽으로 이동 (단위 일관성) */}
+          {/* v18.1: 보고서 출력 버튼은 DAQ 정보 옆 '진단/로그' 왼쪽으로 이동 (단위 일관성) */}
           <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%", marginTop: 8 }} onClick={() => onStartMeasure && onStartMeasure(selected)}>A-scan 스캔 상세보기 ↗</button>
         </div>
       </div>
@@ -1750,7 +1750,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
             /* #2 recal: 재교정 완료 */
             <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onBack}>재교정 완료</button>
           ) : isEdit ? (
-            /* 측정 시작은 MC보드 단위([2] 배너·F6) — 채널 개별 측정 시작 불가하므로 '저장'만 */
+            /* 측정 시작은 DAQ 단위([2] 배너·F6) — 채널 개별 측정 시작 불가하므로 '저장'만 */
             <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onSave}>저장</button>
           ) : (
             /* #15: '임시 저장'·'추가만' 삭제, '추가 + 측정 시작'→'추가' */
@@ -1765,7 +1765,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
 // =================== v8.8: 진단 / 로그 모달 (좌측 탭 메뉴 + 우측 콘텐츠) ===================
 // v17.0: 5탭 → 4탭. 하드웨어 진단(유지) + 통신(신규) + 교정 이력(유지) + 측정 에러(에러+측정 통합).
 //        이벤트 기반 → 수치 기반 raw data 전환. 인라인 펼침 + '상세 →' 버튼 폐기.
-// projectScope: [1] 메인에서 진입 시 true — 하드웨어 진단(보드 개별) 제외, 등록된 전체 MC보드 로그 통합 표시.
+// projectScope: [1] 메인에서 진입 시 true — 하드웨어 진단(보드 개별) 제외, 등록된 전체 DAQ 로그 통합 표시.
 window.DiagnosticsModal = function DiagnosticsModal({ onClose, projectScope = false }) {
   const allTabs = [
     { id: "hw",    label: "하드웨어 진단" },
@@ -1780,7 +1780,7 @@ window.DiagnosticsModal = function DiagnosticsModal({ onClose, projectScope = fa
       <div onClick={(e) => e.stopPropagation()} style={{ width: 1100, maxHeight: "90vh", background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
         {/* v8.8: 헤더 — titlebar 컬러 통일 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderBottom: "1px solid var(--border-medium)", background: "var(--content-medium)" }}>
-          <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>{projectScope ? "진단 / 로그 — 등록된 전체 MC보드" : "진단 / 로그 — MCuF-001"}</div>
+          <div style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>{projectScope ? "진단 / 로그 — 등록된 전체 DAQ" : "진단 / 로그 — MCuF-001"}</div>
           <button onClick={onClose} aria-label="닫기" style={{ background: "transparent", border: "none", color: "var(--content-inverse)", cursor: "pointer", padding: 4, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><window.EIcon.Close size={14}/></button>
         </div>
         {/* 본문 (좌: 탭 메뉴 / 우: 콘텐츠) */}
@@ -1874,7 +1874,7 @@ function DiagHardware() {
 // 다른 탭 placeholder
 // v9.18 (NDT 1.4): 교정 이력 탭 강화 — 채널별 마지막 교정 + 경과일
 function DiagCalibHistory({ projectScope = false }) {
-  // mock 데이터 — 실제는 sensor.lastCalibration 기준. board: [1] 진입 시 MC보드 식별.
+  // mock 데이터 — 실제는 sensor.lastCalibration 기준. board: [1] 진입 시 DAQ 식별.
   const rows = [
     { ch: "CH 04", board: "MCuF-001", date: "2025-11-20", days: 191, status: "경과" },
     { ch: "CH 07", board: "MCuF-001", date: "2026-02-10", days: 108, status: "정상" },
@@ -1894,7 +1894,7 @@ function DiagCalibHistory({ projectScope = false }) {
         <thead>
           <tr style={{ borderBottom: "1px solid var(--border-medium)", textAlign: "left", color: "var(--content-low)", fontWeight: 700 }}>
             <th style={{ padding: "8px 6px" }}>채널</th>
-            {projectScope && <th style={{ padding: "8px 6px" }}>MC보드</th>}
+            {projectScope && <th style={{ padding: "8px 6px" }}>DAQ</th>}
             <th style={{ padding: "8px 6px" }}>마지막 교정일</th>
             <th style={{ padding: "8px 6px" }}>경과일</th>
             <th style={{ padding: "8px 6px" }}>상태</th>
@@ -2065,7 +2065,7 @@ function DiagCommLog({ projectScope = false }) {
   const [kind, setKind] = $s("all");
   const [search, setSearch] = $s("");
 
-  // mock — Error_Code_Spec_v2.0 카탈로그 정합 (E5xx/E6xx/E7xx). board: [1] 진입 시 어느 MC보드 로그인지 식별.
+  // mock — Error_Code_Spec_v2.0 카탈로그 정합 (E5xx/E6xx/E7xx). board: [1] 진입 시 어느 DAQ 로그인지 식별.
   const allRows = [
     { id: 1, ts: "06-09 10:42:18.412", board: "MCuF-001", link: "probe-mc", latency: 3.2,  packetLoss: 0.0,  dataRate: 2048, status: "ok" },
     { id: 2, ts: "06-09 10:42:18.456", board: "MCuF-001", link: "mc-pc",    latency: 12,   packetLoss: 0.2,  dataRate: 2043, status: "ok" },
@@ -2074,7 +2074,7 @@ function DiagCommLog({ projectScope = false }) {
     { id: 5, ts: "06-08 09:32:11.052", board: "MCuF-003", link: "pc-mqtt",  latency: null, packetLoss: 100,  dataRate: 0,    status: "error" },
   ];
 
-  const linkLabel = (l) => l === "probe-mc" ? "탐촉자 ↔ MC" : l === "mc-pc" ? "MC ↔ 미니 PC" : "미니 PC ↔ 서버 MQTT";
+  const linkLabel = (l) => l === "probe-mc" ? "탐촉자 ↔ DAQ" : l === "mc-pc" ? "DAQ ↔ 미니 PC" : "미니 PC ↔ 서버 MQTT";
   const statusColor = (s) => s === "ok" ? "var(--system-success)" : s === "warn" ? "var(--system-caution)" : "var(--system-error)";
   const statusLabel = (s) => s === "ok" ? "정상" : s === "warn" ? "Timeout · 재연결" : "연결 끊김";
 
@@ -2094,7 +2094,7 @@ function DiagCommLog({ projectScope = false }) {
 
   const columns = [
     { key: "ts", label: "시각", width: 150, cellStyle: { color: "var(--content-medium)", fontVariantNumeric: "tabular-nums" } },
-    ...(projectScope ? [{ key: "board", label: "MC보드", width: 110, render: (r) => <span style={{ color: "var(--content-high)", fontWeight: 700 }}>{r.board}</span> }] : []),
+    ...(projectScope ? [{ key: "board", label: "DAQ", width: 110, render: (r) => <span style={{ color: "var(--content-high)", fontWeight: 700 }}>{r.board}</span> }] : []),
     { key: "link", label: "구간", width: 170, render: (r) => <span style={{ color: "var(--content-high)", fontWeight: 700 }}>{linkLabel(r.link)}</span> },
     numCol("latency", "지연 (ms)", 100),
     numCol("packetLoss", "패킷 손실 (%)", 110),
@@ -2113,8 +2113,8 @@ function DiagCommLog({ projectScope = false }) {
         kind={kind} setKind={setKind}
         kindOptions={[
           { value: "all", label: "전체 구간" },
-          { value: "probe-mc", label: "탐촉자 ↔ MC" },
-          { value: "mc-pc", label: "MC ↔ 미니 PC" },
+          { value: "probe-mc", label: "탐촉자 ↔ DAQ" },
+          { value: "mc-pc", label: "DAQ ↔ 미니 PC" },
           { value: "pc-mqtt", label: "미니 PC ↔ 서버 MQTT" },
         ]}
         search={search} setSearch={setSearch}
@@ -2132,7 +2132,7 @@ function DiagMeasErrorLog({ projectScope = false }) {
   const [kind, setKind] = $s("all");
   const [search, setSearch] = $s("");
 
-  // mock — Error_Code_Spec_v2.0 (E1xx 측정). board: [1] 진입 시 MC보드 식별.
+  // mock — Error_Code_Spec_v2.0 (E1xx 측정). board: [1] 진입 시 DAQ 식별.
   const allRows = [
     { id: 1, ts: "06-09 10:42:18.412", board: "MCuF-001", channel: 22, amp: 98.4, tof: 3.32, thickness: 9.84, code: "E101", codeMsg: "ADC saturation", ampTone: "error" },
     { id: 2, ts: "06-09 10:15:02.108", board: "MCuF-002", channel: 49, amp: 8.2,  tof: null, thickness: null, code: "E115", codeMsg: "신호 검출 실패 (부착력 저하)", ampTone: "caution" },
@@ -2157,7 +2157,7 @@ function DiagMeasErrorLog({ projectScope = false }) {
 
   const columns = [
     { key: "ts", label: "시각", width: 150, cellStyle: { color: "var(--content-medium)", fontVariantNumeric: "tabular-nums" } },
-    ...(projectScope ? [{ key: "board", label: "MC보드", width: 110, render: (r) => <span style={{ color: "var(--content-high)", fontWeight: 700 }}>{r.board}</span> }] : []),
+    ...(projectScope ? [{ key: "board", label: "DAQ", width: 110, render: (r) => <span style={{ color: "var(--content-high)", fontWeight: 700 }}>{r.board}</span> }] : []),
     { key: "channel", label: "채널", width: 80, render: (r) => <span style={{ color: "var(--content-high)", fontWeight: 700 }}>CH {String(r.channel).padStart(2, "0")}</span> },
     { key: "amp", label: "Amp (% FSH)", width: 110, align: "right", render: (r) => numCell(r.amp, r.ampTone) },
     { key: "tof", label: "ToF (μs)", width: 100, align: "right", render: (r) => numCell(r.tof, r.tof == null ? "error" : null) },
@@ -2240,10 +2240,10 @@ window.SettingsModal = function SettingsModal({ onClose }) {
 
 // =================== v18.0 보고서 출력 다이얼로그 (채널 측정 보고서 — 현장 데이터 dump) ===================
 // 합의: 감육 등급 판정 미포함. 채널별 A4 1장. 탐촉자 스펙 + 교정 이력 + A-scan + 적용 표준.
-// 진입: [2] DeviceDetail MC보드 정보 옆 "보고서 출력" 버튼 (v18.1) / 메뉴바 [파일] → "보고서 출력..." / Ctrl+P
+// 진입: [2] DeviceDetail DAQ 정보 옆 "보고서 출력" 버튼 (v18.1) / 메뉴바 [파일] → "보고서 출력..." / Ctrl+P
 // v18.1: 채널 → 검사 대상 매핑 helper, 64채널 전체 표시, 검사 대상명 서브텍스트, 좌/우 chevron + 키보드 ←/→
 window.getChannelTarget = function getChannelTarget(chId) {
-  // MC보드 64채널의 검사 대상 매핑 — mockup용. 실제론 TB_CHANNEL_PROBE.ItemID로 join
+  // DAQ 64채널의 검사 대상 매핑 — mockup용. 실제론 TB_CHANNEL_PROBE.ItemID로 join
   const n = parseInt(chId.replace("ch", ""), 10);
   if (n >= 1  && n <= 24) return "PIPE-A-204";
   if (n >= 25 && n <= 48) return "TANK-B-101";
@@ -2253,7 +2253,7 @@ window.getChannelTarget = function getChannelTarget(chId) {
 
 window.ReportExportDialog = function ReportExportDialog({ deviceId, initialChannel, onClose, onExport }) {
   const device = (window.MOCK.devices || []).find(d => d.id === deviceId) || (window.MOCK.devices && window.MOCK.devices[0]) || { id: "MCuF-001", totalCh: 64 };
-  // v18.1: MC보드 단위 진입 — 64채널 전체 표시 (검사 대상별 그룹)
+  // v18.1: DAQ 단위 진입 — 64채널 전체 표시 (검사 대상별 그룹)
   const allChannels = window.MOCK.sensors;
   const [selected, setSelected] = $s(initialChannel ? [initialChannel] : (allChannels[0] ? [allChannels[0].id] : []));
   const [previewCh, setPreviewCh] = $s(initialChannel || (allChannels[0] && allChannels[0].id));
@@ -2551,7 +2551,7 @@ function SettingsGeneral() {
             <option value="en">English (Beta)</option>
           </select>
         </SettingsRow>
-        <SettingsRow label="데이터 송신 주기" hint="MC보드가 측정 데이터를 서버로 전송하는 간격. 감육은 장기 진행이라 짧을 필요 없음. 측정 주파수(PRF)와는 별개.">
+        <SettingsRow label="데이터 송신 주기" hint="DAQ가 측정 데이터를 서버로 전송하는 간격. 감육은 장기 진행이라 짧을 필요 없음. 측정 주파수(PRF)와는 별개.">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <input className="erut-field" type="number" min="1" step="1" value={sendCycle} onChange={(e) => setSendCycle(parseInt(e.target.value, 10) || 0)} style={{ width: 120 }}/>
             <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--content-medium)" }}>분</span>
@@ -2578,7 +2578,7 @@ function SettingsPcInfo() {
   };
   return (
     <>
-      <SettingsSectionHeader title="PC 정보" desc="미니 PC를 탐촉자·MC 보드와 동일하게 자산 관리. 사용자는 별칭(alias)만 입력, UUID와 자동 메타는 시스템이 수집. 다중 PC 운영·MQTT 라우팅·보고서 추적성·장애 진단의 기반."/>
+      <SettingsSectionHeader title="PC 정보" desc="미니 PC를 탐촉자·DAQ와 동일하게 자산 관리. 사용자는 별칭(alias)만 입력, UUID와 자동 메타는 시스템이 수집. 다중 PC 운영·MQTT 라우팅·보고서 추적성·장애 진단의 기반."/>
       <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: "16px 24px", alignItems: "start" }}>
         <SettingsRow label="PC 별칭 (alias)" hint="언제든 변경 가능. 보고서·진단 로그에 자동 반영. 한글 가능.">
           <input className="erut-field" value={alias} onChange={(e) => setAlias(e.target.value)} style={{ width: 320 }}/>
@@ -2692,7 +2692,7 @@ window.AnimatedAscan = function AnimatedAscan({
 // =================== Screen · [4] EQUIPMENT SETTINGS ===================
 // Layout matches ServiceFlow_Analysis SLIDE 9 [4] 장비 연결 설정 (v2.0).
 // 좌측 사이드 메뉴 (220px) + 우측 콘텐츠 영역. 메뉴 3개:
-//   - mc:    MC보드 설정 (목록 / 추가 / 편집 sub-view)
+//   - mc:    DAQ 설정 (목록 / 추가 / 편집 sub-view)
 //   - mqtt:  MQTT 설정
 //   - probe: 탐촉자 설정 ([4-3-1] 교정 마법사 트리거)
 
@@ -3057,7 +3057,7 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
   const switchMenu = (m) => { setSubView(null); setEditingBoardId(null); setMenu(m); };
 
   const menuItems = [
-    { id: "mc",    label: "MC보드 설정", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="6" width="14" height="12"/><line x1="16" y1="12" x2="20" y2="12"/><line x1="18" y1="10" x2="18" y2="14"/></svg> },
+    { id: "mc",    label: "DAQ 설정", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="6" width="14" height="12"/><line x1="16" y1="12" x2="20" y2="12"/><line x1="18" y1="10" x2="18" y2="14"/></svg> },
     { id: "mqtt",  label: "MQTT 설정",   icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 12a10 10 0 0 1 14 0"/><path d="M8.5 15a5 5 0 0 1 7 0"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg> },
   ];
   // #2: '탐촉자 설정' 메뉴 폐기 — 탐촉자 등록은 [2] +탐촉자 추가 → [4-3-1] ChannelCommissioning (적용 범위로 일괄)
@@ -3101,24 +3101,24 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
   );
 };
 
-// ───── MC보드 목록 (메인 SLIDE 9) ─────
+// ───── DAQ 목록 (메인 SLIDE 9) ─────
 function MCBoardList({ onAdd, onEdit }) {
   const boards = window.MOCK.mcBoards;
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
         <div>
-          <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>MC보드 설정</h2>
+          <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>DAQ 설정</h2>
           <p style={{ font: "400 13px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4, marginBottom: 0 }}>IP 직접 입력 방식. 등록 보드 {boards.length}대 · 연결 {boards.filter(b => b.state !== "offline").length}대 · 오프라인 {boards.filter(b => b.state === "offline").length}대.</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="erut-btn erut-btn--default erut-btn--sm">설정 불러오기</button>
           <button className="erut-btn erut-btn--default erut-btn--sm">설정 저장</button>
-          <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onAdd}>+ MC보드 추가</button>
+          <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onAdd}>+ DAQ 추가</button>
         </div>
       </div>
 
-      {/* v8.8: 2컬럼 레이아웃 (MQTT 설정 페이지 매칭) — 좌: MC보드 리스트 / 우: 영점 검증 요약 */}
+      {/* v8.8: 2컬럼 레이아웃 (MQTT 설정 페이지 매칭) — 좌: DAQ 리스트 / 우: 영점 검증 요약 */}
       <div style={{ display: "block" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {boards.map((b, idx) => {
@@ -3169,7 +3169,7 @@ function MCBoardList({ onAdd, onEdit }) {
   );
 }
 
-// ───── MC보드 추가 / 편집 폼 (메인 SLIDE 10 [4-1]) ─────
+// ───── DAQ 추가 / 편집 폼 (메인 SLIDE 10 [4-1]) ─────
 function MCBoardForm({ mode, editingId, onCancel, onSave }) {
   const isEdit = mode === "mc-edit";
   const existing = isEdit ? window.MOCK.mcBoards.find(b => b.id === editingId) : null;
@@ -3184,7 +3184,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
   const [chs, setChs]     = $s(existing ? existing.channels : "");
   const [freq, setFreq]   = $s(existing ? existing.freq : "");
   const [sampling, setSampling] = $s(isEdit ? 100 : "");
-  // MC보드 OEM 모델 유형 (add·edit 공통)
+  // DAQ OEM 모델 유형 (add·edit 공통)
   const MC_BOARD_TYPES = ["OEM-PA2", "OEM-PAmini", "OEM-MC2", "OEM-MCu", "OEM-PAmax", "OEM-MCuF", "OEM-PAmicro"];
 
   const requiredOk = !!(alias && ip && port);
@@ -3195,11 +3195,11 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
         <div>
           <div style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 6 }}>
-            <span style={{ cursor: "pointer", color: "var(--content-emphasis)" }} onClick={onCancel}>MC보드 설정</span>
+            <span style={{ cursor: "pointer", color: "var(--content-emphasis)" }} onClick={onCancel}>DAQ 설정</span>
             <span style={{ margin: "0 6px" }}>›</span>
             <span style={{ color: "var(--content-medium)" }}>{isEdit ? `${existing.id} 편집` : "새 보드 추가"}</span>
           </div>
-          <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>{isEdit ? "MC보드 편집" : "MC보드 추가"}</h2>
+          <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>{isEdit ? "DAQ 편집" : "DAQ 추가"}</h2>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           {/* 업로드 = 항목 일괄 채움(add·edit 공통) / 다운로드 = 기존 보드 설정 내보내기(edit 전용 — add는 다운로드할 Config 없음) */}
@@ -3210,8 +3210,8 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
 
       {/* 안내 배너 */}
       <div style={{ background: "linear-gradient(rgba(34,133,239,0.06),rgba(34,133,239,0.06)), var(--surface-subtle-2)", border: "1px solid var(--border-emphasis)", padding: "10px 14px", marginBottom: 18 }}>
-        <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", marginBottom: 4 }}>유선 LAN 직결 · 단방향 통신 (ERUT → MC보드)</div>
-        <div style={{ font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>MC보드는 Wi-Fi를 지원하지 않습니다. 노트북과 MC보드를 LAN 케이블로 직접 연결하거나 같은 네트워크(서브넷)에 두십시오. 자동 검색은 미지원 — IP / Port 직접 입력. Config 파일 업로드로 항목 일괄 채움 가능.</div>
+        <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", marginBottom: 4 }}>유선 LAN 직결 · 단방향 통신 (ERUT → DAQ)</div>
+        <div style={{ font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>DAQ는 Wi-Fi를 지원하지 않습니다. 노트북과 DAQ를 LAN 케이블로 직접 연결하거나 같은 네트워크(서브넷)에 두십시오. 자동 검색은 미지원 — IP / Port 직접 입력. Config 파일 업로드로 항목 일괄 채움 가능.</div>
       </div>
 
       {/* 입력 폼 */}
@@ -3301,7 +3301,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
           </div>
         </div>
         <div style={{ font: "400 10px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", paddingTop: 8, borderTop: "1px solid var(--border-low)" }}>
-          진단은 "연결 테스트" 클릭 시 자동 실행. 노트북 IP가 MC보드와 다른 서브넷이면 경고 표시. Ping 50ms↑ 또는 패킷 손실 1%↑ 시 케이블·네트워크 점검 권장.
+          진단은 "연결 테스트" 클릭 시 자동 실행. 노트북 IP가 DAQ와 다른 서브넷이면 경고 표시. Ping 50ms↑ 또는 패킷 손실 1%↑ 시 케이블·네트워크 점검 권장.
         </div>
       </div>
 
@@ -3557,8 +3557,8 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   const prfCalc = window.calcPRF(parseFloat(form.th) || 10, form.material);
   const prfValue = autoPRF ? prfCalc.prf : prfManual;
 
-  // 필수 항목 검증 (대상명·MC보드·형태·두께·소재·유체)
-  const mcBoard = form.mcBoard || "MCuF-001";   // 검사 대상이 속한 MC보드 (기본값 첫 보드)
+  // 필수 항목 검증 (대상명·DAQ·형태·두께·소재·유체)
+  const mcBoard = form.mcBoard || "MCuF-001";   // 검사 대상이 속한 DAQ (기본값 첫 보드)
   const requiredOk = !!(form.name && mcBoard && form.shape && form.th && form.material && form.fluid);
 
   // 좌측 리스트 검색 필터
@@ -3690,7 +3690,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             <input className="erut-field" value={form.name} onChange={(e) => setField("name", e.target.value)} style={{ width: "100%" }}/>
           </div>
           <div>
-            {formLabel("MC보드", true)}
+            {formLabel("DAQ", true)}
             <select className="erut-field" value={mcBoard} onChange={(e) => setField("mcBoard", e.target.value)} style={{ width: "100%" }}>
               {window.MOCK.devices.map(d => <option key={d.id}>{d.id}</option>)}
             </select>
@@ -4080,7 +4080,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             </div>
           </div>
 
-          {/* 측정 제어 제거 — 측정은 MC보드 단위 ([2] DeviceDetail 배너 + 툴바) */}
+          {/* 측정 제어 제거 — 측정은 DAQ 단위 ([2] DeviceDetail 배너 + 툴바) */}
         </div>
       </div>
 

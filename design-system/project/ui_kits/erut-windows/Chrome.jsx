@@ -134,10 +134,10 @@ window.Toolbar = function Toolbar({ items, activeKey, onPick, notificationCenter
 // ----------- STATUS BAR ------------
 // v16.0: calibrationAlert 신설 — 교정 임박/만료 채널 N개를 statusbar 우측에 노출.
 // v17.1: 워딩 정리 (사용자 합의 — 각 상태 대상 명확화)
-//   - 장비 연결됨 → MC보드 연결됨 (MC보드 ↔ 미니 PC 커넥션)
-//   - 측정 pill 신설 — MC보드 단위 start/stop 상태 (success/content-low LED)
+//   - 장비 연결됨 → DAQ 연결됨 (DAQ ↔ 미니 PC 커넥션)
+//   - 측정 pill 신설 — DAQ 단위 start/stop 상태 (success/content-low LED)
 //   - MQTT 연결됨 — 미니 PC ↔ 서버 통신 (그대로)
-// 다중 MC보드 시: 분수 표시 (3/3 모두 = 단순 라벨, 일부 = N/M)
+// 다중 DAQ 시: 분수 표시 (3/3 모두 = 단순 라벨, 일부 = N/M)
 window.StatusBar = function StatusBar({
   // v17.1: device 통합 props — mcConnected/mcTotal/measuringCount 집계
   mcConnected = 0, mcTotal = 0, measuringCount = 0,
@@ -155,8 +155,8 @@ window.StatusBar = function StatusBar({
   }
   return (
     <div className="erut-statusbar">
-      {/* v22.10: 그룹 라벨 형식 — "MC보드 : (연결됨) (측정 중) / MQTT : (연결됨)". 측정 중이 MC보드 단위임을 명확화. PRF·Temp 제거 */}
-      <span className="erut-statusbar__text">MC보드 :</span>
+      {/* v22.10: 그룹 라벨 형식 — "DAQ : (연결됨) (측정 중) / MQTT : (연결됨)". 측정 중이 DAQ 단위임을 명확화. PRF·Temp 제거 */}
+      <span className="erut-statusbar__text">DAQ :</span>
       <McConnectionPill connected={mcConnected} total={mcTotal}/>
       <MeasurementPill measuring={measuringCount} totalConnected={mcConnected}/>
       <span style={{ width: 1, height: 14, background: "var(--border-medium)", alignSelf: "center" }}/>
@@ -190,8 +190,8 @@ function StatusPill({ connected, labelOn, labelOff }) {
 }
 window.StatusPill = StatusPill;
 
-// ----------- v17.1: MC보드 연결 Pill (분수 집계) ------------
-// 3/3 모두 연결 = "MC보드 연결됨", 일부 = "MC보드 연결됨 N/M", 0/M = "MC보드 미연결"
+// ----------- v17.1: DAQ 연결 Pill (분수 집계) ------------
+// 3/3 모두 연결 = "DAQ 연결됨", 일부 = "DAQ 연결됨 N/M", 0/M = "DAQ 미연결"
 function McConnectionPill({ connected, total }) {
   if (total === 0) return null;
   const allConn = connected === total;
@@ -209,10 +209,10 @@ function McConnectionPill({ connected, total }) {
 }
 window.McConnectionPill = McConnectionPill;
 
-// ----------- v17.1: 측정 Pill (MC보드 단위 start/stop) ------------
+// ----------- v17.1: 측정 Pill (DAQ 단위 start/stop) ------------
 // 측정 중 N>0 = "측정 중 N/M" (is-green), N=0 = "정지" (is-gray).
 // totalConnected: 연결된 보드 수 (offline 제외). offline 보드는 측정 분모에서 제외.
-// v17.2: inline style 제거 — kit.css의 .erut-led.is-green / .is-gray 클래스 사용 (MC보드·MQTT pill과 동일 형태)
+// v17.2: inline style 제거 — kit.css의 .erut-led.is-green / .is-gray 클래스 사용 (DAQ·MQTT pill과 동일 형태)
 function MeasurementPill({ measuring, totalConnected }) {
   if (totalConnected === 0) return null;
   const isMeasuring = measuring > 0;
