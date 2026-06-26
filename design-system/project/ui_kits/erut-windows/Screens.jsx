@@ -593,10 +593,10 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
           </div>
           <MiniPill tone="pillLED" ledColor={isOffline ? "red" : "green"}>{isOffline ? "연결 끊김" : "연결됨"}</MiniPill>
         </div>
-        {/* 중단: 활성 채널 + 데이터 송신량 + 마지막 데이터 송신일시 */}
+        {/* 중단: 등록 채널 + 데이터 송신량 + 마지막 데이터 송신일시 */}
         <div style={{ display: "flex", gap: 18, padding: "10px 0 8px", marginTop: 10, borderTop: "1px solid var(--border-low)" }}>
           <div>
-            <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>활성 채널</div>
+            <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>등록 채널</div>
             <div style={{ font: "700 16px/1 var(--font-kr)", letterSpacing: ".02em", color: isMeasuring ? "var(--content-emphasis)" : isOffline ? "var(--content-low)" : "var(--content-medium)" }}>
               {d.activeCh != null ? d.activeCh : "—"}
               <span style={{ fontSize: 11, color: "var(--content-low)", fontWeight: 400 }}>&nbsp;/&nbsp;{d.totalCh} CH</span>
@@ -659,7 +659,7 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
             <span style={{ width: 1, height: 14, background: "var(--border-medium)" }}/>
             <span style={{ font: "400 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>측정 중 <strong style={{ fontWeight: 700, color: "var(--brand-primary)" }}>{measuringCount}</strong></span>
             <span style={{ width: 1, height: 14, background: "var(--border-medium)" }}/>
-            <span style={{ font: "400 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>활성 채널 <strong style={{ fontWeight: 700, color: "var(--brand-primary)" }}>{activeChTotal}</strong> / {totalChTotal}</span>
+            <span style={{ font: "400 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>등록 채널 <strong style={{ fontWeight: 700, color: "var(--brand-primary)" }}>{activeChTotal}</strong> / {totalChTotal}</span>
           </div>
         </div>
       </div>
@@ -771,7 +771,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
   const META = [
     { label: "SN (시리얼)",   value: "MCF-2024-001" },
     { label: "IP 주소",       value: "192.168.1.100" },
-    { label: "활성 채널",     value: "64 / 64 CH", emphasis: true },
+    { label: "등록 채널",     value: "64 / 64 CH", emphasis: true },
     { label: "마지막 데이터 송신일시", value: "2026-06-16 13:00", success: true },
   ];
 
@@ -793,7 +793,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
             const isSelected = selectedTargetSet.includes(t.name);
             const isDimmed = selectedTargetSet.length > 0 && !isSelected;
             // v9.31: 결함 표시 border 삭제 — 결함 표시는 웹에서 처리 예정
-            // v15.1: '측정 중' → 활성 채널 신호 상태 집계 (우선순위: 나쁨 > 약함 > 정상). 활성 채널 0개면 표시 hide.
+            // v15.1: '측정 중' → 등록 채널 신호 상태 집계 (우선순위: 나쁨 > 약함 > 정상). 등록 채널 0개면 표시 hide.
             const targetActiveCells = cells.filter(c => c.targetName === t.name && c.sensor);
             const sigCounts = targetActiveCells.reduce((acc, c) => { acc[c.sensor.state] = (acc[c.sensor.state] || 0) + 1; return acc; }, {});
             const sigStatus = targetActiveCells.length === 0 ? null
