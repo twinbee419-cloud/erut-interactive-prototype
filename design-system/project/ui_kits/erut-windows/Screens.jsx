@@ -1390,7 +1390,7 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
           <>
             <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-low)" }}>
               <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", marginBottom: 10 }}>채널 정보</div>
-              {/* add 모드와 동일 필드·순서 (채널번호·주파수는 A-scan 하단 공통) */}
+              {/* add 모드와 동일 필드·순서 (채널번호는 좌측 최상단 공통) */}
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <div>
                   <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>제품명</div>
@@ -1399,6 +1399,10 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                 <div>
                   <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>Serial 번호 (SN)</div>
                   <input className="erut-field" value={serial} onChange={(e) => setSerial(e.target.value)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                </div>
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>탐촉자 주파수 (MHz)</div>
+                  <input className="erut-field" type="number" min="0.5" max="20" step="0.25" value={freqMHz} onChange={(e) => setFreqMHz(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
                 </div>
                 <div>
                   <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>검사 대상</div>
@@ -1484,6 +1488,11 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                 <div>
                   <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>Serial 번호 (SN) <span style={{ color: "var(--system-error)" }}>*</span></div>
                   <input className="erut-field" value={serial} onChange={(e) => setSerial(e.target.value)} placeholder="예: PXT-2024-065" style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
+                </div>
+                {/* 탐촉자 주파수 — 탐촉자 고유 사양(제품명·SN과 동일 그룹) */}
+                <div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>탐촉자 주파수 (MHz) <span style={{ color: "var(--system-error)" }}>*</span></div>
+                  <input className="erut-field" type="number" min="0.5" max="20" step="0.25" value={freqMHz} onChange={(e) => setFreqMHz(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
                 </div>
                 <div>
                   <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>검사 대상 <span style={{ color: "var(--system-error)" }}>*</span></div>
@@ -1606,13 +1615,6 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                 Gate를 활성화하고<br/>마우스로 영역·핸들·Threshold를 드래그하세요.<br/>정밀 값은 우측 input field 사용.
               </div>
             )}
-          </div>
-          {/* 탐촉자 주파수 — A-scan 하단 (채널 번호는 #2로 좌측 최상단 이동) */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 8 }}>
-            <div>
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>탐촉자 주파수 (MHz) {mode === "new" && <span style={{ color: "var(--system-error)" }}>*</span>}</div>
-              <input className="erut-field" type="number" min="0.5" max="20" step="0.25" value={freqMHz} onChange={(e) => setFreqMHz(parseFloat(e.target.value) || 0)} style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
-            </div>
           </div>
         </div>
 
