@@ -3319,7 +3319,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="erut-btn erut-btn--subtle erut-btn--m" onClick={onCancel}>취소</button>
-          <button className="erut-btn erut-btn--default erut-btn--m" onClick={() => setTested(true)}>연결 테스트</button>
+          <button className={"erut-btn erut-btn--m " + (ip && port ? "erut-btn--default" : "erut-btn--disabled")} disabled={!(ip && port)} title={ip && port ? "" : "IP·Port 입력 필요"} onClick={ip && port ? () => setTested(true) : undefined}>연결 테스트</button>
           <button className={"erut-btn erut-btn--m " + (requiredOk ? "erut-btn--emphasis" : "erut-btn--disabled")} disabled={!requiredOk} onClick={requiredOk ? onSave : undefined}>저장 + 연결</button>
         </div>
       </div>
