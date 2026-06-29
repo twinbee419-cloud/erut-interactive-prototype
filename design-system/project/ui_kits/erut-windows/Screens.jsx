@@ -3248,7 +3248,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>펌웨어 버전</div>
           {/* v9.26: add 모드 — 펌웨어 버전 비움. 연결 후 자동 표시 */}
-          <input className="erut-field" value={existing ? existing.firmware : ""} placeholder={isEdit ? "" : "연결 후 자동 감지"} style={{ width: "100%" }} disabled/>
+          <input className="erut-field is-disabled" value={existing ? existing.firmware : ""} placeholder={isEdit ? "" : "연결 후 자동 감지"} style={{ width: "100%" }} disabled/>
         </div>
       </div>
 
