@@ -629,7 +629,7 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
             </button>
           )}
           {isOffline && (
-            <button className="erut-btn erut-btn--default erut-btn--sm">재연결</button>
+            <button className="erut-btn erut-btn--default erut-btn--sm">연결</button>
           )}
           <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onOpenDevice}>상세 →</button>
         </div>
@@ -3142,17 +3142,11 @@ function MCBoardList({ onAdd, onEdit }) {
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6 }}>
-                {b.state === "offline" ? (
-                  <>
-                    <button className="erut-btn erut-btn--default erut-btn--sm">재연결</button>
-                    <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={() => onEdit(b.id)}>편집</button>
-                  </>
-                ) : (
-                  <>
-                    <button className={"erut-btn erut-btn--sm " + (isSelected ? "erut-btn--active" : "erut-btn--default")} onClick={() => onEdit(b.id)}>편집</button>
-                    <button className="erut-btn erut-btn--subtle erut-btn--sm">연결 해제</button>
-                  </>
-                )}
+                <button className={"erut-btn erut-btn--sm " + (isSelected ? "erut-btn--active" : "erut-btn--default")} onClick={() => onEdit(b.id)}>편집</button>
+                {/* 연결/연결 해제 단일 토글 — offline=연결 / 그 외=연결 해제 */}
+                {b.state === "offline"
+                  ? <button className="erut-btn erut-btn--default erut-btn--sm">연결</button>
+                  : <button className="erut-btn erut-btn--subtle erut-btn--sm">연결 해제</button>}
               </div>
             </div>
           );
