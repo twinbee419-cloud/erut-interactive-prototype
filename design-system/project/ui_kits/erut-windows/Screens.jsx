@@ -3177,6 +3177,8 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
   const [boardType, setBoardType] = $s(existing ? (existing.type || "") : "");
   const [chs, setChs]     = $s(existing ? existing.channels : "");
   const [sampling, setSampling] = $s(isEdit ? 100 : "");
+  // 연결 테스트 — 클릭 전 placeholder / 클릭 후 진단 결과 표시
+  const [tested, setTested] = $s(false);
   // DAQ OEM 모델 유형 (add·edit 공통)
   const MC_BOARD_TYPES = ["OEM-PA2", "OEM-PAmini", "OEM-MC2", "OEM-MCu", "OEM-PAmax", "OEM-MCuF", "OEM-PAmicro"];
 
@@ -3256,37 +3258,63 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
         </div>
       </div>
 
-      {/* 연결 진단 */}
+      {/* 연결 진단 — "연결 테스트" 클릭 시 표시 (도달성 + DAQ 핸드셰이크 + 종합 판정) */}
       <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "16px 0 4px", borderBottom: "1px solid var(--border-low)", marginTop: 8 }}>연결 진단</div>
-      <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "14px 16px", marginTop: 10 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px 18px", marginBottom: 10 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
-            <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>노트북 IP</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ font: "700 12px/1 'Consolas', monospace", color: "var(--content-high)" }}>192.168.1.10</span>
-              <span style={{ padding: "2px 6px", font: "700 9px/1 var(--font-kr)", color: "var(--system-success)", border: "1px solid var(--system-success)" }}>같은 서브넷 ✓</span>
-            </span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
-            <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>LAN Link 상태</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
-              <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--system-success)" }}>연결됨 · Cat6 1 Gbps</span>
-            </span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
-            <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>Ping 응답</span>
-            <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--system-success)" }}>4 ms <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>· 양호</span></span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
-            <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>패킷 손실률</span>
-            <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--system-success)" }}>0.0 % <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>· 1000Hz 안정</span></span>
+      {!tested ? (
+        <div style={{ background: "var(--surface-subtle-2)", border: "1px dashed var(--border-medium)", padding: "22px 16px", marginTop: 10, textAlign: "center" }}>
+          <div style={{ font: "400 12px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+            하단 <strong style={{ color: "var(--content-medium)" }}>"연결 테스트"</strong>를 실행하면 네트워크 도달성 · DAQ 응답 · 측정 가능 여부가 표시됩니다.
           </div>
         </div>
-        <div style={{ font: "400 10px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", paddingTop: 8, borderTop: "1px solid var(--border-low)" }}>
-          진단은 "연결 테스트" 클릭 시 자동 실행. 노트북 IP가 DAQ와 다른 서브넷이면 경고 표시. Ping 50ms↑ 또는 패킷 손실 1%↑ 시 케이블·네트워크 점검 권장.
+      ) : (
+        <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "14px 16px", marginTop: 10 }}>
+          {/* 종합 판정 배너 */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", marginBottom: 12, background: "linear-gradient(rgba(24,227,57,0.06),rgba(24,227,57,0.06)), var(--surface-base)", border: "1px solid var(--system-success)" }}>
+            <span className="erut-led is-green" style={{ width: 10, height: 10 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
+            <span style={{ font: "700 13px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-success)" }}>측정 가능</span>
+            <span style={{ font: "400 11px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>— 1000Hz 연속 수집 안정</span>
+          </div>
+          {/* ① 네트워크 도달성 + ② DAQ 핸드셰이크 */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px 18px", marginBottom: 10 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
+              <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>노트북 IP</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ font: "700 12px/1 'Consolas', monospace", color: "var(--content-high)" }}>192.168.1.10</span>
+                <span style={{ padding: "2px 6px", font: "700 9px/1 var(--font-kr)", color: "var(--system-success)", border: "1px solid var(--system-success)" }}>같은 서브넷 ✓</span>
+              </span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
+              <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>LAN Link 상태</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
+                <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--system-success)" }}>연결됨 · Cat6 1 Gbps</span>
+              </span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
+              <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>Ping 응답</span>
+              <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--system-success)" }}>4 ms <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>· 양호</span></span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
+              <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>패킷 손실률</span>
+              <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--system-success)" }}>0.0 % <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>· 1000Hz 안정</span></span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
+              <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>Port 연결</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ font: "700 12px/1 'Consolas', monospace", color: "var(--content-high)" }}>{port || "8080"}</span>
+                <span style={{ padding: "2px 6px", font: "700 9px/1 var(--font-kr)", color: "var(--system-success)", border: "1px solid var(--system-success)" }}>TCP ✓</span>
+              </span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
+              <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>DAQ 응답</span>
+              <span style={{ font: "700 11px/1 var(--font-kr)", color: "var(--content-high)" }}>SN {existing ? existing.id : "MCF-2024-001"} · FW v2.4.1 · 64ch</span>
+            </div>
+          </div>
+          <div style={{ font: "400 10px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", paddingTop: 8, borderTop: "1px solid var(--border-low)" }}>
+            노트북 IP가 DAQ와 다른 서브넷이면 경고. Ping 50ms↑ 또는 패킷 손실 1%↑ 시 케이블·네트워크 점검 권장. DAQ 응답(SN·FW·채널 수)으로 등록 정보 일치 확인 — 펌웨어 버전 자동 채움.
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 하단 액션 */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border-medium)" }}>
@@ -3297,7 +3325,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="erut-btn erut-btn--subtle erut-btn--m" onClick={onCancel}>취소</button>
-          <button className="erut-btn erut-btn--default erut-btn--m">연결 테스트</button>
+          <button className="erut-btn erut-btn--default erut-btn--m" onClick={() => setTested(true)}>연결 테스트</button>
           <button className={"erut-btn erut-btn--m " + (requiredOk ? "erut-btn--emphasis" : "erut-btn--disabled")} disabled={!requiredOk} onClick={requiredOk ? onSave : undefined}>저장 + 연결</button>
         </div>
       </div>
