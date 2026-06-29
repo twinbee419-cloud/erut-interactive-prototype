@@ -3316,6 +3316,8 @@ function MQTTSettings() {
   const [host, setHost] = $s("rabbitmq.erut.local");
   const [mqttPort, setMqttPort] = $s("1883");
   const canTest = !!(host && mqttPort);
+  // 연결 테스트 — 클릭 전 placeholder / 클릭 후 결과 표시
+  const [tested, setTested] = $s(false);
   return (
     <div style={{ padding: "0 30px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, marginTop: 4 }}>
@@ -3379,17 +3381,23 @@ function MQTTSettings() {
           </div>
           <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 16 }}><span style={{ color: "var(--system-error)" }}>*</span> 필수 항목 (Host · Port)</div>
           <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-            <button className={"erut-btn erut-btn--m " + (canTest ? "erut-btn--default" : "erut-btn--disabled")} disabled={!canTest} title={canTest ? "" : "Host·Port 입력 필요"}>연결 테스트</button>
+            <button className={"erut-btn erut-btn--m " + (canTest ? "erut-btn--default" : "erut-btn--disabled")} disabled={!canTest} title={canTest ? "" : "Host·Port 입력 필요"} onClick={canTest ? () => setTested(true) : undefined}>연결 테스트</button>
             <button className="erut-btn erut-btn--emphasis erut-btn--m">저장</button>
           </div>
 
-          <div style={{ marginTop: 20, background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "12px 16px", display: "flex", alignItems: "center", gap: 10 }}>
-            <span className="erut-led is-green"><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
-            <div style={{ flex: 1 }}>
-              <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--system-success)" }}>연결 성공</div>
-              <div style={{ font: "400 12px/1.4 var(--font-kr)", color: "var(--content-low)", marginTop: 2 }}>2026-05-21 14:23:05 · Latency 8 ms · 세션 ID: erut-mcf001-a3f</div>
+          {!tested ? (
+            <div style={{ marginTop: 20, background: "var(--surface-subtle-2)", border: "1px dashed var(--border-medium)", padding: "16px", textAlign: "center", font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+              <strong style={{ color: "var(--content-medium)" }}>"연결 테스트"</strong>를 실행하면 브로커 연결 결과가 표시됩니다.
             </div>
-          </div>
+          ) : (
+            <div style={{ marginTop: 20, background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "12px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+              <span className="erut-led is-green"><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
+              <div style={{ flex: 1 }}>
+                <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--system-success)" }}>연결 성공</div>
+                <div style={{ font: "400 12px/1.4 var(--font-kr)", color: "var(--content-low)", marginTop: 2 }}>2026-05-21 14:23:05 · Latency 8 ms · 세션 ID: erut-mcf001-a3f</div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 우측: 토픽 구조 */}
