@@ -3312,6 +3312,10 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
 
 // ───── MQTT 설정 (메인 SLIDE 11 [4-2]) ─────
 function MQTTSettings() {
+  // 연결 테스트 게이팅 — Host·Port 필수 (브로커 주소)
+  const [host, setHost] = $s("rabbitmq.erut.local");
+  const [mqttPort, setMqttPort] = $s("1883");
+  const canTest = !!(host && mqttPort);
   return (
     <div style={{ padding: "0 30px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, marginTop: 4 }}>
@@ -3336,13 +3340,13 @@ function MQTTSettings() {
           <h3 style={{ font: "700 18px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 16 }}>Broker 연결</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div>
-              <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-medium)", marginBottom: 6 }}>Host</div>
-              <input className="erut-field" defaultValue="rabbitmq.erut.local" style={{ width: "100%" }}/>
+              <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-medium)", marginBottom: 6 }}>Host <span style={{ color: "var(--system-error)" }}>*</span></div>
+              <input className="erut-field" value={host} onChange={(e) => setHost(e.target.value)} style={{ width: "100%" }}/>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div>
-                <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-medium)", marginBottom: 6 }}>Port</div>
-                <input className="erut-field" defaultValue="1883" style={{ width: "100%" }}/>
+                <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-medium)", marginBottom: 6 }}>Port <span style={{ color: "var(--system-error)" }}>*</span></div>
+                <input className="erut-field" value={mqttPort} onChange={(e) => setMqttPort(e.target.value)} style={{ width: "100%" }}/>
               </div>
               <div>
                 <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-medium)", marginBottom: 6 }}>Protocol</div>
@@ -3373,8 +3377,9 @@ function MQTTSettings() {
             </label>
             <window.Toggle checked={true} onChange={() => {}} label="자동 재연결 (Keep-alive 60s)"/>
           </div>
-          <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
-            <button className="erut-btn erut-btn--default erut-btn--m">연결 테스트</button>
+          <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 16 }}><span style={{ color: "var(--system-error)" }}>*</span> 필수 항목 (Host · Port)</div>
+          <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+            <button className={"erut-btn erut-btn--m " + (canTest ? "erut-btn--default" : "erut-btn--disabled")} disabled={!canTest} title={canTest ? "" : "Host·Port 입력 필요"}>연결 테스트</button>
             <button className="erut-btn erut-btn--emphasis erut-btn--m">저장</button>
           </div>
 
