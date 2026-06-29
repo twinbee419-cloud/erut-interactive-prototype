@@ -3146,14 +3146,12 @@ function MCBoardList({ onAdd, onEdit }) {
                   <>
                     <button className="erut-btn erut-btn--default erut-btn--sm">재연결</button>
                     <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={() => onEdit(b.id)}>편집</button>
-                    <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ color: "var(--system-error)" }}>삭제</button>
                   </>
                 ) : (
                   <>
                     <button className={"erut-btn erut-btn--sm " + (isSelected ? "erut-btn--active" : "erut-btn--default")} onClick={() => onEdit(b.id)}>편집</button>
                     <button className="erut-btn erut-btn--subtle erut-btn--sm">Config ↓</button>
                     <button className="erut-btn erut-btn--subtle erut-btn--sm">연결 해제</button>
-                    <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ color: "var(--system-error)" }}>삭제</button>
                   </>
                 )}
               </div>
@@ -3293,7 +3291,11 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
 
       {/* 하단 액션 */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border-medium)" }}>
-        <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}><span style={{ color: "var(--system-error)" }}>*</span> 필수 항목</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          {/* DAQ 삭제 — edit 모드 전용 (카드에서 이동) */}
+          {isEdit && <button className="erut-btn erut-btn--subtle erut-btn--m" style={{ color: "var(--system-error)", borderColor: "var(--system-error)" }}>DAQ 삭제</button>}
+          <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}><span style={{ color: "var(--system-error)" }}>*</span> 필수 항목</div>
+        </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="erut-btn erut-btn--subtle erut-btn--m" onClick={onCancel}>취소</button>
           <button className="erut-btn erut-btn--default erut-btn--m">연결 테스트</button>
