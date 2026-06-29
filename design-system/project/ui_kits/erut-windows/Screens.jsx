@@ -3212,7 +3212,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
         </div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>시리얼 번호 (SN)</div>
-          <input className="erut-field" value={sn} onChange={(e) => setSN(e.target.value)} placeholder="예: MCF-2024-001" style={{ width: "100%" }}/>
+          <input className="erut-field is-disabled" value={sn} placeholder={isEdit ? "" : "연결 후 자동 감지"} disabled style={{ width: "100%" }}/>
         </div>
 
         <div style={{ gridColumn: "1 / -1", font: "700 12px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "12px 0 4px", borderBottom: "1px solid var(--border-low)" }}>네트워크</div>
@@ -3239,7 +3239,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
         </div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>채널 수</div>
-          <input className="erut-field" value={chs} onChange={(e) => setChs(e.target.value)} placeholder="예: 64" style={{ width: "100%" }}/>
+          <input className="erut-field is-disabled" value={chs} placeholder={isEdit ? "" : "연결 후 자동 감지"} disabled style={{ width: "100%" }}/>
         </div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>샘플링 속도 (MHz)</div>
@@ -3257,7 +3257,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
       {!tested ? (
         <div style={{ background: "var(--surface-subtle-2)", border: "1px dashed var(--border-medium)", padding: "22px 16px", marginTop: 10, textAlign: "center" }}>
           <div style={{ font: "400 12px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-            하단 <strong style={{ color: "var(--content-medium)" }}>"연결 테스트"</strong>를 실행하면 네트워크 도달성 · DAQ 응답 · 측정 가능 여부가 표시됩니다.
+            하단 <strong style={{ color: "var(--content-medium)" }}>"연결 테스트"</strong>를 실행하면 네트워크 도달성 · 측정 가능 여부가 표시되고, DAQ 정보(SN·채널 수·펌웨어)가 폼에 자동 채워집니다.
           </div>
         </div>
       ) : (
@@ -3275,10 +3275,6 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
               <span style={{ font: "700 12px/1 'Consolas', monospace", color: "var(--content-high)" }}>192.168.1.10</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
-              <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>LAN Link 상태</span>
-              <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--content-high)" }}>Cat6 1 Gbps</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
               <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>Ping 응답</span>
               <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--content-high)" }}>4 ms <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>· 양호</span></span>
             </div>
@@ -3290,13 +3286,9 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
               <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>Port 연결</span>
               <span style={{ font: "700 12px/1 'Consolas', monospace", color: "var(--content-high)" }}>{port || "8080"}</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
-              <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>DAQ 응답</span>
-              <span style={{ font: "700 11px/1 var(--font-kr)", color: "var(--content-high)" }}>SN {existing ? existing.id : "MCF-2024-001"} · FW v2.4.1 · 64ch</span>
-            </div>
           </div>
           <div style={{ font: "400 10px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", paddingTop: 8, borderTop: "1px solid var(--border-low)" }}>
-            노트북 IP가 DAQ와 다른 서브넷이면 경고. Ping 50ms↑ 또는 패킷 손실 1%↑ 시 케이블·네트워크 점검 권장. DAQ 응답(SN·FW·채널 수)으로 등록 정보 일치 확인 — 펌웨어 버전 자동 채움.
+            노트북 IP가 DAQ와 다른 서브넷이면 경고. Ping 50ms↑ 또는 패킷 손실 1%↑ 시 케이블·네트워크 점검 권장. 연결 시 DAQ가 회신한 SN·채널 수·펌웨어는 폼에 자동 채움 — 선택한 유형과 실제 모델이 다르면 경고.
           </div>
         </div>
       )}
