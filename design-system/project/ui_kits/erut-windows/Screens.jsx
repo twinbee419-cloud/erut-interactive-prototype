@@ -3280,11 +3280,11 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
               <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>Ping 응답</span>
-              <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--system-success)" }}>4 ms <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>· 양호</span></span>
+              <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--content-high)" }}>4 ms <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>· 양호</span></span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
               <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>패킷 손실률</span>
-              <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--system-success)" }}>0.0 % <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>· 1000Hz 안정</span></span>
+              <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--content-high)" }}>0.0 % <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>· 1000Hz 안정</span></span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
               <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>Port 연결</span>
