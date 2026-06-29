@@ -3272,10 +3272,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px 18px", marginBottom: 10 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
               <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>노트북 IP</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ font: "700 12px/1 'Consolas', monospace", color: "var(--content-high)" }}>192.168.1.10</span>
-                <span style={{ padding: "2px 6px", font: "700 9px/1 var(--font-kr)", color: "var(--system-success)", border: "1px solid var(--system-success)" }}>같은 서브넷 ✓</span>
-              </span>
+              <span style={{ font: "700 12px/1 'Consolas', monospace", color: "var(--content-high)" }}>192.168.1.10</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
               <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>LAN Link 상태</span>
