@@ -3276,10 +3276,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
               <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>LAN Link 상태</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
-                <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--system-success)" }}>연결됨 · Cat6 1 Gbps</span>
-              </span>
+              <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--content-high)" }}>Cat6 1 Gbps</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
               <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>Ping 응답</span>
