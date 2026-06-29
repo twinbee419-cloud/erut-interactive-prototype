@@ -3294,10 +3294,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
               <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>Port 연결</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ font: "700 12px/1 'Consolas', monospace", color: "var(--content-high)" }}>{port || "8080"}</span>
-                <span style={{ padding: "2px 6px", font: "700 9px/1 var(--font-kr)", color: "var(--system-success)", border: "1px solid var(--system-success)" }}>TCP ✓</span>
-              </span>
+              <span style={{ font: "700 12px/1 'Consolas', monospace", color: "var(--content-high)" }}>{port || "8080"}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
               <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>DAQ 응답</span>
