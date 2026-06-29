@@ -3150,7 +3150,6 @@ function MCBoardList({ onAdd, onEdit }) {
                 ) : (
                   <>
                     <button className={"erut-btn erut-btn--sm " + (isSelected ? "erut-btn--active" : "erut-btn--default")} onClick={() => onEdit(b.id)}>편집</button>
-                    <button className="erut-btn erut-btn--subtle erut-btn--sm">Config ↓</button>
                     <button className="erut-btn erut-btn--subtle erut-btn--sm">연결 해제</button>
                   </>
                 )}
