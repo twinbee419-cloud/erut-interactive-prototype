@@ -3242,7 +3242,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
           <input className="erut-field" value={chs} onChange={(e) => setChs(e.target.value)} placeholder="예: 64" style={{ width: "100%" }}/>
         </div>
         <div>
-          <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>샘플링 (MHz)</div>
+          <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>샘플링 속도 (MHz)</div>
           <input className="erut-field" value={sampling} onChange={(e) => setSampling(e.target.value)} placeholder="예: 100" style={{ width: "100%" }}/>
         </div>
         <div>
