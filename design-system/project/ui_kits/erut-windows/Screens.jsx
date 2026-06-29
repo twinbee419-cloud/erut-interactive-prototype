@@ -3371,12 +3371,6 @@ function MQTTSettings() {
                 <input className="erut-field" type="password" defaultValue="••••••••••" style={{ width: "100%" }}/>
               </div>
             </div>
-            <label className="erut-cb" style={{ marginTop: 6, cursor: "pointer" }}>
-              <span className="erut-cb__box is-on" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="var(--on-primary)" strokeWidth="2"><polyline points="3,8 7,12 13,4"/></svg>
-              </span>
-              <span className="erut-cb__label">TLS / SSL 사용</span>
-            </label>
           </div>
           <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 16 }}><span style={{ color: "var(--system-error)" }}>*</span> 필수 항목 (Host · Port)</div>
           <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
