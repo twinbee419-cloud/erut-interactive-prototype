@@ -3112,8 +3112,6 @@ function MCBoardList({ onAdd, onEdit }) {
           <p style={{ font: "400 13px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4, marginBottom: 0 }}>IP 직접 입력 방식. 등록 보드 {boards.length}대 · 연결 {boards.filter(b => b.state !== "offline").length}대 · 오프라인 {boards.filter(b => b.state === "offline").length}대.</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button className="erut-btn erut-btn--default erut-btn--sm">설정 불러오기</button>
-          <button className="erut-btn erut-btn--default erut-btn--sm">설정 저장</button>
           <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onAdd}>+ DAQ 추가</button>
         </div>
       </div>
@@ -3137,7 +3135,7 @@ function MCBoardList({ onAdd, onEdit }) {
                   {b.id}
                 </div>
                 <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: b.state === "offline" ? "var(--content-low)" : "var(--content-medium)" }}>
-                  IP {b.ip} : {b.port} · {b.channels} ch · {b.freq} MHz · Firmware {b.firmware} ·{" "}
+                  IP {b.ip} : {b.port} · {b.channels} ch · Firmware {b.firmware} ·{" "}
                   {b.state === "warn"   && <span style={{ color: "var(--system-caution)" }}>{b.note}</span>}
                   {b.state === "offline" && <span style={{ color: "var(--system-error)" }}>{b.note}</span>}
                   {b.state === "connected" && <span>{b.note}</span>}
@@ -3179,10 +3177,8 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
   const [port, setPort]   = $s(existing ? existing.port : "");
   // v9.26: add 모드에서는 통신/채널 수/주파수/샘플링 입력 필드 비움 (default 값 prefill 제거)
   const [timeout, setTimeoutVal] = $s(isEdit ? 5000 : "");
-  const [autoReconnect, setAutoReconnect] = $s(true);
   const [boardType, setBoardType] = $s(existing ? (existing.type || "") : "");
   const [chs, setChs]     = $s(existing ? existing.channels : "");
-  const [freq, setFreq]   = $s(existing ? existing.freq : "");
   const [sampling, setSampling] = $s(isEdit ? 100 : "");
   // DAQ OEM 모델 유형 (add·edit 공통)
   const MC_BOARD_TYPES = ["OEM-PA2", "OEM-PAmini", "OEM-MC2", "OEM-MCu", "OEM-PAmax", "OEM-MCuF", "OEM-PAmicro"];
@@ -3239,12 +3235,6 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>통신 Timeout (ms)</div>
           <input className="erut-field" value={timeout} onChange={(e) => setTimeoutVal(e.target.value)} placeholder="예: 5000" style={{ width: "100%" }}/>
         </div>
-        <div>
-          <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>자동 재연결</div>
-          <div style={{ display: "flex", gap: 16, padding: "10px 0" }}>
-            <window.Toggle checked={autoReconnect} onChange={setAutoReconnect} size="sm" label="활성"/>
-          </div>
-        </div>
 
         <div style={{ gridColumn: "1 / -1", font: "700 12px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "12px 0 4px", borderBottom: "1px solid var(--border-low)" }}>보드 사양</div>
         <div>
@@ -3257,10 +3247,6 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>채널 수</div>
           <input className="erut-field" value={chs} onChange={(e) => setChs(e.target.value)} placeholder="예: 64" style={{ width: "100%" }}/>
-        </div>
-        <div>
-          <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>주파수 (MHz)</div>
-          <input className="erut-field" value={freq} onChange={(e) => setFreq(e.target.value)} placeholder="예: 5" style={{ width: "100%" }}/>
         </div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>샘플링 (MHz)</div>
