@@ -3377,7 +3377,6 @@ function MQTTSettings() {
               </span>
               <span className="erut-cb__label">TLS / SSL 사용</span>
             </label>
-            <window.Toggle checked={true} onChange={() => {}} label="자동 재연결 (Keep-alive 60s)"/>
           </div>
           <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 16 }}><span style={{ color: "var(--system-error)" }}>*</span> 필수 항목 (Host · Port)</div>
           <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
