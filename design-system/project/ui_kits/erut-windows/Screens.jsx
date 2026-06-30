@@ -3151,7 +3151,6 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
   const [timeout, setTimeoutVal] = $s(isEdit ? 5000 : "");
   const [boardType, setBoardType] = $s(existing ? (existing.type || "") : "");
   const [chs, setChs]     = $s(existing ? existing.channels : "");
-  const [sampling, setSampling] = $s(isEdit ? 100 : "");
   // 연결 테스트 — 클릭 전 placeholder / 클릭 후 진단 결과 표시
   const [tested, setTested] = $s(false);
   // DAQ OEM 모델 유형 (add·edit 공통)
@@ -3221,10 +3220,6 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>채널 수</div>
           <input className="erut-field is-disabled" value={chs} placeholder={isEdit ? "" : "연결 후 자동 감지"} disabled style={{ width: "100%" }}/>
-        </div>
-        <div>
-          <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>샘플링 속도 (MHz)</div>
-          <input className="erut-field" value={sampling} onChange={(e) => setSampling(e.target.value)} placeholder="예: 100" style={{ width: "100%" }}/>
         </div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>펌웨어 버전</div>
