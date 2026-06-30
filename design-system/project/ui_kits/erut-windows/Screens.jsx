@@ -3979,14 +3979,7 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
           <line x1="0" y1="85"  x2="800" y2="85"  stroke="var(--border-low)" strokeWidth="0.5" strokeDasharray="2,4"/>
           <path d="M0 250 L140 250 L160 215 L172 30 L184 270 L196 250 L420 250 L440 220 L452 85 L464 265 L476 250 L800 250" stroke="var(--brand-primary)" strokeWidth="2" fill="none"/>
         </svg>
-        {/* 측정값 stripe (하단) */}
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, display: "flex", gap: 14, padding: "8px 14px", background: "var(--surface-subtle-2)", borderTop: "1px solid var(--border-low)", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
-          <span>Amp <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>92% FSH</strong></span>
-          <span>ToF <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>2.64 μs</strong></span>
-          <span>측정 두께 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>7.8 mm</strong></span>
-          <span>감육률 <strong style={{ fontWeight: 700, color: "var(--system-error)" }}>22.0 %</strong></span>
-          <span style={{ marginLeft: "auto" }}>샘플링 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>100 MHz</strong></span>
-        </div>
+        {/* 측정값(Amp·ToF·측정두께·감육률)은 우측 '감육 측정 카드'에서 표시 — A-scan 하단 중복 stripe 제거 */}
       </div>
 
       {/* v9.7: 64CH 채널 상태 — column 3 (320px). erut-panel 헤더 적용 */}
