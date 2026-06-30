@@ -285,15 +285,6 @@ window.MOCK = {
     "SES-2026-043": "현장 검사 PC #1",
     "SES-2026-042": "Office PC",
   },
-  // v18.0: 검사 대상별 적용 표준 (보고서 출력 시 자동 반영). [6] 검사 대상 등록 시 입력
-  targetStandards: {
-    "PIPE-A-204":  "KS B 0817",       // 펄스반사식 초음파 탐상 시험 방법 통칙
-    "TANK-B-101":  "KS B 0817",
-    "VESSEL-C-301":"KS B 0894",       // 강용접부 초음파 탐상 시험 방법
-    "FLANGE-D-08": "KS B 0817",
-    "DOME-E-12":   "KS B 0817",
-    "WELD-F-22":   "ASME Sec. V Art.5", // 미국 ASME Section V
-  },
 };
 // 공통 접근자 — DeviceDetail / index.html F6 차단 다이얼로그 / DiagCalibHistory 모두 이걸 참조
 window.MOCK.needsCalibrationChannels = [...window.MOCK.uncalibratedChannels, ...window.MOCK.expiredChannels];
@@ -2239,7 +2230,7 @@ window.SettingsModal = function SettingsModal({ onClose }) {
 };
 
 // =================== v18.0 보고서 출력 다이얼로그 (채널 측정 보고서 — 현장 데이터 dump) ===================
-// 합의: 감육 등급 판정 미포함. 채널별 A4 1장. 탐촉자 스펙 + 교정 이력 + A-scan + 적용 표준.
+// 합의: 감육 등급 판정 미포함. 채널별 A4 1장. 탐촉자 스펙 + 교정 이력 + A-scan. (적용 표준은 웹 판정으로 이관)
 // 진입: [2] DeviceDetail DAQ 정보 옆 "보고서 출력" 버튼 (v18.1) / 메뉴바 [파일] → "보고서 출력..." / Ctrl+P
 // v18.1: 채널 → 검사 대상 매핑 helper, 64채널 전체 표시, 검사 대상명 서브텍스트, 좌/우 chevron + 키보드 ←/→
 window.getChannelTarget = function getChannelTarget(chId) {
@@ -2269,9 +2260,6 @@ window.ReportExportDialog = function ReportExportDialog({ deviceId, initialChann
   const previewSensor = allChannels.find(s => s.id === previewCh) || allChannels[0];
   const previewTargetId = previewSensor ? window.getChannelTarget(previewSensor.id) : null;
   const previewTarget = previewTargetId && window.MOCK.targets.find(t => t.id === previewTargetId);
-  const previewStandard = previewTargetId && window.MOCK.targetStandards
-    ? (window.MOCK.targetStandards[previewTargetId] || "표준 미지정")
-    : "표준 미지정";
 
   // v18.1: 미리보기 chevron — 선택된 채널들 사이만 이동
   const previewIdx = selected.indexOf(previewCh);
@@ -2348,12 +2336,6 @@ window.ReportExportDialog = function ReportExportDialog({ deviceId, initialChann
           <div>
             <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 6 }}>출력 옵션</div>
             <div style={{ border: "1px solid var(--border-medium)", background: "var(--surface-base)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>적용 표준</span>
-                <span style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)" }}>채널별 다름</span>
-              </div>
-              <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>* 각 채널의 검사 대상에 등록된 표준이 자동 반영. [6] 검사 대상 편집에서 변경.</div>
-              <div style={{ height: 1, background: "var(--border-low)" }}/>
               <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }} onClick={() => setIncludeSign(!includeSign)}>
                 <span className={"erut-cb__box" + (includeSign ? " is-on" : "")}/>
                 <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>서명란 포함</span>
@@ -2382,7 +2364,7 @@ window.ReportExportDialog = function ReportExportDialog({ deviceId, initialChann
           </div>
           <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "flex-start", overflow: "auto" }}>
             <div style={{ width: 420 }}>
-              <ReportA4Preview target={previewTarget} sensor={previewSensor} standard={previewStandard} includeSign={includeSign} deviceId={device.id}/>
+              <ReportA4Preview target={previewTarget} sensor={previewSensor} includeSign={includeSign} deviceId={device.id}/>
             </div>
           </div>
         </div>
@@ -2392,7 +2374,7 @@ window.ReportExportDialog = function ReportExportDialog({ deviceId, initialChann
 };
 
 // A4 미리보기 단일 페이지 — 채널 측정 보고서 (v18.0 / v18.1: 측정 위치 행 → 채널 ID 행)
-function ReportA4Preview({ target, sensor, standard, includeSign, deviceId }) {
+function ReportA4Preview({ target, sensor, includeSign, deviceId }) {
   if (!sensor) return null;
   const today = new Date().toISOString().slice(0, 10);
   const lastCal = (window.MOCK.lastCalibrationDate && window.MOCK.lastCalibrationDate[sensor.id]) || "—";
@@ -2408,11 +2390,10 @@ function ReportA4Preview({ target, sensor, standard, includeSign, deviceId }) {
         </div>
       </div>
       <div className="erut-report-a4__section">
-        <div className="erut-report-a4__section-title">1. 적용 표준 / 검사 대상</div>
+        <div className="erut-report-a4__section-title">1. 검사 대상</div>
         {/* v19.0: 측정 PC 행 추가 (ASNT 추적성) */}
         <table className="erut-report-a4__table">
           <tbody>
-            <tr><td>적용 표준</td><td>{standard}</td></tr>
             <tr><td>검사 대상</td><td>{targetLabel}</td></tr>
             <tr><td>채널 ID</td><td>{sensor.id.toUpperCase()} ({deviceId || "MCuF-001"})</td></tr>
             <tr><td>측정 PC</td><td>{(window.MOCK.pcInfo && window.MOCK.pcInfo.alias) || "—"} ({(window.MOCK.pcInfo && window.MOCK.pcInfo.uuid || "").slice(0, 8) + "…"})</td></tr>
@@ -3750,12 +3731,6 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             <select className="erut-field" value={form.fluid} onChange={(e) => setField("fluid", e.target.value)} style={{ width: "100%" }}>
               <option value="">선택하세요</option>
               <option>고온 스팀</option><option>가스 — 수소</option><option>가스 — LNG</option><option>액체 — 원유</option><option>액체 — 물</option><option>액체 — 화학약품</option><option>기타</option>
-            </select>
-          </div>
-          <div>
-            {formLabel("적용 표준")}
-            <select className="erut-field" value={form.std} onChange={(e) => setField("std", e.target.value)} style={{ width: "100%" }}>
-              <option>KS B 0817</option><option>ASME Sec.V</option><option>API 510</option><option>NACE MR0175</option>
             </select>
           </div>
           <div>
