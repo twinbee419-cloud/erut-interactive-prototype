@@ -4040,13 +4040,12 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
             <div style={{ marginBottom: 4 }}>
               <span style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>PIPE-A-204</span>
             </div>
-            <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 8 }}>배관 · 탄소강 · ASME B31.3</div>
+            <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 8 }}>배관 · 탄소강</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 10px", font: "400 10px/1.3 var(--font-kr)" }}>
               {[
                 ["외경", "300 mm"], ["길이", "6,000 mm"],
-                ["두께", "10 mm"],  ["음속", "5,920 m/s"],
-                ["유체", "고온 스팀"], ["온도", "240 °C"],
-                ["압력", "1.5 MPa"], ["PRF", "2,000 Hz"],
+                ["두께", "10 mm"],  ["유체", "고온 스팀"],
+                ["온도", "240 °C"], ["압력", "1.5 MPa"],
               ].map(([k, v]) => (
                 <div key={k}><span style={{ color: "var(--content-low)" }}>{k}</span> <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{v}</strong></div>
               ))}
