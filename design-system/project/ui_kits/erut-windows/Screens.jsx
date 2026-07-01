@@ -240,7 +240,7 @@ window.MOCK = {
   notifications: [
     { id: "n0", severity: "error", type: "defect",  title: "CH 04 감육 검출",  detail: "측정 두께 7.8mm · 감육률 22.0% (허용 감육 2.0mm 초과) · 검출 시점 자동 기록", actionLabel: "채널 보기", time: "방금" },
     { id: "n1", severity: "error",   type: "calib",   title: "CH 04 교정 만료",       detail: "교정 주기 초과 · F6 측정 시작 차단됨", actionLabel: "재교정",   time: "1분 전" },
-    { id: "n2", severity: "error",   type: "measure", title: "CH 12 채널 미연결",     detail: "측정 중 신호 손실 (E120)",            actionLabel: "채널 보기", time: "2분 전" },
+    { id: "n2", severity: "error",   type: "attach",  title: "CH 12 신호 나쁨 (미부착)", detail: "신호 세기 1~5% · 탐촉자 미부착 — 재부착 필요", actionLabel: "채널 보기", time: "2분 전" },
     { id: "n3", severity: "caution", type: "calib",   title: "CH 09 교정 임박 (D-1)", detail: "1일 후 교정 주기 만료",               actionLabel: "재교정",   time: "10분 전" },
     { id: "n4", severity: "caution", type: "attach",  title: "CH 50 부착력 약함",     detail: "신호 세기 저하 · 부착 상태 점검 권장", actionLabel: "채널 보기", time: "15분 전" },
     { id: "n5", severity: "info",    type: "comm",    title: "서버 재연결 · 미전송 송신 완료", detail: "서버 통신 복구 (10.10.1.20) · 끊김 동안 로컬 보관한 미전송 데이터 자동 송신 완료", time: "1시간 전", read: true },
@@ -2125,7 +2125,7 @@ function DiagMeasErrorLog({ projectScope = false }) {
   const allRows = [
     { id: 1, ts: "06-09 10:42:18.412", board: "MCuF-001", channel: 22, amp: 98.4, tof: 3.32, thickness: 9.84, code: "E101", codeMsg: "ADC saturation", ampTone: "error" },
     { id: 2, ts: "06-09 10:15:02.108", board: "MCuF-002", channel: 49, amp: 8.2,  tof: null, thickness: null, code: "E115", codeMsg: "신호 검출 실패 (부착력 저하)", ampTone: "caution" },
-    { id: 3, ts: "06-09 09:58:31.022", board: "MCuF-002", channel: 62, amp: 0.0,  tof: null, thickness: null, code: "E120", codeMsg: "채널 미연결", ampTone: "error" },
+    { id: 3, ts: "06-09 09:58:31.022", board: "MCuF-002", channel: 62, amp: 3.0,  tof: null, thickness: null, code: "E201", codeMsg: "신호 나쁨 (미부착)", ampTone: "error" },
     { id: 4, ts: "06-08 17:21:09.654", board: "MCuF-003", channel: 4,  amp: 94.0, tof: 2.64, thickness: 7.8, code: "E108", codeMsg: "Amp Threshold 초과 (Critical)", ampTone: "caution" },
   ];
 
