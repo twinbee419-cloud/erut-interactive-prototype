@@ -809,11 +809,9 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
                   transition: "opacity 120ms ease",
                 }}
               >
-                {/* v9.30: 결함 N건 태그 제거 — 카드 border 색상으로 결함 등급 표시 유지 */}
+                {/* 카드 = 검사 대상명 + 신호 상태만 (메타·채널 범위 제거) */}
                 <div className="target-card__name" style={{ color: isSelected ? "var(--content-emphasis)" : "var(--content-high)" }}>{t.name}</div>
-                <div className="target-card__meta" style={{ marginTop: 4 }}>{t.meta}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-                  <span className="target-card__range">{t.range}</span>
                   {sigStatus && (
                     <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: sigColor, display: "inline-flex", alignItems: "center", gap: 4 }}>
                       <span style={{ width: 6, height: 6, background: sigColor, borderRadius: "50%" }}/>{sigLabel}
