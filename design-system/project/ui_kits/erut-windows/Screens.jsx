@@ -263,7 +263,7 @@ window.MOCK = {
     { id: "CH 45", daysRemaining:  1, lastDate: "2025-12-12", cycleDays: 182 },
     { id: "CH 52", daysRemaining:  0, lastDate: "2025-12-13", cycleDays: 180 },  // 전역 기본
   ],
-  // v19.0: 미니 PC 자산 정보 — alias + UUID + 자동 수집 메타. [8] PC 정보 카테고리 / [18] 보고서 / [3] 통신 로그 / 상태바 옵션
+  // v19.0: 현재 PC 자산 정보(단일) — alias + UUID + 자동 수집 메타. [8] PC 정보 / [18] 보고서 / [3] 통신 로그 / 상태바 옵션. 다중 PC 통합 관리는 웹 책임
   pcInfo: {
     alias: "현장 검사 PC #1",                              // 사용자 입력 (변경 가능)
     uuid: "a7f3c2e8-9b4d-4c1f-8e5a-2d6b9f8c1a3e",          // 첫 실행 1회 자동 생성 (readonly)
@@ -2571,7 +2571,7 @@ function SettingsPcInfo() {
   };
   return (
     <>
-      <SettingsSectionHeader title="PC 정보" desc="미니 PC를 탐촉자·DAQ와 동일하게 자산 관리. 사용자는 별칭(alias)만 입력, UUID와 자동 메타는 시스템이 수집. 다중 PC 운영·MQTT 라우팅·보고서 추적성·장애 진단의 기반."/>
+      <SettingsSectionHeader title="PC 정보" desc="현재 이 미니 PC의 자산 정보. 사용자는 별칭(alias)만 입력, UUID와 자동 메타는 시스템이 수집. 보고서·진단 로그 추적성의 기반. 여러 미니 PC의 통합 관리(목록·상태·MQTT 라우팅)는 웹 서비스 책임."/>
       <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: "16px 24px", alignItems: "start" }}>
         <SettingsRow label="PC 별칭 (alias)" hint="언제든 변경 가능. 보고서·진단 로그에 자동 반영. 한글 가능.">
           <input className="erut-field" value={alias} onChange={(e) => setAlias(e.target.value)} style={{ width: 320 }}/>
