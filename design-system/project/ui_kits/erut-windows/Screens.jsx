@@ -2008,7 +2008,7 @@ window.CalibrationExpiryAlertDialog = function CalibrationExpiryAlertDialog({ ch
 // 3개 탭(통신·교정 이력·측정 에러)이 columns/rows/filters props만 다르게 재사용.
 // v17.0: 인라인 펼침 + '상세 →' 버튼 폐기. 수치 기반 raw data만 표시.
 // 에러 코드 체계 상세: dev_handoff/Error_Code_Spec_v1.0.md (v2.0 정합)
-function DiagLogFilterBar({ period, setPeriod, kind, setKind, kindOptions, search, setSearch, searchPlaceholder }) {
+function DiagLogFilterBar({ period, setPeriod, kind, setKind, kindOptions, search, setSearch, searchPlaceholder, status, setStatus, statusOptions }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "160px 200px 1fr", gap: 8, marginBottom: 10 }}>
       <select className="erut-field" value={period} onChange={(e) => setPeriod(e.target.value)} style={{ width: "100%" }}>
@@ -2017,7 +2017,13 @@ function DiagLogFilterBar({ period, setPeriod, kind, setKind, kindOptions, searc
       <select className="erut-field" value={kind} onChange={(e) => setKind(e.target.value)} style={{ width: "100%" }}>
         {kindOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
-      <input className="erut-field" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={searchPlaceholder} style={{ width: "100%" }}/>
+      {statusOptions ? (
+        <select className="erut-field" value={status} onChange={(e) => setStatus(e.target.value)} style={{ width: "100%" }}>
+          {statusOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+      ) : (
+        <input className="erut-field" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={searchPlaceholder} style={{ width: "100%" }}/>
+      )}
     </div>
   );
 }
@@ -2055,7 +2061,7 @@ function DiagLogTable({ columns, rows, getKey }) {
 function DiagCommLog({ projectScope = false }) {
   const [period, setPeriod] = $s("7d");
   const [kind, setKind] = $s("all");
-  const [search, setSearch] = $s("");
+  const [status, setStatus] = $s("all");
 
   // mock — Error_Code_Spec_v2.0 카탈로그 정합 (E5xx/E6xx/E7xx). board: [1] 진입 시 어느 DAQ 로그인지 식별.
   const allRows = [
@@ -2072,7 +2078,7 @@ function DiagCommLog({ projectScope = false }) {
 
   const filtered = allRows.filter(r => {
     if (kind !== "all" && r.link !== kind) return false;
-    if (search && !(r.ts + " " + linkLabel(r.link)).toLowerCase().includes(search.toLowerCase())) return false;
+    if (status !== "all" && r.status !== status) return false;
     return true;
   });
 
@@ -2109,8 +2115,13 @@ function DiagCommLog({ projectScope = false }) {
           { value: "mc-pc", label: "DAQ ↔ 미니 PC" },
           { value: "pc-mqtt", label: "미니 PC ↔ 서버 MQTT" },
         ]}
-        search={search} setSearch={setSearch}
-        searchPlaceholder="구간·채널·코드로 검색"
+        status={status} setStatus={setStatus}
+        statusOptions={[
+          { value: "all", label: "전체 상태" },
+          { value: "ok", label: "정상" },
+          { value: "warn", label: "Timeout · 재연결" },
+          { value: "error", label: "연결 끊김" },
+        ]}
       />
       <DiagLogTable columns={columns} rows={filtered} getKey={(r) => r.id}/>
     </>
