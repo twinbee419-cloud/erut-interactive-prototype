@@ -1844,12 +1844,15 @@ function DiagHardware() {
           </div>
         ))}
       </div>
-      <h4 style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: "0 0 10px" }}>시스템 정보</h4>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "0 0 10px" }}>
+        <h4 style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>시스템 정보</h4>
+        <span style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>DAQ 연결 시 자동 조회 · 미제공 항목은 —</span>
+      </div>
       <div style={{ border: "1px solid var(--border-low)", padding: "12px 14px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px 24px", font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em" }}>
         {info.map(([k, v, type]) => (
           <div key={k} style={type === "link" ? { gridColumn: "1 / -1" } : undefined}>
             <span style={{ color: "var(--content-low)" }}>{k}</span>{" "}
-            <strong style={{ fontWeight: 700, color: type === "link" ? "var(--content-emphasis)" : "var(--content-high)", textDecoration: type === "link" ? "underline" : "none", cursor: type === "link" ? "pointer" : "default" }}>{v}</strong>
+            <strong style={{ fontWeight: 700, color: type === "link" ? "var(--content-emphasis)" : "var(--content-high)", textDecoration: type === "link" ? "underline" : "none", cursor: type === "link" ? "pointer" : "default" }}>{v || "—"}</strong>
           </div>
         ))}
       </div>
