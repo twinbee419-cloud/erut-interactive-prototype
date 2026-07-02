@@ -1827,7 +1827,7 @@ function DiagHardware() {
     ["최대 채널 수", "64 ch"],
     ["IP 주소", "192.168.1.100 : 8080"],
     ["MAC 주소", "B8:27:EB:1F:4C:A2"],
-    ["Config 파일", "default.cfg ↗", "link"],
+    ["Config 파일", "default.cfg"],
   ];
   return (
     <>
