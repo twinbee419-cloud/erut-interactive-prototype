@@ -1028,6 +1028,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
   const [selectedRecal, setSelectedRecal] = $s((recalChannels[0] && (recalChannels[0].id || recalChannels[0])) || null);
   // #1: A-scan 하단 탭 — 교정 측정 / Gain·Gate 설정
   const [calibTab, setCalibTab] = $s("calib");
+  // #2 recal: '재교정 완료' 클릭 시 남은 대상 상태 확인 다이얼로그 (expired=만료 필수 / imminent=임박 미완료)
+  const [recalConfirm, setRecalConfirm] = $s(null);
 
   // ───── 채널 정보 state — edit 모드 시 prefilledChannel로 초기화 ─────
   const [channel, setChannel] = $s(pre.channel || "");
@@ -1727,8 +1729,14 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
         <div style={{ display: "flex", gap: 8 }}>
           <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onBack}>취소</button>
           {isRecal ? (
-            /* #2 recal: 재교정 완료 */
-            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onBack}>재교정 완료</button>
+            /* #2 recal: 재교정 완료 — 항상 활성. 만료 남으면 필수 안내(유지) / 임박만 남으면 미완료 alert 후 [2] / 모두 완료 시 [2] */
+            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => {
+              const hasExpired  = recalChannels.some(c => (((c && c.calibrationStatus) || "expired") === "expired"));
+              const hasImminent = recalChannels.some(c => ((c && c.calibrationStatus) === "imminent"));
+              if (hasExpired) setRecalConfirm("expired");
+              else if (hasImminent) setRecalConfirm("imminent");
+              else onBack();
+            }}>재교정 완료</button>
           ) : isEdit ? (
             /* 측정 시작은 DAQ 단위([2] 배너·F6) — 채널 개별 측정 시작 불가하므로 '저장'만 */
             <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onSave}>저장</button>
@@ -1738,6 +1746,19 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
           )}
         </div>
       </div>
+      {recalConfirm && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={() => setRecalConfirm(null)}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: 480, background: "var(--surface-base)", border: "1px solid var(--border-medium)" }}>
+            <div style={{ padding: "12px 18px", borderBottom: "1px solid var(--border-medium)", background: "var(--system-caution)", font: "700 15px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>{recalConfirm === "expired" ? "재교정 필수" : "교정 미완료 항목"}</div>
+            <div style={{ padding: "18px 22px", font: "400 13px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{recalConfirm === "expired" ? "측정 데이터의 신뢰성 유지를 위해 교정 기간이 초과된 탐촉자는 재교정이 필수입니다." : "교정이 완료되지 않은 항목이 있습니다. 그대로 완료하시겠습니까?"}</div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, padding: "12px 18px", borderTop: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
+              {recalConfirm === "expired"
+                ? <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => setRecalConfirm(null)}>확인</button>
+                : <><button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={() => setRecalConfirm(null)}>취소</button><button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => { setRecalConfirm(null); onBack(); }}>계속</button></>}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -3415,6 +3436,27 @@ function MQTTSettings() {
           </div>
         </div>
       </div>
+
+      {/* 서버 송신 상태 (store-and-forward) — 미니 PC ↔ 서버. 끊김 시 로컬 보관 → 재연결 시 FIFO 자동 재송신 */}
+      <div style={{ marginTop: 24 }}>
+        <h3 style={{ font: "700 18px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 4 }}>서버 송신 상태 <span style={{ font: "400 12px/1 var(--font-kr)", color: "var(--content-low)" }}>(store-and-forward · 미니 PC ↔ 서버)</span></h3>
+        <div style={{ font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 12 }}>서버 연결이 끊겨도 측정 데이터는 로컬에 보관(pending)되고, 재연결 시 FIFO 순서로 자동 재송신됩니다. 상태바 MQTT 표시와 동기.</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+          <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--system-success)", flexShrink: 0 }}/>
+            <div><div style={{ font: "700 13px/1.2 var(--font-kr)", color: "var(--system-success)" }}>연결됨</div><div style={{ font: "400 11px/1.4 var(--font-kr)", color: "var(--content-low)", marginTop: 2 }}>실시간 송신 정상</div></div>
+          </div>
+          <div style={{ background: "var(--surface-base)", border: "1px solid var(--system-caution)", padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--system-caution)", flexShrink: 0 }}/>
+            <div><div style={{ font: "700 13px/1.2 var(--font-kr)", color: "var(--system-caution)" }}>끊김</div><div style={{ font: "400 11px/1.4 var(--font-kr)", color: "var(--content-low)", marginTop: 2 }}>로컬 보관 · 송신 대기 <strong style={{ color: "var(--content-high)" }}>128건</strong></div></div>
+          </div>
+          <div style={{ background: "var(--surface-base)", border: "1px solid var(--system-info)", padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--system-info)", flexShrink: 0 }}/>
+            <div><div style={{ font: "700 13px/1.2 var(--font-kr)", color: "var(--system-info)" }}>재연결</div><div style={{ font: "400 11px/1.4 var(--font-kr)", color: "var(--content-low)", marginTop: 2 }}>자동 재송신 · 송신 중 <strong style={{ color: "var(--content-high)" }}>64건</strong></div></div>
+          </div>
+        </div>
+        <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 8 }}>※ 백엔드 연동 필요 — 현재 프로토타입은 상태 시각화만(mqttPending 0).</div>
+      </div>
     </div>
   );
 }
@@ -3518,6 +3560,8 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   const [presetName, setPresetName]     = $s("");   // 프리셋으로 저장 시 프리셋명 (프리셋 코드 없음)
   // v9.27 Wave B fix: '+새 검사 대상 추가' 클릭 시 입력 초기화 confirm
   const [showResetConfirm, setShowResetConfirm] = $s(false);
+  // 저장 시 필수 미입력 항목을 입력 필드 error 상태로 표시
+  const [saveErr, setSaveErr] = $s(false);
 
   // 선택된 target 변경 시 form 리셋 (selectedId null = 신규 모드)
   React.useEffect(() => {
@@ -3537,6 +3581,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   // 필수 항목 검증 (대상명·DAQ·형태·두께·소재·유체)
   const mcBoard = form.mcBoard || "MCuF-001";   // 검사 대상이 속한 DAQ (기본값 첫 보드)
   const requiredOk = !!(form.name && mcBoard && form.shape && form.th && form.material && form.fluid);
+  const errStyle = (v) => (saveErr && !v ? { borderColor: "var(--system-error)" } : {});
 
   // 좌측 리스트 검색 필터
   const filteredTargets = search
@@ -3649,10 +3694,9 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             )}
             <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowPresetModal(true)}>프리셋</button>
             <button
-              className={"erut-btn erut-btn--sm " + (requiredOk ? "erut-btn--emphasis" : "erut-btn--disabled")}
-              disabled={!requiredOk}
-              title={requiredOk ? "" : "필수 항목(*) 입력 필요"}
-              onClick={requiredOk ? () => setShowSaveConfirm(true) : undefined}
+              className="erut-btn erut-btn--sm erut-btn--emphasis"
+              title="필수 항목(*) 입력 필요"
+              onClick={() => { if (requiredOk) { setSaveErr(false); setShowSaveConfirm(true); } else setSaveErr(true); }}
             >
               저장
             </button>
@@ -3664,7 +3708,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
           {sectionHeader("기본 정보")}
           <div>
             {formLabel("대상명", true)}
-            <input className="erut-field" value={form.name} onChange={(e) => setField("name", e.target.value)} style={{ width: "100%" }}/>
+            <input className="erut-field" value={form.name} onChange={(e) => setField("name", e.target.value)} style={{ width: "100%", ...errStyle(form.name) }}/>
           </div>
           <div>
             {formLabel("DAQ", true)}
@@ -3686,7 +3730,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
           {sectionHeader("형상")}
           <div>
             {formLabel("형태", true)}
-            <select className="erut-field" value={form.shape} onChange={(e) => setField("shape", e.target.value)} style={{ width: "100%" }}>
+            <select className="erut-field" value={form.shape} onChange={(e) => setField("shape", e.target.value)} style={{ width: "100%", ...errStyle(form.shape) }}>
               <option value="">선택하세요</option>
               <option>배관</option><option>탱크 (구형)</option><option>탱크 (원통형)</option><option>플랜지</option><option>용접부</option><option>Dome 헤드</option>
             </select>
@@ -3697,7 +3741,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
           </div>
           <div>
             {formLabel("두께 (mm)", true)}
-            <input className="erut-field" value={form.th} onChange={(e) => setField("th", e.target.value)} style={{ width: "100%" }}/>
+            <input className="erut-field" value={form.th} onChange={(e) => setField("th", e.target.value)} style={{ width: "100%", ...errStyle(form.th) }}/>
           </div>
           <div>
             {formLabel("내경 (mm)")}
@@ -3718,7 +3762,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
           {sectionHeader("소재 · 유체 · 운영 환경")}
           <div>
             {formLabel("소재", true)}
-            <select className="erut-field" value={form.material} onChange={(e) => setField("material", e.target.value)} style={{ width: "100%" }}>
+            <select className="erut-field" value={form.material} onChange={(e) => setField("material", e.target.value)} style={{ width: "100%", ...errStyle(form.material) }}>
               <option value="">선택하세요</option>
               {Object.keys(window.SOUND_SPEEDS).map(m => <option key={m}>{m}</option>)}
               <option>기타 / 직접 입력</option>
@@ -3726,7 +3770,7 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
           </div>
           <div>
             {formLabel("유체 종류", true)}
-            <select className="erut-field" value={form.fluid} onChange={(e) => setField("fluid", e.target.value)} style={{ width: "100%" }}>
+            <select className="erut-field" value={form.fluid} onChange={(e) => setField("fluid", e.target.value)} style={{ width: "100%", ...errStyle(form.fluid) }}>
               <option value="">선택하세요</option>
               <option>고온 스팀</option><option>가스 — 수소</option><option>가스 — LNG</option><option>액체 — 원유</option><option>액체 — 물</option><option>액체 — 화학약품</option><option>기타</option>
             </select>
