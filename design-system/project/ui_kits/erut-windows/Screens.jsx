@@ -218,16 +218,13 @@ window.MOCK = {
     { id: "MCF-2024-002", alias: "보조 장비", ip: "192.168.0.45", port: 8080, type: "OEM-MCu",  channels: 32, freq: 10, firmware: "v2.3.8", state: "warn",      note: "응답 지연 28 ms (높음)" },
     { id: "MCF-2024-003", alias: "예비",     ip: "192.168.0.46", port: 8080, type: "OEM-MCuF", channels: 64, freq: 5,  firmware: "v2.4.1", state: "offline",   note: "연결 끊김 (10분 전)" },
   ],
-  // v12.0: 교정 필요 채널 (uncalibrated: 신규 추가 후 미진행 + expired: 주기 초과 만료) — DeviceDetail breathe 셀과 동일 소스
-  uncalibratedChannels: ["ch20", "ch33"],
+  // 재교정 필요 채널 = 교정 주기 초과(만료)만. 채널 추가 시 교정이 필수 단계라 '미교정' 상태는 존재하지 않음 — DeviceDetail breathe 셀과 동일 소스
   expiredChannels:      ["ch04", "ch09", "ch12"],
-  // v13.0: 마지막 교정일 — 재교정 마법사 좌측 채널 카드에 표시. uncalibrated 채널은 null
+  // 마지막 교정일 — 재교정 대상 채널 카드에 표시. 등록된 모든 채널은 교정 완료 상태(교정이 등록 필수 단계)
   lastCalibrationDate: {
     ch04: "2025-11-20",  // 191일 전 (오늘 2026-06-10 기준 — 가장 오래됨)
     ch09: "2025-11-25",  // 186일 전
     ch12: "2025-12-10",  // 171일 전
-    ch20: null,          // 미교정 (신규 추가 후 미진행)
-    ch33: null,          // 미교정
   },
   // v16.0: 채널별 교정 주기 override — undefined 채널은 전역 기본값(calibrationPolicy.defaultCycleDays) 사용
   channelCycleDays: {
@@ -286,8 +283,8 @@ window.MOCK = {
     "SES-2026-042": "Office PC",
   },
 };
-// 공통 접근자 — DeviceDetail / index.html F6 차단 다이얼로그 / DiagCalibHistory 모두 이걸 참조
-window.MOCK.needsCalibrationChannels = [...window.MOCK.uncalibratedChannels, ...window.MOCK.expiredChannels];
+// 공통 접근자 — DeviceDetail / index.html F6 차단 다이얼로그 / DiagCalibHistory 모두 이걸 참조. 재교정 대상 = 교정 주기 초과 채널만
+window.MOCK.needsCalibrationChannels = [...window.MOCK.expiredChannels];
 
 // =================== Screen · [0] PROJECT PICKER ===================
 // First screen of the app.
@@ -729,16 +726,13 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
   const getTargetName = (i) => i <= 24 ? "PIPE-A-204" : i <= 48 ? "TANK-B-101" : "VESSEL-C-301";
   // v9.17/v22.6: 감육 검출 채널 — PIPE 4건 + VESSEL 2건 (검출 사실만, 등급 없음 — 판정은 웹)
   const DEFECT_CHANNELS = [4, 7, 12, 18, 51, 56];
-  // v9.30: 교정 상태 — 미교정(신규 추가 후 미진행) + 만료(주기 초과) 채널은 major 컬러 breathe
-  // v12.0: window.MOCK으로 통합 — F6 차단 다이얼로그·일괄 재교정과 동일 소스
-  const UNCALIBRATED_CHANNELS = window.MOCK.uncalibratedChannels;
+  // 교정 상태 — 교정 주기 초과(만료) 채널만 major 컬러 breathe. 채널 추가 시 교정 필수라 '미교정' 상태 없음
+  // window.MOCK으로 통합 — F6 차단 다이얼로그·일괄 재교정과 동일 소스
   const EXPIRED_CHANNELS = window.MOCK.expiredChannels;
   const cells = [];
   for (let i = 1; i <= 64; i++) {
     const id = "ch" + String(i).padStart(2, "0");
-    const calibrationStatus = UNCALIBRATED_CHANNELS.includes(id)
-      ? "uncalibrated"
-      : EXPIRED_CHANNELS.includes(id) ? "expired" : "ok";
+    const calibrationStatus = EXPIRED_CHANNELS.includes(id) ? "expired" : "ok";
     cells.push({ id, sensor: sensorMap[id], targetName: getTargetName(i), defect: DEFECT_CHANNELS.includes(i), calibrationStatus });
   }
 
@@ -881,14 +875,14 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
           {/* v12.0: '+ 탐촉자 추가' 좌측 — 교정 필요 채널 일괄 재교정 진입 (N > 0 시에만 노출) */}
           <div style={{ display: "flex", gap: 8 }}>
             {(() => {
-              const needsCalibChannels = cells.filter(c => c.calibrationStatus === "uncalibrated" || c.calibrationStatus === "expired");
+              const needsCalibChannels = cells.filter(c => c.calibrationStatus === "expired");
               if (needsCalibChannels.length === 0) return null;
               return (
                 <button
                   className="erut-btn erut-btn--default erut-btn--sm"
                   style={{ color: "var(--system-caution)", borderColor: "var(--system-caution)" }}
                   onClick={() => onBatchRecal && onBatchRecal(needsCalibChannels)}
-                  title={`교정 주기 초과 또는 미진행 ${needsCalibChannels.length}채널 일괄 재교정`}
+                  title={`교정 주기 초과 ${needsCalibChannels.length}채널 일괄 재교정`}
                 >
                   일괄 재교정
                 </button>
@@ -996,7 +990,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
           {/* 액션 버튼 (사이드패널 하단) — v14.0: 교정/Gate 통합 → 'Gain·Gate·교정 통합 편집' 단일 진입점 */}
           {(() => {
             const selectedCell = cells.find(c => c.id === selected);
-            const needsCalib = selectedCell && (selectedCell.calibrationStatus === "uncalibrated" || selectedCell.calibrationStatus === "expired");
+            const needsCalib = selectedCell && selectedCell.calibrationStatus === "expired";
             return (
               <button
                 className={"erut-btn " + (needsCalib ? "erut-btn--emphasis" : "erut-btn--default") + " erut-btn--m"}
@@ -1197,8 +1191,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
     { key: "vel",    label: "음속 측정",        done: velocity.value != null },
   ];
   const requiredDone = checklist.filter(c => !c.optional).every(c => c.done);
-  const canAddOnly  = !!(productName && channel && serial && target);
-  const canAddStart = requiredDone;
+  // 채널 추가 = 채널 지정 + 전체 커미셔닝(정보·Gain·Gate·영점·음속) 완료 필수. 교정이 등록 필수 단계라 '미교정' 채널이 생기지 않음
+  const canAddOnly  = !!channel && requiredDone;
 
   // ───── mock 측정 동작 ─────
   // v15.0: 음속·영점은 참조 블록 두께 기반 계산. 두께 미입력 시 disabled.
@@ -1338,11 +1332,10 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                   const id = (rc && (rc.id || rc)) || "";
                   const num = String(id).replace(/\D/g, "").padStart(2, "0");
                   const tname = (rc && rc.targetName) || "—";
-                  const status = (rc && rc.calibrationStatus) || "expired";
                   const dates = (window.MOCK && window.MOCK.lastCalibrationDate) || {};
                   const last = dates["ch" + num] || dates[id];
                   const sel = selectedRecal === id;
-                  const statusLabel = status === "uncalibrated" ? "미교정" : "주기 초과";
+                  const statusLabel = "주기 초과";
                   return (
                     <div key={id} onClick={() => setSelectedRecal(id)} style={{
                       padding: "8px 10px", cursor: "pointer",
@@ -1432,12 +1425,11 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
                 const tone = lastDate == null ? "var(--system-error)" : expired ? "var(--system-caution)" : "var(--system-success)";
                 return (
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em" }}>
-                    <div><span style={{ color: "var(--content-low)" }}>마지막 교정</span> <strong style={{ color: "var(--content-high)", fontWeight: 700 }}>{lastDate || "— (미교정)"}</strong></div>
+                    <div><span style={{ color: "var(--content-low)" }}>마지막 교정</span> <strong style={{ color: "var(--content-high)", fontWeight: 700 }}>{lastDate || "—"}</strong></div>
                     {daysAgo != null && <div><span style={{ color: "var(--content-low)" }}>경과</span> <strong style={{ color: tone, fontWeight: 700 }}>{daysAgo}일 전</strong></div>}
                     {daysAgo != null && (
                       <div><span style={{ color: "var(--content-low)" }}>만료까지</span> <strong style={{ color: tone, fontWeight: 700 }}>{expired ? `주기 ${daysAgo - cycle}일 초과` : `${cycle - daysAgo}일 남음`}</strong></div>
                     )}
-                    {lastDate == null && <div style={{ color: "var(--system-error)", fontWeight: 700 }}>미교정 — 교정 후 측정 가능</div>}
                   </div>
                 );
               })()}
@@ -1742,8 +1734,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
             /* 측정 시작은 DAQ 단위([2] 배너·F6) — 채널 개별 측정 시작 불가하므로 '저장'만 */
             <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onSave}>저장</button>
           ) : (
-            /* #15: '임시 저장'·'추가만' 삭제, '추가 + 측정 시작'→'추가' */
-            <button className={"erut-btn erut-btn--emphasis erut-btn--sm" + (canAddOnly ? "" : " erut-btn--disabled")} disabled={!canAddOnly} onClick={onAddOnly}>추가</button>
+            /* '추가' = 채널 정보·Gain·Gate·영점·음속 교정 전체 완료 시에만 활성 (미교정 채널 방지) */
+            <button className={"erut-btn erut-btn--emphasis erut-btn--sm" + (canAddOnly ? "" : " erut-btn--disabled")} disabled={!canAddOnly} onClick={onAddOnly} title={canAddOnly ? undefined : "채널 정보·Gain·Gate·영점·음속 교정을 모두 완료해야 추가할 수 있습니다"}>추가</button>
           )}
         </div>
       </div>
@@ -1911,10 +1903,10 @@ function DiagCalibHistory({ projectScope = false }) {
   );
 }
 
-// v12.0: F6 측정 시작 차단 다이얼로그 — 미교정/만료 채널 존재 시 noop measurement 방지
+// F6 측정 시작 차단 다이얼로그 — 교정 주기 초과(만료) 채널 존재 시 noop measurement 방지
 // 기본 액션: 일괄 재교정 (NDT 안전 보증 default). "그대로 측정 시작"은 명시 선택 시에만.
-window.CalibrationStartDialog = function CalibrationStartDialog({ uncalibratedIds, expiredIds, onRecalibrateAll, onContinueAnyway, onClose }) {
-  const total = (uncalibratedIds?.length || 0) + (expiredIds?.length || 0);
+window.CalibrationStartDialog = function CalibrationStartDialog({ expiredIds, onRecalibrateAll, onContinueAnyway, onClose }) {
+  const total = expiredIds?.length || 0;
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(10,28,60,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 560, background: "var(--surface-base)", border: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
@@ -1924,17 +1916,10 @@ window.CalibrationStartDialog = function CalibrationStartDialog({ uncalibratedId
         </div>
         <div style={{ padding: "18px 22px", display: "flex", flexDirection: "column", gap: 14 }}>
           <p style={{ font: "400 13px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>
-            <strong style={{ fontWeight: 700, color: "var(--system-caution)" }}>{total}개</strong> 채널이 교정되지 않았거나 교정 주기를 초과했습니다.<br/>
-            교정되지 않은 채널의 측정 데이터는 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>신뢰성을 보장할 수 없습니다</strong>.
+            <strong style={{ fontWeight: 700, color: "var(--system-caution)" }}>{total}개</strong> 채널이 교정 주기를 초과했습니다.<br/>
+            교정 주기가 지난 채널의 측정 데이터는 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>신뢰성을 보장할 수 없습니다</strong>.
           </p>
           <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 6, font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em" }}>
-            {uncalibratedIds?.length > 0 && (
-              <div>
-                <span style={{ color: "var(--content-low)" }}>미교정 (신규 추가 후 미진행)</span>{" "}
-                <strong style={{ color: "var(--content-high)" }}>{uncalibratedIds.length}개</strong>
-                <span style={{ color: "var(--content-medium)", marginLeft: 8 }}>· {uncalibratedIds.map(c => c.toUpperCase().replace("CH", "CH ")).join(" · ")}</span>
-              </div>
-            )}
             {expiredIds?.length > 0 && (
               <div>
                 <span style={{ color: "var(--content-low)" }}>교정 주기 초과</span>{" "}
@@ -2694,13 +2679,13 @@ window.AnimatedAscan = function AnimatedAscan({
 // v14.0: mode="new" 단일 채널 wizard는 사용 폐기 (commission edit 모드로 통합). mode="recalibration"만 활성. new 분기는 향후 정리 wave에서 제거.
 window.CalibrationWizard = function CalibrationWizard({ onClose, mode = "recalibration", channelList = [], onComplete }) {
   const isRecal = mode === "recalibration";
-  // v13.0: 재교정 모드 — 채널 정렬 (미교정 먼저 → 만료 경과일 내림차순). new 모드는 단일.
+  // 재교정 모드 — 채널 정렬 (만료 경과일 내림차순, 오래된 것 우선). new 모드는 단일.
   const sortedChannels = isRecal ? (() => {
     const dates = (window.MOCK && window.MOCK.lastCalibrationDate) || {};
     const today = new Date("2026-06-10");
     const daysAgo = (id) => {
       const d = dates[id];
-      if (!d) return Infinity; // 미교정 = 최우선
+      if (!d) return Infinity; // 교정일 미상 방어 — 최우선 정렬
       return Math.floor((today - new Date(d)) / 86400000);
     };
     return [...channelList].sort((a, b) => daysAgo(b) - daysAgo(a));
@@ -3921,17 +3906,14 @@ window.RealtimeScan = function RealtimeScan({ channel, state, setState, elapsed,
 
   // v9.15: 64ch cells — MOCK.sensors 기반 (두 화면 데이터 단일 진실 공급원)
   const sensorMap64 = Object.fromEntries(window.MOCK.sensors.map(s => [s.id, s]));
-  // v9.30: [2]와 동일한 교정 상태 mock (단일 진실 공급원 유지)
-  const UNCALIBRATED_CHANNELS_64 = ["ch20", "ch33"];
+  // [2]와 동일한 교정 상태 mock (단일 진실 공급원 유지) — 교정 주기 초과 채널만, '미교정' 없음
   const EXPIRED_CHANNELS_64 = ["ch04", "ch09", "ch12"];
   const cells64 = [];
   for (let i = 1; i <= 64; i++) {
     const def = defects.find(d => d.channel === i);
     const id = "ch" + String(i).padStart(2, "0");
     const sensor = sensorMap64[id];
-    const calibrationStatus = UNCALIBRATED_CHANNELS_64.includes(id)
-      ? "uncalibrated"
-      : EXPIRED_CHANNELS_64.includes(id) ? "expired" : "ok";
+    const calibrationStatus = EXPIRED_CHANNELS_64.includes(id) ? "expired" : "ok";
     cells64.push({
       num: i,
       id,

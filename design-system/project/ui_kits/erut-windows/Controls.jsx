@@ -275,8 +275,8 @@ window.ChannelGrid = function ChannelGrid({
           const isSel = (c.id === selectedCh || c.num === selectedCh) && active;
           const isFocus = isSel && focusActive;
           const hasDefect = !!c.defect; // v22.6: 검출 사실(boolean) — 등급 없음
-          // v9.30: 교정 상태 — 미교정/만료 채널은 회색 breathe (감육과 독립)
-          const needsCalibration = c.calibrationStatus === "uncalibrated" || c.calibrationStatus === "expired";
+          // 교정 상태 — 교정 주기 초과(만료) 채널은 회색 breathe (감육과 독립)
+          const needsCalibration = c.calibrationStatus === "expired";
 
           const clsParts = ["erut-ch-cell"];
           if (isSel) clsParts.push("is-active");
@@ -336,7 +336,7 @@ window.ChannelGrid = function ChannelGrid({
 
       {/* v9.32: 하단 범례 — '교정 필요' (breathe) + '선택됨' 인라인 (좌측 정렬) */}
       {showDefectLegend && (() => {
-        const needsCalibCount = cells.filter(c => c.calibrationStatus === "uncalibrated" || c.calibrationStatus === "expired").length;
+        const needsCalibCount = cells.filter(c => c.calibrationStatus === "expired").length;
         const signalWarnCount = cells.filter(c => c.sensor && (c.sensor.state === "warn" || c.sensor.state === "err")).length;
         return (
           <div style={{ display: "flex", gap: 14, marginTop: 4, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
