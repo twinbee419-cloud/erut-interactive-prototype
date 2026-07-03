@@ -3147,12 +3147,14 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
   const [timeout, setTimeoutVal] = $s(isEdit ? 5000 : "");
   const [boardType, setBoardType] = $s(existing ? (existing.type || "") : "");
   const [chs, setChs]     = $s(existing ? existing.channels : "");
-  // 연결 테스트 — 클릭 전 placeholder / 클릭 후 진단 결과 표시
+  // 연결 테스트 — 클릭 전 placeholder / 클릭 후 진단 결과 표시. 연결 테스트는 항상 활성, 필수(유형·IP·Port) 미입력 시 필드 error(reqErr)
   const [tested, setTested] = $s(false);
+  const [reqErr, setReqErr] = $s(false);
   // DAQ OEM 모델 유형 (add·edit 공통)
   const MC_BOARD_TYPES = ["OEM-PA2", "OEM-PAmini", "OEM-MC2", "OEM-MCu", "OEM-PAmax", "OEM-MCuF", "OEM-PAmicro"];
 
-  const requiredOk = !!(alias && ip && port);
+  const testReqOk  = !!(boardType && ip && port);   // 연결 테스트 필수: 유형·IP·Port
+  const requiredOk = tested;                          // 저장 및 연결 = 연결 테스트 성공 후에만 (별칭은 선택)
 
   return (
     <>
@@ -3183,8 +3185,9 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 24px" }}>
         <div style={{ gridColumn: "1 / -1", font: "700 12px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "4px 0", borderBottom: "1px solid var(--border-low)" }}>기본 정보</div>
         <div>
-          <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>보드 별칭 <span style={{ color: "var(--system-error)" }}>*</span></div>
+          <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>보드 별칭 <span style={{ color: "var(--content-low)" }}>(선택)</span></div>
           <input className="erut-field" value={alias} onChange={(e) => setAlias(e.target.value)} placeholder="예: 주력 장비" style={{ width: "100%" }}/>
+          <div style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4 }}>미입력 시 시리얼 번호로 기본 설정합니다.</div>
         </div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>시리얼 번호 (SN)</div>
@@ -3194,11 +3197,11 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
         <div style={{ gridColumn: "1 / -1", font: "700 12px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "12px 0 4px", borderBottom: "1px solid var(--border-low)" }}>네트워크</div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>IP 주소 <span style={{ color: "var(--system-error)" }}>*</span></div>
-          <input className="erut-field" value={ip} onChange={(e) => setIP(e.target.value)} placeholder="예: 10.10.1.5" style={{ width: "100%" }}/>
+          <input className="erut-field" value={ip} onChange={(e) => setIP(e.target.value)} placeholder="예: 10.10.1.5" style={{ width: "100%", ...(reqErr && !ip ? { borderColor: "var(--system-error)" } : {}) }}/>
         </div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>Port <span style={{ color: "var(--system-error)" }}>*</span></div>
-          <input className="erut-field" value={port} onChange={(e) => setPort(e.target.value)} placeholder="기본 8080" style={{ width: "100%" }}/>
+          <input className="erut-field" value={port} onChange={(e) => setPort(e.target.value)} placeholder="기본 8080" style={{ width: "100%", ...(reqErr && !port ? { borderColor: "var(--system-error)" } : {}) }}/>
         </div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>통신 Timeout (ms)</div>
@@ -3208,7 +3211,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
         <div style={{ gridColumn: "1 / -1", font: "700 12px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "12px 0 4px", borderBottom: "1px solid var(--border-low)" }}>보드 사양</div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>유형</div>
-          <select className="erut-field" value={boardType} onChange={(e) => setBoardType(e.target.value)} style={{ width: "100%" }}>
+          <select className="erut-field" value={boardType} onChange={(e) => setBoardType(e.target.value)} style={{ width: "100%", ...(reqErr && !boardType ? { borderColor: "var(--system-error)" } : {}) }}>
             <option value="">선택하세요</option>
             {MC_BOARD_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
@@ -3219,8 +3222,12 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
         </div>
         <div>
           <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>펌웨어 버전</div>
-          {/* v9.26: add 모드 — 펌웨어 버전 비움. 연결 후 자동 표시 */}
+          {/* add 모드 — 펌웨어 버전 비움. 연결 후 자동 표시 */}
           <input className="erut-field is-disabled" value={existing ? existing.firmware : ""} placeholder={isEdit ? "" : "연결 후 자동 감지"} style={{ width: "100%" }} disabled/>
+        </div>
+        <div>
+          <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>MAC 주소</div>
+          <input className="erut-field is-disabled" value={isEdit ? "00-1A-2B-3C-4D-5E" : ""} placeholder={isEdit ? "" : "연결 후 자동 감지"} style={{ width: "100%" }} disabled/>
         </div>
       </div>
 
@@ -3229,7 +3236,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
       {!tested ? (
         <div style={{ background: "var(--surface-subtle-2)", border: "1px dashed var(--border-medium)", padding: "22px 16px", marginTop: 10, textAlign: "center" }}>
           <div style={{ font: "400 12px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-            하단 <strong style={{ color: "var(--content-medium)" }}>"연결 테스트"</strong>를 실행하면 네트워크 도달성 · 측정 가능 여부가 표시되고, DAQ 정보(SN·채널 수·펌웨어)가 폼에 자동 채워집니다.
+하단 <strong style={{ color: "var(--content-medium)" }}>"연결 테스트"</strong>를 실행하면 네트워크 도달성(PC IP·Ping·Ping 품질)이 표시되고, DAQ 정보(SN·채널 수·MAC·펌웨어)가 폼에 자동 채워집니다. 장비 전원·LAN 케이블 물리 연결을 먼저 확인하세요. 실패 시 "DAQ 응답 없음"과 [재시도]가 표시됩니다.
           </div>
         </div>
       ) : (
@@ -3237,8 +3244,8 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
           {/* 종합 판정 배너 */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", marginBottom: 12, background: "linear-gradient(rgba(24,227,57,0.06),rgba(24,227,57,0.06)), var(--surface-base)", border: "1px solid var(--system-success)" }}>
             <span className="erut-led is-green" style={{ width: 10, height: 10 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
-            <span style={{ font: "700 13px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-success)" }}>측정 가능</span>
-            <span style={{ font: "400 11px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>— 1000Hz 연속 수집 안정</span>
+            <span style={{ font: "700 13px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-success)" }}>정상</span>
+            <span style={{ font: "400 11px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>— 측정 가능 · 1000Hz 연속 수집 안정</span>
           </div>
           {/* ① 네트워크 도달성 + ② DAQ 핸드셰이크 */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px 18px", marginBottom: 10 }}>
@@ -3248,7 +3255,7 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
               <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>Ping 응답</span>
-              <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--content-high)" }}>4 ms <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>· 양호</span></span>
+              <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--content-high)" }}>4 ms <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>· 품질 정상</span></span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--surface-base)", border: "1px solid var(--border-low)" }}>
               <span style={{ font: "400 11px/1 var(--font-kr)", color: "var(--content-low)" }}>패킷 손실률</span>
@@ -3270,12 +3277,12 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {/* DAQ 삭제 — edit 모드 전용 (카드에서 이동) */}
           {isEdit && <button className="erut-btn erut-btn--subtle erut-btn--m" style={{ color: "var(--system-error)", borderColor: "var(--system-error)" }}>DAQ 삭제</button>}
-          <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}><span style={{ color: "var(--system-error)" }}>*</span> 필수 항목</div>
+          <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: reqErr ? "var(--system-error)" : "var(--content-low)" }}>{reqErr ? "유형 · IP 주소 · Port를 입력해 주세요" : <><span style={{ color: "var(--system-error)" }}>*</span> 필수 항목 (유형 · IP · Port)</>}</div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="erut-btn erut-btn--subtle erut-btn--m" onClick={onCancel}>취소</button>
-          <button className={"erut-btn erut-btn--m " + (ip && port ? "erut-btn--default" : "erut-btn--disabled")} disabled={!(ip && port)} title={ip && port ? "" : "IP·Port 입력 필요"} onClick={ip && port ? () => setTested(true) : undefined}>연결 테스트</button>
-          <button className={"erut-btn erut-btn--m " + (requiredOk ? "erut-btn--emphasis" : "erut-btn--disabled")} disabled={!requiredOk} onClick={requiredOk ? onSave : undefined}>저장 + 연결</button>
+          <button className="erut-btn erut-btn--m erut-btn--default" onClick={() => { if (testReqOk) { setTested(true); setReqErr(false); } else setReqErr(true); }}>연결 테스트</button>
+          <button className={"erut-btn erut-btn--m " + (requiredOk ? "erut-btn--emphasis" : "erut-btn--disabled")} disabled={!requiredOk} title={requiredOk ? "" : "연결 테스트 성공 후 저장할 수 있습니다"} onClick={requiredOk ? onSave : undefined}>저장 및 연결</button>
         </div>
       </div>
     </>
