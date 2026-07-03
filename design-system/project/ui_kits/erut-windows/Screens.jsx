@@ -1181,12 +1181,11 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
 
   // ───── 진행 체크리스트 (자동 계산) ─────
   // v16.1: Wedge 측정 항목 제거 — Wedge 각도는 측정 불가, 좌측 채널 정보 input(wedgeAngle)으로 처리
-  // #12: 순서 — 채널 정보 / Gain / Gate A / Gate B / 영점 / 음속
+  // 진행 체크리스트 5항목 — 정보 입력 / Gain / Gate / 영점 / 음속. 제품명·SN은 선택 입력이라 정보 입력 = 검사 대상만 필수. Gate는 A·B 통합 단일 항목.
   const checklist = [
-    { key: "info",   label: "채널 정보 입력",  done: !!(productName && serial && target) },
+    { key: "info",   label: "정보 입력",        done: !!target },
     { key: "gain",   label: "Gain 설정",        done: gainSw != null },
-    { key: "gateA",  label: "Gate A 설정",      done: aOn },
-    { key: "gateB",  label: "Gate B 설정",      done: bOn },
+    { key: "gate",   label: "Gate 설정",        done: aOn && bOn },
     { key: "zero",   label: "영점 측정",        done: zero.value != null },
     { key: "vel",    label: "음속 측정",        done: velocity.value != null },
   ];
@@ -1463,11 +1462,11 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {/* #11: 제품명 — 탐촉자 제품/모델명 (구 채널 번호 자리) */}
                 <div>
-                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>제품명 <span style={{ color: "var(--system-error)" }}>*</span></div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>제품명 <span style={{ color: "var(--content-low)" }}>(선택)</span></div>
                   <input className="erut-field" value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="예: Olympus A430S-SB" style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
                 </div>
                 <div>
-                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>Serial 번호 (SN) <span style={{ color: "var(--system-error)" }}>*</span></div>
+                  <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 3 }}>Serial 번호 (SN) <span style={{ color: "var(--content-low)" }}>(선택)</span></div>
                   <input className="erut-field" value={serial} onChange={(e) => setSerial(e.target.value)} placeholder="예: PXT-2024-065" style={{ width: "100%", height: 30, padding: "4px 8px", fontSize: 12 }}/>
                 </div>
                 {/* 탐촉자 주파수 — 탐촉자 고유 사양(제품명·SN과 동일 그룹) */}
