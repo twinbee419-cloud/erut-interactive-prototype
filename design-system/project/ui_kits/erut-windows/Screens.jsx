@@ -2562,10 +2562,10 @@ function SettingsPcInfo() {
           <input className="erut-field" value={alias} onChange={(e) => setAlias(e.target.value)} style={{ width: 320 }}/>
         </SettingsRow>
 
-        <SettingsRow label="PC 고유키" hint="첫 실행 시 1회 자동 생성. OS 재설치 / PC 교체 시 새로 생성됨. 사용자 수정 불가 (서버 식별자).">
+        <SettingsRow label="UUID" hint="첫 실행 시 1회 자동 생성. OS 재설치 / PC 교체 시 새로 생성됨. 사용자 수정 불가 (서버 식별자).">
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <input className="erut-field" value={pc.uuid || ""} readOnly style={{ width: 340, fontFamily: "'Consolas', monospace", fontSize: 11, background: "var(--surface-subtle-1)", color: "var(--content-medium)" }}/>
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={copyUuid} title="PC 고유키 복사" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={copyUuid} title="UUID 복사" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="9" y="9" width="13" height="13" rx="1"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               복사
             </button>
