@@ -3093,7 +3093,7 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
       <div style={{ padding: "20px 30px", overflowY: "auto" }}>
         {menu === "mc" && !subView && <MCBoardList onAdd={() => setSubView("mc-add")} onEdit={(id) => { setEditingBoardId(id); setSubView("mc-edit"); }}/>}
         {menu === "mc" && subView && <MCBoardForm mode={subView} editingId={editingBoardId} onCancel={() => setSubView(null)} onSave={() => setSubView(null)}/>}
-        {menu === "mqtt" && <MQTTSettings/>}
+        {menu === "mqtt" && <MQTTSettings onBack={onBack}/>}
       </div>
     </div>
   );
@@ -3311,20 +3311,31 @@ function MCBoardForm({ mode, editingId, onCancel, onSave }) {
 }
 
 // ───── MQTT 설정 (메인 SLIDE 11 [4-2]) ─────
-function MQTTSettings() {
-  // 연결 테스트 게이팅 — Host·Port 필수 (브로커 주소)
+function MQTTSettings({ onBack }) {
+  // 브로커 접속 정보 — Host·Port 필수, Username·Password 인증(선택), Client ID 자동 생성
   const [host, setHost] = $s("rabbitmq.erut.local");
   const [mqttPort, setMqttPort] = $s("1883");
-  const canTest = !!(host && mqttPort);
-  // 연결 테스트 — 클릭 전 placeholder / 클릭 후 결과 표시
-  const [tested, setTested] = $s(false);
+  const [username, setUsername] = $s("");
+  const [password, setPassword] = $s("");
+  const [showPw, setShowPw] = $s(false);
+  // 연결 테스트 결과 3상태: default | positive | error. 버튼은 항상 활성, 결과는 입력값에 따라(Host·Port 있으면 성공 시뮬).
+  const [testState, setTestState] = $s("default");
+  const runTest = () => setTestState(host && mqttPort ? "positive" : "error");
+  const label = (txt, req) => (
+    <div style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 6 }}>{txt}{req && <span style={{ color: "var(--system-error)", marginLeft: 4 }}>*</span>}</div>
+  );
+  const panelStyle = testState === "positive"
+    ? { background: "linear-gradient(rgba(24,227,57,0.05),rgba(24,227,57,0.05)), var(--surface-base)", border: "1px solid var(--system-success)" }
+    : testState === "error"
+      ? { background: "linear-gradient(rgba(255,0,94,0.05),rgba(255,0,94,0.05)), var(--surface-base)", border: "1px solid var(--system-error)" }
+      : { background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)" };
+
   return (
-    <div style={{ padding: "0 30px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, marginTop: 4 }}>
-        <div>
-          <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>MQTT 설정</h2>
-          <p style={{ font: "400 13px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4, marginBottom: 0 }}>Broker 연결 정보 + Pub/Sub 토픽 구조 + 연결 테스트</p>
-        </div>
+    <div>
+      {/* 헤더 */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, marginTop: 4 }}>
+        <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>MQTT 설정</h2>
+        <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onBack}>〈 이전</button>
       </div>
 
       {/* 외부 연동 안내 배너 */}
@@ -3336,126 +3347,66 @@ function MQTTSettings() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
-        {/* 좌측: Broker 연결 */}
+      {/* 중앙 폼 + 우측 연결 테스트 패널 (3상태) */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 28, alignItems: "start" }}>
         <div>
-          <h3 style={{ font: "700 18px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 16 }}>Broker 연결</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div>
-              <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-medium)", marginBottom: 6 }}>Host <span style={{ color: "var(--system-error)" }}>*</span></div>
-              <input className="erut-field" value={host} onChange={(e) => setHost(e.target.value)} style={{ width: "100%" }}/>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div>
-                <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-medium)", marginBottom: 6 }}>Port <span style={{ color: "var(--system-error)" }}>*</span></div>
-                <input className="erut-field" value={mqttPort} onChange={(e) => setMqttPort(e.target.value)} style={{ width: "100%" }}/>
-              </div>
-              <div>
-                <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-medium)", marginBottom: 6 }}>Protocol</div>
-                <select className="erut-field" defaultValue="MQTT v5" style={{ width: "100%" }}>
-                  <option>MQTT v5</option><option>MQTT v3.1.1</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-medium)", marginBottom: 6 }}>Client ID</div>
-              <input className="erut-field" defaultValue="erut-client-mcf001" style={{ width: "100%" }}/>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div>
-                <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-medium)", marginBottom: 6 }}>Username</div>
-                <input className="erut-field" defaultValue="erut-publisher" style={{ width: "100%" }}/>
-              </div>
-              <div>
-                <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-medium)", marginBottom: 6 }}>Password</div>
-                <input className="erut-field" type="password" defaultValue="••••••••••" style={{ width: "100%" }}/>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 20px" }}>
+            <div>{label("Host", true)}<input className="erut-field" value={host} onChange={(e) => setHost(e.target.value)} placeholder="예: rabbitmq.erut.local" style={{ width: "100%" }}/></div>
+            <div>{label("Port", true)}<input className="erut-field" value={mqttPort} onChange={(e) => setMqttPort(e.target.value)} placeholder="기본 1883" style={{ width: "100%" }}/></div>
+            <div>{label("Username")}<input className="erut-field" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="입력" style={{ width: "100%" }}/></div>
+            <div>{label("Password")}
+              <div style={{ position: "relative" }}>
+                <input className="erut-field" type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="입력" style={{ width: "100%", paddingRight: 44 }}/>
+                <button onClick={() => setShowPw(s => !s)} title={showPw ? "숨김" : "표시"} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--content-low)", font: "700 11px/1 var(--font-kr)" }}>{showPw ? "숨김" : "표시"}</button>
               </div>
             </div>
           </div>
-          <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 16 }}><span style={{ color: "var(--system-error)" }}>*</span> 필수 항목 (Host · Port)</div>
-          <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-            <button className={"erut-btn erut-btn--m " + (canTest ? "erut-btn--default" : "erut-btn--disabled")} disabled={!canTest} title={canTest ? "" : "Host·Port 입력 필요"} onClick={canTest ? () => setTested(true) : undefined}>연결 테스트</button>
-            <button className="erut-btn erut-btn--emphasis erut-btn--m">저장</button>
+          <div style={{ borderTop: "1px solid var(--border-low)", margin: "20px 0" }}/>
+          <div style={{ width: "calc(50% - 10px)" }}>
+            {label("Client ID")}
+            <input className="erut-field is-disabled" value="" readOnly tabIndex={-1} placeholder="자동 입력" style={{ width: "100%" }}/>
+            <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4 }}>연결 시 브로커 세션 식별자 자동 부여 · 수정 불가</div>
           </div>
+          <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 20 }}>프로토콜 = MQTT v5 고정 (백엔드 · config 관리)</div>
+        </div>
 
-          {!tested ? (
-            <div style={{ marginTop: 20, background: "var(--surface-subtle-2)", border: "1px dashed var(--border-medium)", padding: "16px", textAlign: "center", font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-              <strong style={{ color: "var(--content-medium)" }}>"연결 테스트"</strong>를 실행하면 브로커 연결 결과가 표시됩니다.
-            </div>
-          ) : (
-            <div style={{ marginTop: 20, background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", padding: "12px 16px", display: "flex", alignItems: "center", gap: 10 }}>
-              <span className="erut-led is-green"><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
-              <div style={{ flex: 1 }}>
-                <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--system-success)" }}>연결 성공</div>
-                <div style={{ font: "400 12px/1.4 var(--font-kr)", color: "var(--content-low)", marginTop: 2 }}>2026-05-21 14:23:05 · Latency 8 ms · 세션 ID: erut-mcf001-a3f</div>
+        <div style={{ ...panelStyle, padding: "20px 18px", display: "flex", flexDirection: "column", minHeight: 320 }}>
+          {testState === "default" && (
+            <>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--content-emphasis)" strokeWidth="1.5" style={{ marginBottom: 10 }}><polyline points="4,12 10,18 20,6"/></svg>
+              <div style={{ font: "700 14px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>PC↔서버의 연결 테스트를 시작합니다. <span style={{ color: "var(--content-emphasis)" }}>호스트, 포트를 입력 후 버튼을 클릭해 주세요.</span></div>
+              <div style={{ font: "400 12px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 12 }}>호스트 주소와 포트 번호가 서버 설정과 일치하는지 확인해 주세요. 인증이 필요한 경우, 클라이언트 ID와 비밀번호가 정확하게 입력되었는지 점검해 주세요.</div>
+              <div style={{ flex: 1 }}/>
+              <button className="erut-btn erut-btn--default erut-btn--m" style={{ width: "100%", marginTop: 16 }} onClick={runTest}>연결 테스트</button>
+            </>
+          )}
+          {testState === "positive" && (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--system-success)" }}/>
+                <span style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-success)" }}>정상</span>
               </div>
-            </div>
+              <div style={{ font: "700 14px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>MQTT 브로커와 성공적으로 연결되었습니다.</div>
+              <div style={{ font: "400 12px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 12 }}>실시간 데이터 발행(Publish) 및 명령 수신(Subscribe) 준비가 완료되었습니다. 상태바에서 연결 상태를 상시 확인할 수 있습니다.</div>
+              <div style={{ flex: 1 }}/>
+              <div style={{ borderTop: "1px solid var(--border-low)", margin: "16px 0 12px" }}/>
+              <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%" }}>저장</button>
+            </>
+          )}
+          {testState === "error" && (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--system-error)" }}/>
+                <span style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>연결 실패</span>
+              </div>
+              <div style={{ font: "700 14px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>브로커 서버에 접속할 수 없습니다.</div>
+              <div style={{ font: "400 12px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 12 }}>호스트 주소와 포트가 정확한지, 혹은 사용자 인증 정보(ID/PW)가 일치하는지 다시 확인해 주세요.</div>
+              <div style={{ flex: 1 }}/>
+              <div style={{ borderTop: "1px solid var(--border-low)", margin: "16px 0 12px" }}/>
+              <button className="erut-btn erut-btn--default erut-btn--m" style={{ width: "100%" }} onClick={() => setTestState("default")}>재시도</button>
+            </>
           )}
         </div>
-
-        {/* 우측: 토픽 구조 */}
-        <div>
-          <h3 style={{ font: "700 18px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 16 }}>토픽 구조</h3>
-          <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", borderLeft: "3px solid var(--brand-primary)", padding: "14px 18px", marginBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <span className="erut-badge">Publish</span>
-              <span style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-high)" }}>측정 데이터 전송</span>
-            </div>
-            <div style={{ font: "400 13px/1 'Consolas', monospace", color: "var(--content-emphasis)", background: "var(--surface-base)", padding: "8px 12px", border: "1px solid var(--border-low)", letterSpacing: 0 }}>erut/data/{`{SN}`}/{`{ch}`}</div>
-            <div style={{ marginTop: 8, font: "400 12px/1.6 var(--font-kr)", color: "var(--content-low)" }}>
-              <strong style={{ color: "var(--content-medium)" }}>{`{SN}`}</strong>: 장비 시리얼 · <strong style={{ color: "var(--content-medium)" }}>{`{ch}`}</strong>: 채널 번호 (1~64)<br/>
-              QoS 1 · Retain false · 약 16 KB/sec 채널당
-            </div>
-          </div>
-          <div style={{ background: "var(--surface-subtle-2)", border: "1px solid var(--border-medium)", borderLeft: "3px solid var(--system-info)", padding: "14px 18px", marginBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <span className="erut-badge" style={{ background: "var(--system-info)" }}>Subscribe</span>
-              <span style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-high)" }}>원격 명령 수신</span>
-            </div>
-            <div style={{ font: "400 13px/1 'Consolas', monospace", color: "var(--system-info)", background: "var(--surface-base)", padding: "8px 12px", border: "1px solid var(--border-low)", letterSpacing: 0 }}>erut/command/{`{SN}`}</div>
-            <div style={{ marginTop: 8, font: "400 12px/1.6 var(--font-kr)", color: "var(--content-low)" }}>
-              지원 명령: <strong style={{ color: "var(--content-medium)" }}>start · stop · pause · calibrate · ack</strong><br/>
-              QoS 2 · 명령 검증 후 응답 ack 발송
-            </div>
-          </div>
-
-          <h4 style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: "16px 0 10px" }}>실시간 트래픽</h4>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-            <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px", textAlign: "center" }}>
-              <div style={{ font: "700 22px/1 var(--font-kr)", color: "var(--brand-primary)" }}>1.2 MB/s</div>
-              <div style={{ font: "700 11px/1 var(--font-kr)", color: "var(--content-low)", marginTop: 4 }}>송신 (Publish)</div>
-            </div>
-            <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px", textAlign: "center" }}>
-              <div style={{ font: "700 22px/1 var(--font-kr)", color: "var(--system-info)" }}>240 B/s</div>
-              <div style={{ font: "700 11px/1 var(--font-kr)", color: "var(--content-low)", marginTop: 4 }}>수신 (Subscribe)</div>
-            </div>
-            <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "10px 12px", textAlign: "center" }}>
-              <div style={{ font: "700 22px/1 var(--font-kr)", color: "var(--content-high)" }}>8 ms</div>
-              <div style={{ font: "700 11px/1 var(--font-kr)", color: "var(--content-low)", marginTop: 4 }}>Round-trip</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 서버 송신 상태 (store-and-forward) — 미니 PC ↔ 서버. 끊김 시 로컬 보관 → 재연결 시 FIFO 자동 재송신 */}
-      <div style={{ marginTop: 24 }}>
-        <h3 style={{ font: "700 18px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 4 }}>서버 송신 상태 <span style={{ font: "400 12px/1 var(--font-kr)", color: "var(--content-low)" }}>(store-and-forward · 미니 PC ↔ 서버)</span></h3>
-        <div style={{ font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 12 }}>서버 연결이 끊겨도 측정 데이터는 로컬에 보관(pending)되고, 재연결 시 FIFO 순서로 자동 재송신됩니다. 상태바 MQTT 표시와 동기.</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-          <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--system-success)", flexShrink: 0 }}/>
-            <div><div style={{ font: "700 13px/1.2 var(--font-kr)", color: "var(--system-success)" }}>연결됨</div><div style={{ font: "400 11px/1.4 var(--font-kr)", color: "var(--content-low)", marginTop: 2 }}>실시간 송신 정상</div></div>
-          </div>
-          <div style={{ background: "var(--surface-base)", border: "1px solid var(--system-caution)", padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--system-caution)", flexShrink: 0 }}/>
-            <div><div style={{ font: "700 13px/1.2 var(--font-kr)", color: "var(--system-caution)" }}>끊김</div><div style={{ font: "400 11px/1.4 var(--font-kr)", color: "var(--content-low)", marginTop: 2 }}>로컬 보관 · 송신 대기 <strong style={{ color: "var(--content-high)" }}>128건</strong></div></div>
-          </div>
-          <div style={{ background: "var(--surface-base)", border: "1px solid var(--system-info)", padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--system-info)", flexShrink: 0 }}/>
-            <div><div style={{ font: "700 13px/1.2 var(--font-kr)", color: "var(--system-info)" }}>재연결</div><div style={{ font: "400 11px/1.4 var(--font-kr)", color: "var(--content-low)", marginTop: 2 }}>자동 재송신 · 송신 중 <strong style={{ color: "var(--content-high)" }}>64건</strong></div></div>
-          </div>
-        </div>
-        <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 8 }}>※ 백엔드 연동 필요 — 현재 프로토타입은 상태 시각화만(mqttPending 0).</div>
       </div>
     </div>
   );
@@ -3541,32 +3492,20 @@ function buildTargetForm(target) {
 
 window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   const targets = window.MOCK.targets;
-  // v8.5: initialMode === "new" → 신규 등록 폼 진입 (selectedId null + 빈 폼)
   const isNewMode = initialMode === "new";
   const [selectedId, setSelectedId] = $s(isNewMode ? null : (targetId || (targets[0] && targets[0].id)));
   const [search, setSearch]         = $s("");
   const initialTarget = isNewMode ? null : (targets.find(t => t.id === selectedId) || targets[0]);
   const [form, setForm]             = $s(isNewMode ? buildEmptyTargetForm() : buildTargetForm(initialTarget));
-  const [autoPRF, setAutoPRF]       = $s(true);
-  const [prfManual, setPrfManual]   = $s(2000);
-  // v18.1: 채널 배치 마법사 폐기 (A-scan은 좌표 정보 없음)
-  // v9.27 Wave B (#6): 프리셋 모달 + 저장 confirm 모달
-  const [showPresetModal, setShowPresetModal] = $s(false);
-  const [showSaveConfirm, setShowSaveConfirm] = $s(false);
-  const [isFromPreset, setIsFromPreset] = $s(false);
-  const [saveAsPreset, setSaveAsPreset] = $s(false);
+  // 프리셋: 우측 상시 패널에서 1개만 선택. 선택 시 파트2·3 즉시 반영, 재클릭 시 해제 + 전체 clear.
   const [selectedPresetId, setSelectedPresetId] = $s(null);
-  const [presetSearch, setPresetSearch] = $s("");   // 프리셋 모달 검색/필터
-  const [presetName, setPresetName]     = $s("");   // 프리셋으로 저장 시 프리셋명 (프리셋 코드 없음)
-  // v9.27 Wave B fix: '+새 검사 대상 추가' 클릭 시 입력 초기화 confirm
+  // '+ 새 검사 대상' 클릭 시 입력 초기화 confirm
   const [showResetConfirm, setShowResetConfirm] = $s(false);
   // 저장 시 필수 미입력 항목을 입력 필드 error 상태로 표시
   const [saveErr, setSaveErr] = $s(false);
 
-  // 선택된 target 변경 시 form 리셋 (selectedId null = 신규 모드)
   React.useEffect(() => {
-    // v9.27 Wave B fix #1: selectedId 변경 시 isFromPreset 리셋 — 신규 작성 시 '프리셋으로 저장' 체크박스 정상 표시
-    setIsFromPreset(false);
+    setSelectedPresetId(null);
     if (!selectedId) { setForm(buildEmptyTargetForm()); return; }
     const t = targets.find(x => x.id === selectedId);
     setForm(buildTargetForm(t));
@@ -3574,40 +3513,39 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
 
   const setField = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  // PRF 자동 계산
-  const prfCalc = window.calcPRF(parseFloat(form.th) || 10, form.material);
-  const prfValue = autoPRF ? prfCalc.prf : prfManual;
-
-  // 필수 항목 검증 (대상명·DAQ·형태·두께·소재·유체)
-  const mcBoard = form.mcBoard || "MCuF-001";   // 검사 대상이 속한 DAQ (기본값 첫 보드)
-  const requiredOk = !!(form.name && mcBoard && form.shape && form.th && form.material && form.fluid);
+  // 필수 항목 검증 (대상명·DAQ·형태·두께·허용 감육·소재·유체 = 7)
+  const mcBoard = form.mcBoard || "MCuF-001";
+  const requiredOk = !!(form.name && mcBoard && form.shape && form.th && form.allow && form.material && form.fluid);
   const errStyle = (v) => (saveErr && !v ? { borderColor: "var(--system-error)" } : {});
 
-  // 좌측 리스트 검색 필터
   const filteredTargets = search
     ? targets.filter(t => t.name.includes(search) || (t.desc || "").includes(search) || (buildTargetForm(t).code || "").includes(search))
     : targets;
 
-  // 좌측 카드 short desc 생성
-  const shortDesc = (t) => {
-    const d = buildTargetForm(t);
-    if (d.shape === "배관")        return `탄소강 배관 · 외경 ${d.od} / 두께 ${d.th} mm · ${d.fluid}`;
-    if (d.shape.startsWith("탱크"))return `${d.material.split(" ")[0]} 탱크 · ∅ ${d.od} mm · ${d.fluid.split(" — ")[1] || d.fluid}`;
-    if (d.shape === "플랜지")      return `플랜지 · ∅ ${d.od} mm · ${d.material.split(" ")[0]}`;
-    if (d.shape === "Dome 헤드")   return `반구형 헤드 · ∅ ${d.od} mm · ${d.fluid.split(" — ")[1] || d.fluid}`;
-    if (d.shape === "용접부")      return `용접부 · 직선 ${d.length} mm · ${d.material.split(" ")[0]}`;
-    return t.desc || "";
+  // 표준 프리셋 (앱 내장 라이브러리) — 카드 = 프리셋명 + 형태·두께. data = 파트2 형상 + 파트3 소재·운영만 (파트1 기본 정보 제외).
+  const presets = [
+    { id: "p1", name: "탄소강 배관 2",           shape: "배관",         th: "100", data: { shape: "배관", th: "100", allow: "3.0", od: "320", idim: "120", length: "6000", material: "탄소강 (S355)", fluid: "고온 스팀", temp: "380", press: "4.2" } },
+    { id: "p2", name: "고온 스팀에 적합한 프리셋", shape: "플랜지",       th: "30",  data: { shape: "플랜지", th: "30", allow: "3.0", od: "200", idim: "140", length: "", material: "탄소강 (S355)", fluid: "고온 스팀", temp: "200", press: "3.5" } },
+    { id: "p3", name: "상용 탱크 스펙",           shape: "탱크 (원통형)", th: "25",  data: { shape: "탱크 (원통형)", th: "25", allow: "2.5", od: "800", idim: "750", length: "400", material: "스테인레스 (304)", fluid: "액체 — 물", temp: "60", press: "1.0" } },
+    { id: "p4", name: "우선 설정용",             shape: "용접부",       th: "15",  data: { shape: "용접부", th: "15", allow: "2.0", od: "", idim: "", length: "800", material: "탄소강 (S355)", fluid: "고온 스팀", temp: "150", press: "2.0" } },
+    { id: "p5", name: "스뎅",                    shape: "배관",         th: "50",  data: { shape: "배관", th: "50", allow: "2.0", od: "120", idim: "20", length: "3000", material: "스테인레스 (304)", fluid: "액체 — 화학약품", temp: "40", press: "1.5" } },
+  ];
+
+  const clickPreset = (p) => {
+    if (selectedPresetId === p.id) {
+      setSelectedPresetId(null);
+      setForm(buildEmptyTargetForm());
+    } else {
+      setSelectedPresetId(p.id);
+      setForm(f => ({ ...f, ...p.data }));
+    }
   };
 
-  // v9.27 Wave B fix: 프리셋 데이터에 실제 form 매핑 추가 — '불러오기' 시 input field 자동 적용
-  const presets = [
-    { id: "p1", name: "탄소강 배관 6~12mm @ 고온 스팀", params: "5 MHz · 28 dB · Pulser 200V · PRF 2,000 Hz · DAC ON", uses: 12, last: "2026-05-19", applied: true,
-      data: { shape: "배관", th: "10", od: "300", material: "탄소강 (S355)", fluid: "고온 스팀", std: "KS B 0817", temp: "380", press: "4.2", allow: "2.0" } },
-    { id: "p2", name: "탄소강 배관 표준 (범용)",         params: "5 MHz · 26 dB · Pulser 180V · PRF 2,000 Hz",          uses: 28, last: "2026-05-21", applied: false,
-      data: { shape: "배관", th: "8",  od: "200", material: "탄소강 (S355)", fluid: "액체 — 물",   std: "KS B 0817", temp: "25",  press: "1.0", allow: "1.5" } },
-    { id: "p3", name: "탄소강 고압 배관 (압력 ≥ 4 MPa)", params: "2.25 MHz · 32 dB · TCG ON · PRF 1,000 Hz",            uses:  5, last: "2026-05-15", applied: false,
-      data: { shape: "배관", th: "14", od: "400", material: "탄소강 (S355)", fluid: "고온 스팀", std: "ASME Sec.V", temp: "350", press: "5.5", allow: "3.0" } },
-  ];
+  const resetToNew = () => {
+    const isDirty = selectedPresetId || Object.values(form).some(v => v !== "" && v != null);
+    if (isDirty) { setShowResetConfirm(true); }
+    else { setSelectedId(null); setForm(buildEmptyTargetForm()); setSelectedPresetId(null); }
+  };
 
   const formLabel = (txt, req) => (
     <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>
@@ -3617,97 +3555,54 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   const sectionHeader = (txt) => (
     <div style={{ gridColumn: "1 / -1", font: "700 12px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "12px 0 4px", borderBottom: "1px solid var(--border-low)" }}>{txt}</div>
   );
+  const tabStyle = (active) => ({
+    display: "block", width: "100%", textAlign: "center", padding: "11px 20px",
+    font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em",
+    color: active ? "var(--content-emphasis)" : "var(--content-medium)",
+    background: active ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "transparent",
+    border: "none", borderLeft: "3px solid " + (active ? "var(--brand-primary)" : "transparent"),
+    cursor: "pointer",
+  });
 
   return (
-    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "360px 1fr", gap: 0, padding: 0, height: "100%" }}>
-      {/* ───── 좌측: 검사 대상 카드 리스트 ───── */}
+    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "300px 1fr 340px", gap: 0, padding: 0, height: "100%" }}>
+      {/* ───── 좌측: 검사 대상 리스트 ───── */}
       <div style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-medium)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-            <h3 style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>검사 대상</h3>
-            <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>{targets.length}개</span>
-          </div>
-          <input
-            className="erut-field"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="검색 (대상명·소재·코드)"
-            style={{ width: "100%", height: 32, fontSize: 12 }}
-          />
-          <button
-            className="erut-btn erut-btn--emphasis erut-btn--sm"
-            style={{ width: "100%", marginTop: 8 }}
-            onClick={() => {
-              // v9.27 Wave B fix #2: 입력된 데이터(또는 프리셋)가 있으면 confirm. 없으면 즉시 초기화
-              const isDirty = isFromPreset || Object.values(form).some(v => v !== "" && v != null);
-              if (isDirty) {
-                setShowResetConfirm(true);
-              } else {
-                setSelectedId(null);
-                setForm(buildEmptyTargetForm());
-              }
-            }}
-          >+ 새 검사 대상 추가</button>
+          <input className="erut-field" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="검사 대상명, 코드" style={{ width: "100%", height: 36, fontSize: 12 }}/>
         </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "8px 12px" }}>
-          {filteredTargets.map((t) => {
-            const isSelected = t.id === selectedId;
-            return (
-              <div
-                key={t.id}
-                onClick={() => setSelectedId(t.id)}
-                style={{
-                  background: isSelected ? "linear-gradient(rgba(34,133,239,0.06),rgba(34,133,239,0.06)), var(--surface-base)" : "var(--surface-base)",
-                  border: isSelected ? "1px solid var(--border-emphasis)" : "1px solid var(--border-medium)",
-                  padding: "10px 12px",
-                  marginBottom: 8,
-                  cursor: "pointer",
-                }}
-              >
-                <div style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: isSelected ? "var(--content-emphasis)" : "var(--content-high)", marginBottom: 4 }}>{t.name}</div>
-                <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{shortDesc(t)}</div>
-              </div>
-            );
-          })}
-          {selectedId === null && (
-            <div style={{ background: "linear-gradient(rgba(34,133,239,0.06),rgba(34,133,239,0.06)), var(--surface-base)", border: "1px dashed var(--border-emphasis)", padding: "10px 12px", marginBottom: 8 }}>
-              <div style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", marginBottom: 4 }}>새 검사 대상 (미저장)</div>
-              <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>우측 폼에서 정보 입력 후 저장</div>
-            </div>
-          )}
+        <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+          <button onClick={() => setSelectedId(null)} style={tabStyle(selectedId === null)}>신규 검사 대상</button>
+          {filteredTargets.map((t) => (
+            <button key={t.id} onClick={() => setSelectedId(t.id)} style={tabStyle(t.id === selectedId)}>{t.name}</button>
+          ))}
+        </div>
+        <div style={{ padding: "16px 20px", borderTop: "1px solid var(--border-medium)" }}>
+          <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%" }} onClick={resetToNew}>+ 새 검사 대상</button>
         </div>
       </div>
 
-      {/* ───── 우측: 상세 입력 폼 + 프리셋 ───── */}
+      {/* ───── 중앙: 입력 폼 ───── */}
       <div style={{ padding: "20px 30px", overflowY: "auto" }}>
         {/* 헤더 */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-          <div>
-            <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>
-              {form.name || "(신규)"} · {selectedId ? "편집" : "신규 등록"}
-            </h2>
-            <p style={{ font: "400 13px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4, marginBottom: 0 }}>기본 정보 · 형상 · 운영 환경 · 표준 프리셋</p>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>
+            {selectedId ? "검사 대상 편집" : "검사 대상 추가"}
+          </h2>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onBack}>〈 이전</button>
             {selectedId && (
-              <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ color: "var(--system-error)" }}>검사 대상 삭제</button>
+              <button className="erut-btn erut-btn--disabled erut-btn--sm" disabled title="검사 대상에 연결된 탐촉자가 없어야 삭제할 수 있습니다.">삭제</button>
             )}
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => setShowPresetModal(true)}>프리셋</button>
-            <button
-              className="erut-btn erut-btn--sm erut-btn--emphasis"
-              title="필수 항목(*) 입력 필요"
-              onClick={() => { if (requiredOk) { setSaveErr(false); setShowSaveConfirm(true); } else setSaveErr(true); }}
-            >
-              저장
-            </button>
+            <button className="erut-btn erut-btn--sm erut-btn--emphasis" title="필수 항목(*) 입력 필요" onClick={() => { if (requiredOk) setSaveErr(false); else setSaveErr(true); }}>저장</button>
           </div>
         </div>
 
-        {/* 검사 대상 항목 입력 폼 (3열 grid) */}
+        {/* 입력 폼 (3열 grid) */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px 18px" }}>
           {sectionHeader("기본 정보")}
           <div>
-            {formLabel("대상명", true)}
+            {formLabel("검사 대상명", true)}
             <input className="erut-field" value={form.name} onChange={(e) => setField("name", e.target.value)} style={{ width: "100%", ...errStyle(form.name) }}/>
           </div>
           <div>
@@ -3717,14 +3612,17 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             </select>
           </div>
           <div>
-            {formLabel("코드")}
+            {formLabel("고유 코드")}
             <input className="erut-field is-disabled" value={form.code} readOnly tabIndex={-1} style={{ width: "100%" }}/>
             <div style={{ font: "400 9px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 3 }}>UUID 자동 부여 · 수정 불가</div>
           </div>
-          {/* v18.1: 채널 배치 마법사 폐기 — A-scan은 좌표 정보 없음. 도면 thumbnail만 유지 */}
           <div>
-            <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>도면 thumbnail</div>
-            <button className="erut-btn erut-btn--default erut-btn--sm" style={{ width: "100%" }}>파일 첨부 ↑</button>
+            {formLabel("도면")}
+            <button className="erut-btn erut-btn--default erut-btn--sm" style={{ width: "100%" }}>찾기</button>
+          </div>
+          <div style={{ gridColumn: "span 2" }}>
+            {formLabel("비고")}
+            <input className="erut-field" value={form.note} onChange={(e) => setField("note", e.target.value)} placeholder="자유 입력" style={{ width: "100%" }}/>
           </div>
 
           {sectionHeader("형상")}
@@ -3736,12 +3634,16 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             </select>
           </div>
           <div>
-            {formLabel("외경 (mm)")}
-            <input className="erut-field" value={form.od} onChange={(e) => setField("od", e.target.value)} style={{ width: "100%" }}/>
-          </div>
-          <div>
             {formLabel("두께 (mm)", true)}
             <input className="erut-field" value={form.th} onChange={(e) => setField("th", e.target.value)} style={{ width: "100%", ...errStyle(form.th) }}/>
+          </div>
+          <div>
+            {formLabel("허용 감육 (mm)", true)}
+            <input className="erut-field" type="number" min="0" step="0.1" value={form.allow} onChange={(e) => setField("allow", e.target.value)} style={{ width: "100%", ...errStyle(form.allow) }}/>
+          </div>
+          <div>
+            {formLabel("외경 (mm)")}
+            <input className="erut-field" value={form.od} onChange={(e) => setField("od", e.target.value)} style={{ width: "100%" }}/>
           </div>
           <div>
             {formLabel("내경 (mm)")}
@@ -3750,13 +3652,6 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
           <div>
             {formLabel("길이 (mm)")}
             <input className="erut-field" value={form.length} onChange={(e) => setField("length", e.target.value)} style={{ width: "100%" }}/>
-          </div>
-          <div>
-            {formLabel("허용 감육")}
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input className="erut-field" type="number" min="0" step="0.1" value={form.allow} onChange={(e) => setField("allow", e.target.value)} style={{ flex: 1, minWidth: 0 }}/>
-              <span style={{ font: "700 12px/1 var(--font-kr)", color: "var(--content-medium)" }}>mm</span>
-            </div>
           </div>
 
           {sectionHeader("소재 · 유체 · 운영 환경")}
@@ -3783,75 +3678,41 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             {formLabel("운영 압력 (MPa)")}
             <input className="erut-field" value={form.press} onChange={(e) => setField("press", e.target.value)} style={{ width: "100%" }}/>
           </div>
-          <div>
-            {formLabel("비고")}
-            <input className="erut-field" value={form.note} onChange={(e) => setField("note", e.target.value)} placeholder="자유 입력" style={{ width: "100%" }}/>
-          </div>
-
-          {/* 측정 파라미터(PRF 등) 섹션 삭제 — 측정 파라미터는 [4-3-1] 채널 설정에서 관리(중복 제거) */}
         </div>
 
-        {/* v9.27 Wave B: 표준 프리셋 영역을 페이지에서 제거 → 모달로 이동 (상단 '프리셋' 버튼 클릭 시 표시) */}
+        {saveErr && (
+          <div style={{ marginTop: 14, font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>필수 7개(대상명 · DAQ · 형태 · 두께 · 허용 감육 · 소재 · 유체)를 입력해 주세요.</div>
+        )}
       </div>
 
-      {/* v18.1: 채널 배치 마법사 모달 폐기 */}
-
-      {/* v9.27 Wave B: 프리셋 선택 모달 */}
-      {showPresetModal && (
-        <window.Modal
-          title="검사체별 표준 프리셋"
-          onClose={() => { setShowPresetModal(false); setSelectedPresetId(null); }}
-          footer={(
-            <>
-              <window.Button variant="subtle" size="sm" onClick={() => { setShowPresetModal(false); setSelectedPresetId(null); }}>닫기</window.Button>
-              <window.Button
-                variant={selectedPresetId ? "emphasis" : "disabled"}
-                size="sm"
-                onClick={selectedPresetId ? () => {
-                  // v9.27 Wave B fix: 선택된 프리셋의 data 필드를 form에 적용
-                  const preset = presets.find(p => p.id === selectedPresetId);
-                  if (preset && preset.data) {
-                    setForm(f => ({ ...f, ...preset.data }));
-                  }
-                  setIsFromPreset(true);
-                  setShowPresetModal(false);
-                  setSelectedPresetId(null);
-                } : undefined}
-              >불러오기</window.Button>
-            </>
-          )}
-        >
-          <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
-            검사 대상 정보(소재·두께·유체)에 맞는 프리셋을 선택하면 측정 파라미터(MHz·dB·Pulser·Gate·DAC 등)가 일괄 적용됩니다.
+      {/* ───── 우측: 검사 대상 설정 프리셋 (상시 표시) ───── */}
+      <div style={{ background: "var(--surface-subtle-1)", borderLeft: "1px solid var(--border-medium)", display: "flex", flexDirection: "column", overflowY: "auto" }}>
+        <div style={{ padding: "20px 16px 12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--content-medium)" strokeWidth="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <h3 style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>검사 대상 설정 프리셋</h3>
           </div>
-          {/* #23: 프리셋 검색/필터 — 개수 증가 시 탐색 용이 */}
-          <input className="erut-field" value={presetSearch} onChange={(e) => setPresetSearch(e.target.value)} placeholder="프리셋명 · 파라미터 검색" style={{ width: "100%" }}/>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-            {presets.filter(p => !presetSearch || p.name.includes(presetSearch) || p.params.includes(presetSearch)).map((p) => {
-              const isSel = selectedPresetId === p.id;
-              return (
-                <div
-                  key={p.id}
-                  onClick={() => setSelectedPresetId(p.id)}
-                  style={{
-                    background: isSel ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "var(--surface-base)",
-                    border: isSel ? "1px solid var(--border-emphasis)" : "1px solid var(--border-medium)",
-                    padding: "10px 12px",
-                    position: "relative",
-                    cursor: "pointer",
-                  }}
-                >
-                  <div style={{ font: "700 12px/1.2 var(--font-kr)", letterSpacing: ".02em", color: isSel ? "var(--content-emphasis)" : "var(--content-high)", marginBottom: 4 }}>{p.name}</div>
-                  <div style={{ font: "400 10px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{p.params}</div>
-                  <div style={{ marginTop: 6, font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>사용 {p.uses}회 · 마지막 {p.last}</div>
-                </div>
-              );
-            })}
-          </div>
-        </window.Modal>
-      )}
+          <div style={{ font: "400 11px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>저장된 프리셋을 선택하여 형상과 운영 환경 설정을 간편하게 불러올 수 있습니다. 반복되는 입력을 줄여 등록 시간을 단축해 보세요.</div>
+        </div>
+        <div style={{ flex: 1, padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+          {presets.map((p) => {
+            const isSel = selectedPresetId === p.id;
+            return (
+              <div key={p.id} onClick={() => clickPreset(p)} style={{
+                background: isSel ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "var(--surface-base)",
+                border: isSel ? "1px solid var(--border-emphasis)" : "1px solid var(--border-medium)",
+                padding: "12px 14px", cursor: "pointer",
+                display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10,
+              }}>
+                <span style={{ font: "700 13px/1.2 var(--font-kr)", letterSpacing: ".02em", color: isSel ? "var(--content-emphasis)" : "var(--content-high)" }}>{p.name}</span>
+                <span style={{ font: "400 11px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", whiteSpace: "nowrap" }}>{p.shape} {p.th}mm</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
-      {/* v9.27 Wave B fix #2: 입력 초기화 confirm 모달 */}
+      {/* 입력 초기화 confirm 모달 */}
       {showResetConfirm && (
         <window.Modal
           title="입력 초기화"
@@ -3860,10 +3721,9 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
             <>
               <window.Button variant="subtle" size="sm" onClick={() => setShowResetConfirm(false)}>닫기</window.Button>
               <window.Button variant="emphasis" size="sm" onClick={() => {
-                // 폼 초기화 + 프리셋 상태 리셋
                 setSelectedId(null);
                 setForm(buildEmptyTargetForm());
-                setIsFromPreset(false);
+                setSelectedPresetId(null);
                 setShowResetConfirm(false);
               }}>확인</window.Button>
             </>
@@ -3872,55 +3732,6 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
           <div style={{ font: "400 13px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
             입력한 정보가 초기화됩니다. 진행하시겠습니까?
           </div>
-        </window.Modal>
-      )}
-
-      {/* v9.27 Wave B: 저장 confirm 모달 — 컨텍스트별 동적 문구. 프리셋에서 불러온 경우 체크박스 미표시 */}
-      {showSaveConfirm && (
-        <window.Modal
-          title="저장 확인"
-          onClose={() => setShowSaveConfirm(false)}
-          footer={(
-            <>
-              <window.Button variant="subtle" size="sm" onClick={() => setShowSaveConfirm(false)}>닫기</window.Button>
-              <window.Button variant="emphasis" size="sm" onClick={() => {
-                // mockup — 실제 저장 로직은 백엔드. 모달 닫기 + 상태 초기화
-                setShowSaveConfirm(false);
-                setIsFromPreset(false);
-                setSaveAsPreset(false);
-              }}>저장</window.Button>
-            </>
-          )}
-        >
-          <div style={{ font: "400 13px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
-            {selectedId
-              ? "변경 사항을 저장하시겠습니까?"
-              : "검사 대상을 추가하시겠습니까?"}
-          </div>
-          {!isFromPreset && (
-            <div>
-              {/* #1: '프리셋으로 저장' 체크 시 프리셋명 입력 필드 표시 (프리셋 코드 없음) */}
-              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                <span
-                  className={"erut-cb__box" + (saveAsPreset ? " is-on" : "")}
-                  onClick={() => setSaveAsPreset(s => !s)}
-                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
-                >
-                  {saveAsPreset && <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="#FFFFFF" strokeWidth="2"><polyline points="3,8 7,12 13,4"/></svg>}
-                </span>
-                <span style={{ font: "400 12px/1.2 var(--font-kr)", color: "var(--content-medium)" }}>프리셋으로 저장</span>
-              </label>
-              {saveAsPreset && (
-                <div style={{ marginTop: 10 }}>
-                  <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>프리셋명 <span style={{ color: "var(--system-error)" }}>*</span></div>
-                  <input className="erut-field" value={presetName} onChange={(e) => setPresetName(e.target.value)} placeholder="예: 탄소강 배관 6~12mm @ 고온 스팀" style={{ width: "100%" }}/>
-                  <div style={{ marginTop: 6, font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-                    프리셋에는 형상 · 소재 · 유체 · 운영 환경 · 측정 파라미터만 저장됩니다 (기본 정보 제외).
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </window.Modal>
       )}
     </div>
