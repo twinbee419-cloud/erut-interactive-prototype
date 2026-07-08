@@ -66,7 +66,7 @@ window.EquipmentConnect = function EquipmentConnect({ onContinue }) {
 };
 
 // =================== Screen 3 · CONNECT FAILED ===================
-// /page/section frame 3 (right): big icon, 2-line message, 재시도 + 장비 연결 설정.
+// /page/section frame 3 (right): big icon, 2-line message, 재시도 + 장비 연결 관리.
 /* ============================================================
    NEW SCREENS (2026-05-26) — Interactive Prototype Extensions
    APPEND-ONLY. Existing screens above this line untouched.
@@ -212,7 +212,7 @@ window.MOCK = {
     { id: 2, channel: 7,  amp: 78, tof: 2.70, thickness: 8.0, nominal: 10, thinMm: 2.0, thinPct: 20.0, ampState: "ok"   },
     { id: 3, channel: 38, amp: 41, tof: 2.85, thickness: 8.4, nominal: 10, thinMm: 1.6, thinPct: 16.0, ampState: "warn" },
   ],
-  // [4] 장비 연결 설정 — DAQ 리스트 (main slide 9 매칭)
+  // [4] 장비 연결 관리 — DAQ 리스트 (main slide 9 매칭)
   mcBoards: [
     { id: "MCF-2024-001", alias: "주력 장비", ip: "10.10.1.5",    port: 8080, type: "OEM-MCuF", channels: 64, freq: 5,  firmware: "v2.4.1", state: "connected", note: "지연 4 ms · 정상" },
     { id: "MCF-2024-002", alias: "보조 장비", ip: "192.168.0.45", port: 8080, type: "OEM-MCu",  channels: 32, freq: 10, firmware: "v2.3.8", state: "warn",      note: "응답 지연 28 ms (높음)" },
@@ -2688,7 +2688,7 @@ window.AnimatedAscan = function AnimatedAscan({
 };
 
 // =================== Screen · [4] EQUIPMENT SETTINGS ===================
-// Layout matches ServiceFlow_Analysis SLIDE 9 [4] 장비 연결 설정 (v2.0).
+// Layout matches ServiceFlow_Analysis SLIDE 9 [4] 장비 연결 관리 (v2.0).
 // 좌측 사이드 메뉴 (220px) + 우측 콘텐츠 영역. 메뉴 3개:
 //   - mc:    DAQ 설정 (목록 / 추가 / 편집 sub-view)
 //   - mqtt:  MQTT 설정
@@ -3064,7 +3064,7 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
     <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 0, padding: 0, height: "100%" }}>
       {/* ───── 좌측 사이드 메뉴 ───── */}
       <div style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", padding: "20px 0" }}>
-        <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "0 20px 14px" }}>장비 연결 설정</div>
+        <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "0 20px 14px" }}>장비 연결 관리</div>
         {menuItems.map((item) => {
           const active = menu === item.id;
           return (

@@ -43,7 +43,7 @@ const TITLE_BY_SCREEN = {
   gate:      "ERUT - Ultrasonic Monitoring System  ·  CH 04 Gate 설정",
   realtime:  "ERUT - Ultrasonic Monitoring System  ·  MCuF-001 · 실시간 스캔 · 3개 대상",
   manage:    "ERUT - Ultrasonic Monitoring System  ·  검사 대상 관리",
-  settings:  "ERUT - Ultrasonic Monitoring System  ·  장비 연결 설정",
+  settings:  "ERUT - Ultrasonic Monitoring System  ·  장비 연결 관리",
   // v18.0: report 스크린 라우팅 폐기 — 모달 전환
 };
 
@@ -84,7 +84,7 @@ function App() {
     return next === cur ? s : { ...s, [id]: next };
   });
 
-  // [4] 장비 연결 설정 진입 시 sub-view 지정용 (예: + 장비 추가 → mc-add)
+  // [4] 장비 연결 관리 진입 시 sub-view 지정용 (예: + 장비 추가 → mc-add)
   const [settingsInitialSubView, setSettingsInitialSubView] = useState(null);
   // 장비 메뉴 'MQTT 설정' 진입 시 초기 탭 지정 (mc | mqtt)
   const [settingsInitialMenu, setSettingsInitialMenu] = useState("mc");
@@ -133,7 +133,7 @@ function App() {
     device:     [{ label: "메인" }, { label: "장비 상세 (MCuF-001)", current: true }],
     realtime:   [{ label: "메인" }, { label: "장비 상세" }, { label: "실시간 스캔", current: true }],
     commission: [{ label: "메인" }, { label: "장비 상세" }, { label: "채널 설정", current: true }],
-    settings:   [{ label: "메인" }, { label: "장비 연결 설정", current: true }],
+    settings:   [{ label: "메인" }, { label: "장비 연결 관리", current: true }],
     manage:     [{ label: "메인" }, { label: "검사 대상 관리", current: true }],
   };
 
@@ -177,7 +177,7 @@ function App() {
     { id: "main",      label: "[1] 메인" },
     { id: "device",    label: "[2] 장비 상세" },
     { id: "commission",label: "[4-3-1] 채널 설정" },
-    { id: "settings",  label: "[4] 장비 연결 설정" },
+    { id: "settings",  label: "[4] 장비 연결 관리" },
     { id: "manage",    label: "[6] 검사 대상 관리" },
     { id: "realtime",  label: "[11] 실시간" },
   ];
