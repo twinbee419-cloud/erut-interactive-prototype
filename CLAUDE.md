@@ -89,7 +89,7 @@ window/window__content · titlebar/winbtn · bar/menubar/menu/toolbar/tb/tb-sep/
 - 메인 기획: `ERUT_ServiceFlow_FixedProbe.html`(고정형). 스캔형: `ERUT_ServiceFlow_Crawler.html`.
 - 흐름: **[0] 프로젝트 선택 → [1] 메인(MC보드 목록) → [2] 장비 상세(검사대상 + 64ch 그리드) → [11] 실시간**. 설정 분기: **[4]** 장비연결(MC보드·MQTT·탐촉자) · **[4-3-1]** 채널 설정 · **[6]** 검사대상 관리 · **[7]** 검사 이력 · **[8]** 설정 · **[18]** 채널 보고서.
 - **측정 제어 = MC보드 단위**([2] 배너 + 툴바 활성 보드). 탐촉자 개별 start/stop 불가(64ch 동시 PRF).
-- 단축키: F6 시작 · Space 일시정지 · F7 중지 · Ctrl+S 저장 · Ctrl+O 열기 · Ctrl+P 보고서.
+- 단축키: F6 시작 · F7 중지 · Ctrl+S 저장 · Ctrl+O 열기 · Ctrl+P 보고서. (일시정지 폐지 — 측정=시작/중지만). 상태바 우측 = 측정 제어 단축키(F6 시작·F7 중지) 상시 표시.
 
 ## 기술 스택 (구현 단계 — 참고)
 - .NET 4.8 · WinForms · SQLite(WAL 필수) · Helix Toolkit(3D) · OxyPlot · AssimpNet · Newtonsoft.Json · NLog · LZ4(선택).

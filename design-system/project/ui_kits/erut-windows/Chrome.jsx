@@ -170,7 +170,8 @@ window.StatusBar = function StatusBar({
       )}
       <span style={{flex:1}}/>
       {/* v21.0: 교정 임박 배지 제거 → 메뉴바 통합 알림 센터(NotificationCenter)로 흡수. calibrationAlert prop은 back-compat용으로 무시 */}
-      <span className="erut-statusbar__text">{version}</span>
+      {/* 우측: 앱 버전 → 측정 제어 단축키(현장 조작 힌트). 버전은 [CFG-01] 설정 > PC 정보에 있음. pause는 v23.0 폐지 → F6/F7만 */}
+      <span className="erut-statusbar__text">측정 : F6 시작 · F7 중지</span>
       <span className="erut-statusbar__grip"><I.ResizeCorner/></span>
     </div>
   );
