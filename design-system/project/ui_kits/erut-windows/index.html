@@ -86,9 +86,11 @@ function App() {
 
   // [4] 장비 연결 설정 진입 시 sub-view 지정용 (예: + 장비 추가 → mc-add)
   const [settingsInitialSubView, setSettingsInitialSubView] = useState(null);
-  // settings 화면을 떠날 때 초기 sub-view 리셋 (다음 진입 시 list부터)
+  // 장비 메뉴 'MQTT 설정' 진입 시 초기 탭 지정 (mc | mqtt)
+  const [settingsInitialMenu, setSettingsInitialMenu] = useState("mc");
+  // settings 화면을 떠날 때 초기 sub-view/menu 리셋 (다음 진입 시 list · DAQ 탭부터)
   useEffect(() => {
-    if (screen !== "settings") setSettingsInitialSubView(null);
+    if (screen !== "settings") { setSettingsInitialSubView(null); setSettingsInitialMenu("mc"); }
   }, [screen]);
 
   // v14.0: commission 화면 진입 모드 — "new" (탐촉자 추가) / "edit" ([2]에서 이 채널 설정 편집)
@@ -136,16 +138,29 @@ function App() {
   };
 
   const fileMenu = [
-    // 프로젝트 저장 — [0]에서 비활성, [1]부터 활성 (구 '다른 이름으로 저장'). 저장은 30초 자동 + 페이지 내 명시 버튼 병행
+    // 프로젝트 생성 → 새 프로젝트 모달 / 프로젝트 저장 → [0]에서 비활성, [1]부터 활성
+    { label: "프로젝트 생성", shortcut: "Ctrl+Shift+N", onClick: () => setShowNewProject(true) },
     { label: "프로젝트 저장", shortcut: "Ctrl+Shift+S", disabled: screen === "project" },
     { divider: true },
-    // v18.0: 보고서 출력은 toolbar로 일원화 — 파일 메뉴 항목 삭제(중복). Ctrl+P 단축키는 유지.
-    { label: "종료", shortcut: "Alt+F4" },
+    { label: "종료" },
   ];
   const deviceMenu = [
-    // v9.26: '+ 장비 추가' 메뉴바 진입 — [1] '+장비 추가' 버튼과 동일하게 mc-add 모드로 직접 진입
-    { label: "+ 장비 추가",     onClick: () => { setSettingsInitialSubView("mc-add"); goto("settings"); } },
-    { label: "장비 연결 설정",  onClick: () => goto("settings") },
+    { label: "MQTT 설정",     onClick: () => { setSettingsInitialMenu("mqtt"); setSettingsInitialSubView(null); goto("settings"); } },
+    { divider: true },
+    { label: "DAQ 추가",      onClick: () => { setSettingsInitialMenu("mc"); setSettingsInitialSubView("mc-add"); goto("settings"); } },
+    { label: "DAQ 관리",      onClick: () => { setSettingsInitialMenu("mc"); setSettingsInitialSubView(null); goto("settings"); } },
+    { divider: true },
+    { label: "검사 대상 추가", onClick: () => { setManageInitialMode("new"); goto("manage"); } },
+    { label: "검사 대상 관리", onClick: () => { setManageInitialMode("edit"); goto("manage"); } },
+    { divider: true },
+    { label: "탐촉자 추가",    onClick: () => { setCommissionMode("new"); goto("commission"); } },
+    { label: "일괄 재교정",    onClick: () => setShowRecalibWizard(true) },
+  ];
+  const helpMenu = [
+    { label: "사용 설명서",   shortcut: "F1" },
+    { divider: true },
+    { label: "업데이트 확인" },
+    { label: "라이선스 정보" },
   ];
 
   // 툴바: 홈 / 보고서 / 진단. 보고서=장비 컨텍스트 전용. 진단=장비 컨텍스트 + [1] 메인(전체 보드 로그). 이전·알림·breadcrumb은 Toolbar 별도 슬롯.
@@ -244,6 +259,7 @@ function App() {
     setMenuOpen(
       label === "파일" ? (menuOpen === "file" ? null : "file")
       : label === "장비" ? (menuOpen === "device" ? null : "device")
+      : label === "도움말" ? (menuOpen === "help" ? null : "help")
       : null
     );
   };
@@ -277,6 +293,11 @@ function App() {
         {menuOpen === "device" && (
           <div style={{ position: "absolute", left: 60, top: 40, zIndex: 50 }}>
             <window.ContextMenu items={deviceMenu.map(i => i.divider ? i : { ...i, onClick: () => handleMenuItemClick(i) })}/>
+          </div>
+        )}
+        {menuOpen === "help" && (
+          <div style={{ position: "absolute", left: 160, top: 40, zIndex: 50 }}>
+            <window.ContextMenu items={helpMenu.map(i => i.divider ? i : { ...i, onClick: () => handleMenuItemClick(i) })}/>
           </div>
         )}
       </div>
@@ -372,7 +393,7 @@ function App() {
         )}
         {screen === "settings" && (
           <window.EquipmentSettings
-            initialMenu="mc"
+            initialMenu={settingsInitialMenu}
             initialSubView={settingsInitialSubView}
             onBack={() => goto("main")}
           />
