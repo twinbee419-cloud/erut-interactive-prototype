@@ -512,7 +512,7 @@
    (구 .is-defect-critical/major/minor 등급 fill 폐기 · 구 좌상단 코너 삼각형 → 빨강 테두리로 통일) */
 .erut-ch-cell__flaw{
   position: absolute; inset: 0;
-  border: 2px solid var(--system-error);
+  border: 1px solid var(--system-error);
   pointer-events: none;
 }
 
