@@ -148,7 +148,7 @@ function App() {
     { label: "MQTT 설정",     onClick: () => { setSettingsInitialMenu("mqtt"); setSettingsInitialSubView(null); goto("settings"); } },
     { divider: true },
     { label: "DAQ 추가",      onClick: () => { setSettingsInitialMenu("mc"); setSettingsInitialSubView("mc-add"); goto("settings"); } },
-    { label: "DAQ 설정",      onClick: () => { setSettingsInitialMenu("mc"); setSettingsInitialSubView(null); goto("settings"); } },
+    { label: "DAQ 목록",      onClick: () => { setSettingsInitialMenu("mc"); setSettingsInitialSubView(null); goto("settings"); } },
     { divider: true },
     { label: "검사 대상 추가", onClick: () => { setManageInitialMode("new"); goto("manage"); } },
     { label: "검사 대상 관리", onClick: () => { setManageInitialMode("edit"); goto("manage"); } },
