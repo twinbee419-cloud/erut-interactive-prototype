@@ -77,7 +77,7 @@ PRF_max = c / (2 × T_max × N_safety)
 
 | 필드 | 타입 | 범위 | 비고 |
 |---|---|---|---|
-| `recommended_prf_hz` | integer | 200 ~ 10,000 | 권장 PRF (Hz). 산업 표준 단계로 매핑된 값 |
+| `recommended_prf_hz` | integer | 200 ~ 20,000 | 권장 PRF (Hz). 산업 표준 단계로 매핑된 값 |
 | `calculation_details` | object | — | UI의 "계산 근거" 박스 표시용. 아래 구조 참고 |
 
 ```typescript
@@ -120,7 +120,7 @@ function calculateAutoPRF(thickness_mm, material, velocity_custom_m_s, board_max
     upper_bound_hz = min(theoretical_max_prf_hz, board_max_prf)
 
     # ── 6. 산업 표준 단계 매핑 (상한 이하의 최대값)
-    STANDARD_PRF_STEPS = [200, 500, 1000, 2000, 4000]
+    STANDARD_PRF_STEPS = [200, 500, 1000, 2000, 4000, 8000, 16000, 20000]
     recommended_prf_hz = max(
         step for step in STANDARD_PRF_STEPS
         if step <= upper_bound_hz
@@ -147,7 +147,7 @@ function calculateAutoPRF(thickness_mm, material, velocity_custom_m_s, board_max
 |---|---|---|
 | `SAFETY_MULTIPLIER_FOR_RANGE` | **3** | 다중 반사·검출 거리 안전 보장. 두께 × 3 까지 측정 가능하도록 |
 | `SAFETY_MARGIN` | **2.0** | 시간 도메인 안전 마진. ghost echo 완전 방지 |
-| `STANDARD_PRF_STEPS` | **[200, 500, 1000, 2000, 4000]** | NDT 산업 표준 단계 (Olympus·GE 등 산업용 NDT 장비 기본 단계) |
+| `STANDARD_PRF_STEPS` | **[200, 500, 1000, 2000, 4000, 8000, 16000, 20000]** | NDT 산업 표준 단계 + 고속 단계. 장비 실제 송수신 사이클 상한(약 2,000~20,000 Hz, NDT 전문가 교육 기준)에 맞춰 상향(2026-07-08). 실제 적용 상한은 `board_max_prf`로 제한 |
 
 ---
 

@@ -78,7 +78,7 @@ window/window__content · titlebar/winbtn · bar/menubar/menu/toolbar/tb/tb-sep/
 - **핵심 4종**: **Amp**(%FSH · Gate 피크) · **ToF**(μs · 왕복시간) · **Gate**(Start/Width/Threshold) · **두께**(= ToF×음속/2, mm · 감육 판정).
 - 규칙: A-scan 차트가 측정·진단 화면 중심(Gate·Threshold 시각화) · 두께는 ToF·음속 자동환산(검사대상 등록 시 **공칭두께·소재 필수**) · Gate/PRF 자동계산으로 검사자 부담↓.
 - 용어: 공칭두께 · 감육(부식·마모로 두께감소) · PRF(펄스반복주파수, ghost echo 방지) · DAC(거리진폭보정) · 참조블록(IIW V1/V2·STB-A1/A2) · 시험편(표준/비교).
-- **PRF 자동**: `PRF_max = 음속 / (2 × 두께 × 3 × 2)`, 단계 `200·500·1000·2000·4000 Hz` 중 상한 이하 최대. 음속(m/s): 탄소강 5920 · SS304 5790 · SS316L 5740 · Al 6320 · Ti 6070 · 구리 4660 · Inconel 5820 · 황동 4430 · 주철 4600. 상세: `dev_handoff/PRF_Auto_Calculation_Spec_v1.0.md`.
+- **PRF 자동**: `PRF_max = 음속 / (2 × 두께 × 3 × 2)`, 단계 `200·500·1000·2000·4000·8000·16000·20000 Hz` 중 상한 이하 최대(장비 상한 ~20,000 Hz·NDT 전문가 교육 기준, board_max_prf로 제한). 음속(m/s): 탄소강 5920 · SS304 5790 · SS316L 5740 · Al 6320 · Ti 6070 · 구리 4660 · Inconel 5820 · 황동 4430 · 주철 4600. 상세: `dev_handoff/PRF_Auto_Calculation_Spec_v1.0.md`.
 
 ## 제품 분리 (윈도우 / 웹) + 검출 vs 판정
 - **윈도우** = 현장 단기 검사(수집·교정·신뢰성). **웹** = 상시 모니터링·시계열 트렌드·결함 등급/유형 판정.

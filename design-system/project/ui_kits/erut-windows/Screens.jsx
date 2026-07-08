@@ -3427,7 +3427,7 @@ window.SOUND_SPEEDS = {
   "알루미늄 (6061)":  6320,
   "티타늄 (Gr.2)":    6070,
 };
-window.PRF_STEPS = [200, 500, 1000, 2000, 4000];
+window.PRF_STEPS = [200, 500, 1000, 2000, 4000, 8000, 16000, 20000];
 
 window.calcPRF = function(thicknessMm, material) {
   const v = window.SOUND_SPEEDS[material] || 5920;     // m/s
