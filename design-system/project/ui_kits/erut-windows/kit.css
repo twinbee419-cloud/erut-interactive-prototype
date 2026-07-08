@@ -508,18 +508,17 @@
 
 /* ---------- v22.6: 결함 검출 마커 (단일 · 등급 없음) ----------
    검출 사실만 표시 — 등급(critical/major/minor)·유형 판정은 웹 서비스 책임.
-   배경은 중립 유지, 좌상단 코너 삼각형 마커(system-caution)로 '검출' 표시.
-   (구 .is-defect-critical/major/minor 등급 fill 폐기) */
+   배경 중립 유지, 셀 빨강(error) 테두리 오버레이로 '감육 검출' 표시(선택=파랑 셀 테두리와 구분).
+   (구 .is-defect-critical/major/minor 등급 fill 폐기 · 구 좌상단 코너 삼각형 → 빨강 테두리로 통일) */
 .erut-ch-cell__flaw{
-  position: absolute; top: 0; left: 0; width: 0; height: 0;
-  border-top: 9px solid var(--system-error);
-  border-right: 9px solid transparent;
+  position: absolute; inset: 0;
+  border: 2px solid var(--system-error);
   pointer-events: none;
 }
 
 /* ---------- #21: 신호 약함·나쁨 셀 — orange(caution) breathe ----------
    [2] 장비 상세 셀에서 신호 상태(약함·나쁨) 강조. 교정 필요(red)보다 우선순위 낮음(JSX else-if).
-   감육 검출은 코너 삼각 마커(형태)로 구분. */
+   감육 검출은 빨강(error) 테두리 마커로 구분. */
 .erut-ch-cell.is-signal-warn{
   --calib-fill-low:    rgba(255,146,0,0.10);
   --calib-fill-high:   rgba(255,146,0,0.30);
@@ -528,7 +527,7 @@
   animation: erut-calib-breathe 1.6s ease-in-out infinite;
 }
 /* ---------- #21: 교정 필요 셀 — red(error) breathe ----------
-   측정 신뢰성 전제 미충족(F6 차단) = 조치 필요 → red. 감육 검출(red 코너 마커)과 형태로 구분.
+   측정 신뢰성 전제 미충족(F6 차단) = 조치 필요 → red. 감육 검출(빨강 테두리)과 dim·breathe로 구분.
    (v15.2 회색-블루 → red 변경) */
 .erut-ch-cell.is-needs-calibration{
   --calib-fill-low:    rgba(255,0,94,0.10);
