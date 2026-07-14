@@ -1183,16 +1183,16 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
 
   // ───── 진행 체크리스트 (자동 계산) ─────
   // v16.1: Wedge 측정 항목 제거 — Wedge 각도는 측정 불가, 좌측 채널 정보 input(wedgeAngle)으로 처리
-  // 진행 체크리스트 5항목 — 정보 입력 / Gain / Gate / 영점 / 음속. 제품명·SN은 선택 입력이라 정보 입력 = 검사 대상만 필수. Gate는 A·B 통합 단일 항목.
+  // 진행 체크리스트 4항목 — 정보 입력 / Gain / Gate / 음속. 제품명·SN은 선택 입력이라 정보 입력 = 검사 대상만 필수. Gate는 A·B 통합 단일 항목.
+  // 영점(zero)은 필수 제외 — 2게이트 echo-to-echo는 영점이 상쇄되어 두께 계산엔 불필요(1순위 도메인). 영점은 [측정]으로 산출·기록만(단일 게이트 fallback·drift 진단), 등록 게이팅에서 제외.
   const checklist = [
     { key: "info",   label: "정보 입력",        done: !!target },
     { key: "gain",   label: "Gain 설정",        done: gainSw != null },
     { key: "gate",   label: "Gate 설정",        done: aOn && bOn },
-    { key: "zero",   label: "영점 측정",        done: zero.value != null },
     { key: "vel",    label: "음속 측정",        done: velocity.value != null },
   ];
   const requiredDone = checklist.filter(c => !c.optional).every(c => c.done);
-  // 채널 추가 = 채널 지정 + 전체 커미셔닝(정보·Gain·Gate·영점·음속) 완료 필수. 교정이 등록 필수 단계라 '미교정' 채널이 생기지 않음
+  // 채널 추가 = 채널 지정 + 필수 커미셔닝(정보·Gain·Gate·음속) 완료. 교정이 등록 필수 단계라 '미교정' 채널이 생기지 않음 (영점은 필수 제외 — 기록용)
   const canAddOnly  = !!channel && requiredDone;
 
   // ───── mock 측정 동작 ─────
@@ -1741,8 +1741,8 @@ window.ChannelCommissioning = function ChannelCommissioning({ deviceName, target
             /* 측정 시작은 DAQ 단위([2] 배너·F6) — 채널 개별 측정 시작 불가하므로 '저장'만 */
             <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={onSave}>저장</button>
           ) : (
-            /* '추가' = 채널 정보·Gain·Gate·영점·음속 교정 전체 완료 시에만 활성 (미교정 채널 방지) */
-            <button className={"erut-btn erut-btn--emphasis erut-btn--sm" + (canAddOnly ? "" : " erut-btn--disabled")} disabled={!canAddOnly} onClick={onAddOnly} title={canAddOnly ? undefined : "채널 정보·Gain·Gate·영점·음속 교정을 모두 완료해야 추가할 수 있습니다"}>추가</button>
+            /* '추가' = 채널 정보·Gain·Gate·음속 교정 완료 시에만 활성 (미교정 채널 방지 · 영점은 필수 제외) */
+            <button className={"erut-btn erut-btn--emphasis erut-btn--sm" + (canAddOnly ? "" : " erut-btn--disabled")} disabled={!canAddOnly} onClick={onAddOnly} title={canAddOnly ? undefined : "채널 정보·Gain·Gate·음속 교정을 모두 완료해야 추가할 수 있습니다"}>추가</button>
           )}
         </div>
       </div>
