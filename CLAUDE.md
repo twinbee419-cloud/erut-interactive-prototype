@@ -55,10 +55,10 @@ sed 's|href="design-system/|href="../design-system/|g' ERUT_ServiceFlow_FixedPro
 - 메인 HTML·`archive/`는 **gitignore**(로컬). git 추적 = `design-system/`·`dev_handoff/`·`CLAUDE.md`.
 
 ## 디자인 토큰 (요약 — 정식: colors_and_type.css)
-- **Content**: high `#0A1C3C`(본문) · medium `#273A5C`(보조·타이틀바) · low `#6B7C9B`(캡션·placeholder) · inverse `#FFFFFF` · emphasis `#2285EF`(active).
-- **Surface**: base `#F7F9FC`(캔버스) · subtle-1 `#EBEFF6`(툴/메뉴/상태바) · subtle-2 `#F1F5FC`(카드·hover) · strong `#E0E6F1` · disabled `#AEB8CA`.
-- **Border**: high `#697893` · medium `#A5B2CA`(기본) · low `#E0E6F1`(divider) · emphasis `#2285EF`.
-- **Brand/System**: brand `#2285EF` · success `#18E339` · caution `#FF9200` · error `#FF005E` · info `#2BAEFF` · disabled `#8C8C8C`.
+- **Content**: high `#0A1C3C`(본문) · medium `#354D74`(보조·타이틀바) · low `#6B7C9B`(캡션·placeholder) · inverse `#FFFFFF` · emphasis `#2285EF`(active).
+- **Surface**: base `#F7F9FC`(캔버스) · subtle-1 `#EBEFF6`(툴/메뉴/상태바) · subtle-2 `#F1F5FC`(카드·hover) · subtle-3 `#EAF8FF`(연한 brand-tint) · strong `#354D74`(네이비) · disabled `#DFE4ED`.
+- **Border**: high `#697893` · medium `#A5B2CA`(기본) · low `#DADFEA`(divider) · emphasis `#2285EF`.
+- **Brand/System**: brand `#2285EF` · brand-subtle `#C2E9FB` · success `#2ED218` · caution `#FF9200` · error `#F33523` · info `#2BAEFF` · disabled `#EBEFF6`.
 - **Type**: NanumSquare, +0.02em. h1 24 / h2 20 / h3 18 / h4 16 (700) · body 16·14 (400) · caption 12 (700).
 - **Space**: 4·8·12·16·20·24·32·40·48·64·80·96.
 - **Radius**: 0 (pill 100px·dot 50%만).

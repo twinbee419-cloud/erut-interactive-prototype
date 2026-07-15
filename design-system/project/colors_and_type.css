@@ -35,36 +35,39 @@
 
   /* ---------- Color · basic / content (text & icon) ---------- */
   --content-high:     #0A1C3C; /* primary text, headings */
-  --content-medium:   #273A5C; /* secondary text, title-bar bg */
+  --content-medium:   #354D74; /* secondary text, title-bar bg */
   --content-low:      #6B7C9B; /* tertiary text, captions, status meta */
   --content-inverse:  #FFFFFF;
   --content-emphasis: #2285EF; /* brand-tinted text (active/selected) */
 
   /* ---------- Color · basic / surface (backgrounds) ---------- */
   --surface-base:     #F7F9FC; /* canvas / window content fill */
-  --surface-strong:   #E0E6F1;
+  --surface-strong:   #354D74; /* strong navy surface */
   --surface-subtle-1: #EBEFF6; /* toolbar, menu bar, status bar */
   --surface-subtle-2: #F1F5FC; /* card fill, hover row */
-  --surface-disabled: #AEB8CA;
+  --surface-subtle-3: #EAF8FF; /* lightest brand-tint surface */
+  --surface-disabled: #DFE4ED;
 
   /* ---------- Color · basic / border ---------- */
   --border-high:      #697893; /* strong stroke — buttons, fields, form inputs */
   --border-medium:    #A5B2CA; /* default 1px box border */
-  --border-low:       #E0E6F1; /* subtle dividers */
+  --border-low:       #DADFEA; /* subtle dividers */
   --border-emphasis:  #2285EF; /* selected / active stroke */
 
   /* ---------- Color · brand / primary ---------- */
   --brand-primary:    #2285EF; /* sole brand accent — use sparingly */
+  --brand-subtle:     #C2E9FB; /* light brand tint (badge, chip) */
   --on-primary:       #FFFFFF;
 
   /* ---------- Color · system (semantic) ---------- */
-  --system-success:   #18E339;
+  --system-success:   #2ED218;
   --system-caution:   #FF9200;
-  --system-error:     #FF005E;
+  --system-error:     #F33523;
   --system-info:      #2BAEFF; /* cyan-blue, distinct from brand emphasis */
-  --system-disabled:  #8C8C8C;
+  --system-disabled:  #EBEFF6;
 
   /* ---------- Color · overlay ---------- */
+  --overlay-high:     rgba(34,133,239,0.10); /* brand 10% */
   --overlay-medium:   rgba(0,0,0,0.10);
   --overlay-low:      rgba(255,255,255,0.10);
 
