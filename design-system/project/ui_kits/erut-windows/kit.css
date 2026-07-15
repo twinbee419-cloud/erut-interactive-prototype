@@ -191,6 +191,12 @@
   border-color: var(--system-error);
   color: var(--system-error);
 }
+/* danger-emphasis — solid error fill (측정 중지 등 활성 파괴 액션 · emphasis의 error판). */
+.erut-btn--danger-emphasis{
+  background: var(--system-error);
+  border-color: var(--system-error);
+  color: var(--on-primary);
+}
 
 /* ---------- Fields ---------- */
 .erut-field{

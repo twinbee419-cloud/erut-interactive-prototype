@@ -556,62 +556,65 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
   // v22.1: 보드별 측정 상태 (공유 state) — 없으면 MOCK 기본값
   const stOf = (d) => (boardStates && boardStates[d.id]) || d.state;
 
-  // 장비 패널 헤더 요약 카운터
+  // 좌측 사이드바 요약 집계
   const connectedCount = devices.filter(d => stOf(d) !== "offline").length;
   const measuringCount = devices.filter(d => stOf(d) === "measuring").length;
   const activeChTotal  = devices.reduce((s, d) => s + (d.activeCh || 0), 0);
   const totalChTotal   = devices.reduce((s, d) => s + d.totalCh, 0);
 
-  // 각 장비 mini-card 렌더링
+  // 사이드바 집계 1행 (라벨 좌 · 분자/분모 우 — 분자만 상태색)
+  function statRow(label, num, den, numColor) {
+    return (
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+        <span style={{ font: "400 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{label}</span>
+        <span style={{ font: "700 18px/1 var(--font-kr)", letterSpacing: ".02em", color: numColor }}>
+          {num}
+          <span style={{ font: "400 14px/1 var(--font-kr)", color: "var(--content-low)" }}>&nbsp;/&nbsp;{den}</span>
+        </span>
+      </div>
+    );
+  }
+
+  // 각 DAQ 카드 렌더링 — 상단 상태 색 풀필 헤더 + 본문 + 액션 footer
   function renderDeviceCard(d) {
     const st = stOf(d);
     const isMeasuring = st === "measuring";
     const isOffline   = st === "offline";
-
-    // 상태 클래스로 분기 (measuring / offline / idle) — 일시정지 폐기
-    const cardCls = "erut-device-card" + (isMeasuring ? " is-measuring" : isOffline ? " is-offline" : "");
+    const headBg    = isMeasuring ? "var(--brand-primary)" : isOffline ? "var(--system-error)" : "var(--system-success)";
+    const headLabel = isMeasuring ? "측정 중"          : isOffline ? "연결 끊김"          : "연결됨";
 
     return (
-      <div key={d.id} className={cardCls}>
-        {/* v9.11: 상단 — 연결 상태 pill만 유지. 측정 중/대기/오프라인 badge 삭제 (좌하단 액션 버튼으로 인지) */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
-            <div style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: isOffline ? "var(--content-medium)" : "var(--content-high)" }}>{d.id}</div>
-            <div style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4 }}>IP&nbsp;:&nbsp;{d.ip}</div>
-          </div>
-          <MiniPill tone="pillLED" ledColor={isOffline ? "red" : "green"}>{isOffline ? "연결 끊김" : "연결됨"}</MiniPill>
+      <div key={d.id} className="erut-device-card" style={{ padding: 0 }}>
+        {/* 상단: 상태 색 풀필 헤더 (좌 상태 · 우 IP) */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", background: headBg }}>
+          <span style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>{headLabel}</span>
+          <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)" }}>IP {d.ip}</span>
         </div>
-        {/* 중단: 등록 채널 + 데이터 송신량 + 마지막 데이터 송신일시 */}
-        <div style={{ display: "flex", gap: 18, padding: "10px 0 8px", marginTop: 10, borderTop: "1px solid var(--border-low)" }}>
-          <div>
-            <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>등록 채널</div>
-            <div style={{ font: "700 16px/1 var(--font-kr)", letterSpacing: ".02em", color: isMeasuring ? "var(--content-emphasis)" : isOffline ? "var(--content-low)" : "var(--content-medium)" }}>
+        {/* 본문: DAQ ID + 채널 수 + meta 2줄 */}
+        <div style={{ padding: "14px 14px 0" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <span style={{ font: "700 20px/1 var(--font-kr)", letterSpacing: ".02em", color: isOffline ? "var(--content-medium)" : "var(--content-high)" }}>{d.id}</span>
+            <span style={{ font: "700 18px/1 var(--font-kr)", letterSpacing: ".02em", color: isMeasuring ? "var(--content-emphasis)" : "var(--content-high)" }}>
               {d.activeCh != null ? d.activeCh : "—"}
-              <span style={{ fontSize: 11, color: "var(--content-low)", fontWeight: 400 }}>&nbsp;/&nbsp;{d.totalCh} CH</span>
-            </div>
+              <span style={{ font: "400 13px/1 var(--font-kr)", color: "var(--content-low)" }}>&nbsp;/&nbsp;{d.totalCh}</span>
+            </span>
           </div>
-          <div>
-            <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>데이터 송신량</div>
-            <div style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{d.dataSent || "—"}</div>
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>마지막 데이터 송신일시</div>
-            <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: isOffline ? "var(--system-error)" : "var(--content-medium)" }}>{d.lastSent || "—"}</div>
+          <div style={{ marginTop: 14 }}>
+            <div style={{ font: "400 13px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>전송량 {d.dataSent || "—"}</div>
+            <div style={{ font: "400 13px/1.5 var(--font-kr)", letterSpacing: ".02em", color: isOffline ? "var(--system-error)" : "var(--content-low)" }}>최근 송신일시 {d.lastSent || "—"}</div>
           </div>
         </div>
-        {/* 하단: 액션 버튼 */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+        {/* footer: 상세 + 상태별 측정 제어 */}
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, padding: "12px 14px", marginTop: 12, borderTop: "1px solid var(--border-low)" }}>
+          <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onOpenDevice}>상세</button>
           {isMeasuring && (
-            /* 측정 중 = 중지만 (시작/중지 — 일시정지 폐기) */
-            <div style={{ display: "flex", gap: 6 }}>
-              <button className="erut-btn erut-btn--default erut-btn--sm" style={{ background: "var(--system-error)", color: "var(--on-primary)", borderColor: "var(--system-error)", display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 중지 (F7)" onClick={() => onBoardControl && onBoardControl(d.id, "stop")}>
-                <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><rect x="2" y="2" width="8" height="8"/></svg>
-                측정 중지
-              </button>
-            </div>
+            <button className="erut-btn erut-btn--danger-emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 중지 (F7)" onClick={() => onBoardControl && onBoardControl(d.id, "stop")}>
+              <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><rect x="2" y="2" width="8" height="8"/></svg>
+              측정 중지
+            </button>
           )}
           {st === "idle" && (
-            <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} onClick={() => onBoardControl && onBoardControl(d.id, "start")}>
+            <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 시작 (F6)" onClick={() => onBoardControl && onBoardControl(d.id, "start")}>
               <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><polygon points="3,2 10,6 3,10"/></svg>
               측정 시작
             </button>
@@ -619,59 +622,51 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
           {isOffline && (
             <button className="erut-btn erut-btn--default erut-btn--sm">연결</button>
           )}
-          <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={onOpenDevice}>상세 →</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="erut-page-enter" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <div className="erut-page-enter" style={{ height: "100%", display: "flex" }}>
 
-      {/* ▼ 프로젝트 헤더 (통합 패널) — 유형은 생성 시 결정, 단일 유형 프로젝트 ▼ */}
-      <div style={{ background: "var(--surface-subtle-1)", borderBottom: "1px solid var(--border-medium)", padding: "14px 40px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>프로젝트</span>
-              <span style={{ font: "700 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{proj.name}</span>
-              <span style={{ padding: "3px 9px", font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", border: "1px solid var(--border-emphasis)", background: "linear-gradient(rgba(34,133,239,0.08),rgba(34,133,239,0.08)), var(--surface-base)" }}>고정형</span>
-            </div>
-            <div style={{ font: "400 11px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 6 }}>
-              생성일 {proj.startDate}{proj.note ? ` · ${proj.note}` : ""}
-            </div>
-          </div>
-          {/* 장비 요약 카운터 (프로젝트명과 동일 크기) — 패널 헤더에서 이동 */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <span style={{ font: "400 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>연결 <strong style={{ fontWeight: 700, color: "var(--system-success)" }}>{connectedCount}</strong> / {devices.length}</span>
-            <span style={{ width: 1, height: 14, background: "var(--border-medium)" }}/>
-            <span style={{ font: "400 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>측정 중 <strong style={{ fontWeight: 700, color: "var(--brand-primary)" }}>{measuringCount}</strong></span>
-            <span style={{ width: 1, height: 14, background: "var(--border-medium)" }}/>
-            <span style={{ font: "400 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>등록 채널 <strong style={{ fontWeight: 700, color: "var(--brand-primary)" }}>{activeChTotal}</strong> / {totalChTotal}</span>
-          </div>
-        </div>
-      </div>
+      {/* ▼ 좌측 정보 사이드바 (240px) ▼ */}
+      <aside style={{ width: 240, flexShrink: 0, borderRight: "1px solid var(--border-medium)", padding: "20px", display: "flex", flexDirection: "column", overflow: "auto" }}>
+        {/* 프로젝트명 (줄바꿈 허용) */}
+        <h2 style={{ font: "700 22px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>{proj.name}</h2>
 
-      {/* ▼ 콘텐츠 ▼ */}
-      <div style={{ padding: "20px 40px", flex: 1, overflow: "auto" }}>
-        {/* ▼ 장비 연결 상태 패널 ▼ */}
-        <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "14px 18px", marginBottom: 20 }}>
-          {/* 헤더 라인 — 요약 카운터는 상단 프로젝트 정보로 이동(#6) */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
-              <h3 style={{ font: "700 16px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>등록된 장비</h3>
-              <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>총 {devices.length}대 등록</span>
-            </div>
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onAddDevice}>+ 장비 추가</button>
-          </div>
-          {/* 3 장비 mini-card grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-            {devices.map(renderDeviceCard)}
-          </div>
+        {/* 집계 3행 */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 24 }}>
+          {statRow("DAQ 상태",  connectedCount, devices.length, "var(--system-success)")}
+          {statRow("측정 중",   measuringCount, devices.length, "var(--brand-primary)")}
+          {statRow("탐촉자 상태", activeChTotal,  totalChTotal,   "var(--system-caution)")}
         </div>
 
-        {/* v8.5: 검사 대상 그리드 삭제 — DAQ 자산 중심 모델 */}
-        {/* 검사 대상은 [2] 장비 상세에서 DAQ별로 표시. DAQ 카드 "상세 →" 클릭 → [2] 진입. */}
+        {/* 생성일 */}
+        <div style={{ marginTop: 28 }}>
+          <div style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>생성일</div>
+          <div style={{ font: "400 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginTop: 8 }}>{proj.startDate}</div>
+        </div>
+
+        {/* 비고 */}
+        <div style={{ marginTop: 24 }}>
+          <div style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>비고</div>
+          <div style={{ font: "400 13px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginTop: 8 }}>{proj.note || "—"}</div>
+        </div>
+
+        {/* 하단 버튼 (divider + 세로 2버튼) */}
+        <div style={{ marginTop: "auto", paddingTop: 20, borderTop: "1px solid var(--border-low)", display: "flex", flexDirection: "column", gap: 8 }}>
+          <button className="erut-btn erut-btn--subtle" onClick={onAddDevice}>+ DAQ 추가</button>
+          <button className="erut-btn erut-btn--default">편집</button>
+        </div>
+      </aside>
+
+      {/* ▼ 우측 메인 (등록된 DAQ 목록) ▼ */}
+      <div style={{ flex: 1, padding: "20px 32px", overflow: "auto" }}>
+        <h3 style={{ font: "700 18px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: "0 0 16px" }}>등록된 DAQ 목록</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, alignItems: "start" }}>
+          {devices.map(renderDeviceCard)}
+        </div>
       </div>
     </div>
   );

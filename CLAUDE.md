@@ -65,7 +65,7 @@ sed 's|href="design-system/|href="../design-system/|g' ERUT_ServiceFlow_FixedPro
 - **Chrome(1920×1080)**: 타이틀 40 + 메뉴 40 + 툴 40 + 상태바 46 = 126px · 콘텐츠 914px (padding 20·40).
 
 ## 컴포넌트 (kit.css `.erut-*`)
-window/window__content · titlebar/winbtn · bar/menubar/menu/toolbar/tb/tb-sep/tb-hint · statusbar(__text/__grip) · pill·led(is-green/red/gray) · btn(--default/active/emphasis/subtle/danger/disabled · --sm/m/l) · field(is-error/readonly/disabled · --area) · field-group(__label/__msg · field-wrap __unit/__clear) · select(__trigger/menu/opt) · cb(체크박스) · toggle(__track is-on·__label--sm) · card(is-selected) · cmenu · badge · hero · panel(__header/body) · tabs/tab(--sm) · checklist(진행 체크리스트 __item is-done/current) · crumb(--step 수평 stepper) · tooltip · modal(__header/body/footer) · ch-cell(__flaw 결함 검출 마커).
+window/window__content · titlebar/winbtn · bar/menubar/menu/toolbar/tb/tb-sep/tb-hint · statusbar(__text/__grip) · pill·led(is-green/red/gray) · btn(--default/active/emphasis/subtle/danger/danger-emphasis/disabled · --sm/m/l) · field(is-error/readonly/disabled · --area) · field-group(__label/__msg · field-wrap __unit/__clear) · select(__trigger/menu/opt) · cb(체크박스) · toggle(__track is-on·__label--sm) · card(is-selected) · cmenu · badge · hero · panel(__header/body) · tabs/tab(--sm) · checklist(진행 체크리스트 __item is-done/current) · crumb(--step 수평 stepper) · tooltip · modal(__header/body/footer) · ch-cell(__flaw 결함 검출 마커).
 - **Toggle vs Checkbox**: 즉시효과·동작(자동/활성/표시) = **toggle** / 폼 제출·다중선택·단발성 옵션 = **checkbox**. 같은 의미는 전 화면 동일 컴포넌트로 통일.
 - 상호작용: Hover = surface-subtle-2 lift / Active = emphasis stroke + 10% brand wash + emphasis 텍스트 / Disabled = content-low + surface-disabled.
 
