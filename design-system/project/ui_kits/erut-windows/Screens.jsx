@@ -628,9 +628,9 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
   }
 
   return (
-    <div className="erut-page-enter" style={{ height: "100%", display: "flex" }}>
+    <div className="erut-page-enter" style={{ height: "calc(100% + 40px)", width: "calc(100% + 80px)", margin: "-20px -40px", display: "flex" }}>
 
-      {/* ▼ 좌측 정보 사이드바 (240px) ▼ */}
+      {/* ▼ 좌측 정보 사이드바 (240px · surface-base) ▼ */}
       <aside style={{ width: 240, flexShrink: 0, background: "var(--surface-base)", borderRight: "1px solid var(--border-medium)", padding: "20px", display: "flex", flexDirection: "column", overflow: "auto" }}>
         {/* 프로젝트명 (줄바꿈 허용) */}
         <h2 style={{ font: "700 22px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>{proj.name}</h2>
@@ -661,8 +661,8 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
         </div>
       </aside>
 
-      {/* ▼ 우측 메인 (등록된 DAQ 목록) ▼ */}
-      <div style={{ flex: 1, padding: "20px 32px", overflow: "auto" }}>
+      {/* ▼ 우측 메인 (등록된 DAQ 목록 · 흰색) ▼ */}
+      <div style={{ flex: 1, background: "var(--color-white)", padding: "20px 32px", overflow: "auto" }}>
         <h3 style={{ font: "700 18px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: "0 0 16px" }}>등록된 DAQ 목록</h3>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, alignItems: "start" }}>
           {devices.map(renderDeviceCard)}
