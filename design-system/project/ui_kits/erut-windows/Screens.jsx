@@ -631,7 +631,7 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
     <div className="erut-page-enter" style={{ height: "100%", display: "flex" }}>
 
       {/* ▼ 좌측 정보 사이드바 (240px) ▼ */}
-      <aside style={{ width: 240, flexShrink: 0, borderRight: "1px solid var(--border-medium)", padding: "20px", display: "flex", flexDirection: "column", overflow: "auto" }}>
+      <aside style={{ width: 240, flexShrink: 0, background: "var(--surface-base)", borderRight: "1px solid var(--border-medium)", padding: "20px", display: "flex", flexDirection: "column", overflow: "auto" }}>
         {/* 프로젝트명 (줄바꿈 허용) */}
         <h2 style={{ font: "700 22px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>{proj.name}</h2>
 
