@@ -954,3 +954,14 @@
 .erut-checklist__item.is-current .erut-checklist__mark{
   border-color: var(--brand-primary); color: var(--brand-primary);
 }
+
+/* ---------- 좌측 정보 사이드바 (MainScreen · DeviceDetail 등 공통) ----------
+   240px 고정폭 · surface-base 배경(오른쪽 보더 없음 — 흰 메인 영역과의 대비로 구분).
+   부모가 full-bleed(window__content padding 상쇄) 컨테이너일 것을 전제. */
+.erut-sidebar{
+  width: 240px; flex: none;
+  background: var(--surface-base);
+  padding: 20px;
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}

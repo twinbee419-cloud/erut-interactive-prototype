@@ -630,8 +630,8 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
   return (
     <div className="erut-page-enter" style={{ height: "calc(100% + 40px)", width: "calc(100% + 80px)", margin: "-20px -40px", display: "flex" }}>
 
-      {/* ▼ 좌측 정보 사이드바 (240px · surface-base) ▼ */}
-      <aside style={{ width: 240, flexShrink: 0, background: "var(--surface-base)", padding: "20px", display: "flex", flexDirection: "column", overflow: "auto" }}>
+      {/* ▼ 좌측 정보 사이드바 (240px · surface-base — 공통 .erut-sidebar) ▼ */}
+      <aside className="erut-sidebar">
         {/* 프로젝트명 (줄바꿈 허용) */}
         <h2 style={{ font: "700 22px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>{proj.name}</h2>
 
@@ -762,11 +762,11 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
   ];
 
   return (
-    // C-PRJ-03: 좌 사이드바(240·surface-base·오른쪽 보더 없음) + 중앙 64ch 그리드(흰색) + 우 상세패널(404·상태 tint) · full-bleed
-    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "240px 1fr 404px", height: "100%", minHeight: 0 }}>
+    // C-PRJ-03: 좌 사이드바(240·surface-base·오른쪽 보더 없음 · 공통 .erut-sidebar) + 중앙 64ch 그리드(흰색) + 우 상세패널(404·상태 tint) · full-bleed(MainScreen과 동일 패턴 — window__content padding 상쇄해야 사이드바가 흰 중앙과 대비되어 보임)
+    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "240px 1fr 404px", height: "calc(100% + 40px)", width: "calc(100% + 80px)", margin: "-20px -40px", minHeight: 0 }}>
 
-      {/* ───── 좌측 정보 사이드바 (surface-base · 오른쪽 보더 없음) ───── */}
-      <aside style={{ background: "var(--surface-base)", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 20, minHeight: 0, overflowY: "auto" }}>
+      {/* ───── 좌측 정보 사이드바 (공통 .erut-sidebar — 아코디언 간격만 로컬 오버라이드) ───── */}
+      <aside className="erut-sidebar" style={{ gap: 20, minHeight: 0 }}>
 
         {/* DAQ명 + 연결 상태 pill */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
@@ -861,8 +861,8 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
 
       </aside>
 
-      {/* ───── 중앙 64ch 그리드 (흰색) ───── */}
-      <section style={{ minWidth: 0, display: "flex", flexDirection: "column", padding: "20px 24px", overflowY: "auto" }}>
+      {/* ───── 중앙 64ch 그리드 (흰색 — 좌 사이드바 surface-base와 대비되어 구분) ───── */}
+      <section style={{ minWidth: 0, background: "var(--color-white)", display: "flex", flexDirection: "column", padding: "20px 24px", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
           <h3 style={{ font: "700 18px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>
             64CH 탐촉자 상태 <span style={{ color: "var(--content-emphasis)" }}>{cells.length}</span> / 64
@@ -963,9 +963,9 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
               <div><div style={lbl}>최근 교정일</div><div style={val}>2026-06-30</div></div>
             </div>
 
-            {/* 액션 버튼 (하단 고정 · 세로) — 상세보기=onStartMeasure / 탐촉자 설정=onEditChannel */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: "auto", paddingTop: 8 }}>
-              <button className="erut-btn erut-btn--default" style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, ...(isDefectSel ? { color: "var(--system-error)", borderColor: "var(--system-error)" } : {}) }} onClick={() => onStartMeasure && onStartMeasure(selected)}>
+            {/* 액션 버튼 (하단 고정 · 세로 · 상단 divider) — 상세보기=onStartMeasure(정상=brand emphasis outline/감육검출=error outline) / 탐촉자 설정=onEditChannel(default) */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: "auto", paddingTop: 16, borderTop: "1px solid var(--border-low)" }}>
+              <button className="erut-btn erut-btn--default" style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, color: isDefectSel ? "var(--system-error)" : "var(--content-emphasis)", borderColor: isDefectSel ? "var(--system-error)" : "var(--border-emphasis)" }} onClick={() => onStartMeasure && onStartMeasure(selected)}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
                 상세보기
               </button>
