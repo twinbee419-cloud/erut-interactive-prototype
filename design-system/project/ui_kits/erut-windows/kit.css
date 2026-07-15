@@ -589,8 +589,9 @@
 .erut-sparkline{ display: block; width: 100%; height: 22px; }
 
 /* ---------- A-scan dark canvas ---------- */
+/* Figma/프로토타입 기준: 흰(light) 배경 + 파랑(brand) 파형 + Gate A(error)·Gate B(brand) band */
 .erut-ascan{
-  background: var(--content-high);
+  background: var(--surface-base);
   position: relative;
   border: 1px solid var(--border-medium);
   overflow: hidden;
@@ -598,21 +599,29 @@
 .erut-ascan__grid{
   position: absolute; inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+    linear-gradient(rgba(10,28,60,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(10,28,60,0.05) 1px, transparent 1px);
   background-size: 24px 24px;
 }
+/* SVG 파형: baseline stroke=var(--border-low) · wave stroke=var(--brand-primary) */
 .erut-ascan__wave{ position: absolute; inset: 0; }
+/* Gate 밴드 — 기본 = Gate A(error 적색) · --b = Gate B(brand 청색) */
 .erut-ascan__gate{
   position: absolute; top: 0; bottom: 0;
-  border-left: 1px solid var(--system-caution);
-  border-right: 1px solid var(--system-caution);
-  background: rgba(255,146,0,0.16);
+  border-left: 2px solid var(--system-error);
+  border-right: 2px solid var(--system-error);
+  background: rgba(243,53,35,0.10);
+}
+.erut-ascan__gate--b{
+  border-left-color: var(--brand-primary);
+  border-right-color: var(--brand-primary);
+  background: rgba(34,133,239,0.10);
 }
 .erut-ascan__gate-label{
   position: absolute; top: 4px; font: 700 10px/1 var(--font-kr); letter-spacing: .02em;
-  color: var(--system-caution);
+  color: var(--system-error);
 }
+.erut-ascan__gate-label--b{ color: var(--brand-primary); }
 
 /* ---------- Breadcrumb ---------- */
 .erut-bread{
