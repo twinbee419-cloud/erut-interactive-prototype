@@ -185,17 +185,11 @@
     linear-gradient(var(--overlay-medium), var(--overlay-medium)),
     var(--brand-primary);
 }
-/* danger — 파괴적 액션(삭제 등). 흰 bg + error 테두리·텍스트 (hover는 공통 overlay). */
+/* danger — 파괴적 액션(삭제·측정 중지 등). 흰 bg + error 테두리·텍스트 (hover는 공통 overlay). */
 .erut-btn--danger{
   background: var(--surface-base);
   border-color: var(--system-error);
   color: var(--system-error);
-}
-/* danger-emphasis — solid error fill (측정 중지 등 활성 파괴 액션 · emphasis의 error판). */
-.erut-btn--danger-emphasis{
-  background: var(--system-error);
-  border-color: var(--system-error);
-  color: var(--on-primary);
 }
 
 /* ---------- Fields ---------- */

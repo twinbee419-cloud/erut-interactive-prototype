@@ -608,7 +608,7 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, padding: "12px 14px", marginTop: 12, borderTop: "1px solid var(--border-low)" }}>
           <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onOpenDevice}>상세</button>
           {isMeasuring && (
-            <button className="erut-btn erut-btn--danger-emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 중지 (F7)" onClick={() => onBoardControl && onBoardControl(d.id, "stop")}>
+            <button className="erut-btn erut-btn--danger erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 중지 (F7)" onClick={() => onBoardControl && onBoardControl(d.id, "stop")}>
               <svg viewBox="0 0 12 12" width="9" height="9" fill="currentColor"><rect x="2" y="2" width="8" height="8"/></svg>
               측정 중지
             </button>
@@ -631,7 +631,7 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
     <div className="erut-page-enter" style={{ height: "calc(100% + 40px)", width: "calc(100% + 80px)", margin: "-20px -40px", display: "flex" }}>
 
       {/* ▼ 좌측 정보 사이드바 (240px · surface-base) ▼ */}
-      <aside style={{ width: 240, flexShrink: 0, background: "var(--surface-base)", borderRight: "1px solid var(--border-medium)", padding: "20px", display: "flex", flexDirection: "column", overflow: "auto" }}>
+      <aside style={{ width: 240, flexShrink: 0, background: "var(--surface-base)", padding: "20px", display: "flex", flexDirection: "column", overflow: "auto" }}>
         {/* 프로젝트명 (줄바꿈 허용) */}
         <h2 style={{ font: "700 22px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>{proj.name}</h2>
 
@@ -642,8 +642,11 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
           {statRow("탐촉자 상태", activeChTotal,  totalChTotal,   "var(--system-caution)")}
         </div>
 
+        {/* divider — 집계 ↔ 생성일 */}
+        <div style={{ marginTop: 24, borderTop: "1px solid var(--border-low)" }}/>
+
         {/* 생성일 */}
-        <div style={{ marginTop: 28 }}>
+        <div style={{ marginTop: 20 }}>
           <div style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>생성일</div>
           <div style={{ font: "400 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginTop: 8 }}>{proj.startDate}</div>
         </div>
@@ -654,8 +657,8 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
           <div style={{ font: "400 13px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginTop: 8 }}>{proj.note || "—"}</div>
         </div>
 
-        {/* 하단 버튼 (divider + 세로 2버튼) */}
-        <div style={{ marginTop: "auto", paddingTop: 20, borderTop: "1px solid var(--border-low)", display: "flex", flexDirection: "column", gap: 8 }}>
+        {/* 버튼 (비고 아래 · 세로 2버튼) — Figma 위치: 하단 고정 아님 */}
+        <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--border-low)", display: "flex", flexDirection: "column", gap: 8 }}>
           <button className="erut-btn erut-btn--subtle" onClick={onAddDevice}>+ DAQ 추가</button>
           <button className="erut-btn erut-btn--default">편집</button>
         </div>
