@@ -55,7 +55,6 @@ function App() {
   const [selectedTarget, setSelectedTarget]   = useState("PIPE-A-204");
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [pickedProject, setPickedProject]     = useState(null);
-  const [showNewProject, setShowNewProject]   = useState(false);
   // v10.0: 환경 설정 모달 — 메뉴바 [설정] + 툴바 gear 공통 진입
   const [showSettings, setShowSettings]       = useState(false);
   // v12.0: F6/툴바 play 측정 시작 차단 다이얼로그 (미교정/만료 채널 존재 시) + 일괄 재교정 모달
@@ -316,9 +315,8 @@ function App() {
       <div className="erut-window__content" onClick={closeMenus} style={{ position: "relative" }}>
         {screen === "project" && (
           <window.ProjectPicker
-            onPick={(pid) => { setPickedProject(pid); goto("main"); }}
-            onNew={() => setShowNewProject(true)}
-            onLoad={() => {}} /* v8.8: 추후 윈도우 파일 탐색기 연동 예정 — 현재는 no-op */
+            onLoadFile={() => goto("main")}
+            onNewFile={() => { setSettingsInitialMenu("mc"); setSettingsInitialSubView("mc-add"); goto("settings"); }}
           />
         )}
         {screen === "connect" && (
@@ -411,14 +409,6 @@ function App() {
           />
         )}
         {/* v18.0: [18] 보고서는 풀스크린 → 모달로 전환. v27: [7] 검사 이력 화면 폐기(라우팅·메뉴·진입 전면 제거) */}
-
-        {/* 새 프로젝트 모달 */}
-        {showNewProject && (
-          <window.NewProjectModal
-            onClose={() => setShowNewProject(false)}
-            onCreate={() => { setShowNewProject(false); goto("main"); }}
-          />
-        )}
 
         {/* v10.0: 환경 설정 모달 (메뉴바 [설정] + 툴바 gear 공통 진입) */}
         {showSettings && (

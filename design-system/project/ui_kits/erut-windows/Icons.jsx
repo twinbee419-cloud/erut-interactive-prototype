@@ -143,4 +143,22 @@ window.EIcon = {
       <polyline points="3 12 7 12 10 19 14 5 17 12 21 12"/>
     </svg>
   ),
+  // 파일 불러오기 (file-search)
+  FileSearch: (p) => (
+    <svg viewBox="0 0 24 24" width={p?.size ?? 20} height={p?.size ?? 20} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" {...p}>
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5"/>
+      <polyline points="14 3 14 9 20 9"/>
+      <circle cx="15" cy="15" r="3"/>
+      <line x1="17.5" y1="17.5" x2="20" y2="20"/>
+    </svg>
+  ),
+  // 새 파일 등록 (file-plus)
+  FilePlus: (p) => (
+    <svg viewBox="0 0 24 24" width={p?.size ?? 20} height={p?.size ?? 20} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" {...p}>
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+      <polyline points="14 3 14 9 20 9"/>
+      <line x1="12" y1="12" x2="12" y2="18"/>
+      <line x1="9" y1="15" x2="15" y2="15"/>
+    </svg>
+  ),
 };
