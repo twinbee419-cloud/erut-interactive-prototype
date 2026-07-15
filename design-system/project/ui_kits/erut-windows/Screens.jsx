@@ -818,19 +818,19 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
                     onClick={() => onTargetCardClick(t.name)}
                     style={{
                       position: "relative",
-                      display: "flex", alignItems: "center", gap: 8,
+                      display: "flex", alignItems: "stretch",
                       background: isSelected ? "linear-gradient(var(--overlay-high),var(--overlay-high)), var(--surface-base)" : "var(--surface-base)",
                       border: isSelected ? "1px solid var(--border-emphasis)" : "1px solid var(--border-medium)",
-                      padding: "8px 10px",
                       opacity: isDimmed ? 0.6 : 1,
                       cursor: "pointer",
+                      overflow: "hidden",
                       transition: "opacity 120ms ease",
                     }}
                   >
-                    {/* 상태 badge(정상 green/약함 orange/나쁨 red) + 대상명 + 편집 링크 */}
-                    <span style={{ flexShrink: 0, padding: "3px 6px", font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)", background: sigColor }}>{sigLabel}</span>
-                    <span style={{ flex: 1, minWidth: 0, font: "700 12px/1.3 var(--font-kr)", letterSpacing: ".02em", color: isSelected ? "var(--content-emphasis)" : "var(--content-high)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</span>
-                    <span className="target-card__edit-link" style={{ flexShrink: 0, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", textDecoration: "underline" }} onClick={(e) => { e.stopPropagation(); onEditTarget && onEditTarget(t.name); }}>편집</span>
+                    {/* 가로 1행: [상태 badge(전체 높이·flush)] [대상명] [편집 링크] */}
+                    <span style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 44, padding: "6px 8px", font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)", background: sigColor }}>{sigLabel}</span>
+                    <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "8px 10px", font: "700 12px/1.3 var(--font-kr)", letterSpacing: ".02em", color: isSelected ? "var(--content-emphasis)" : "var(--content-high)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</span>
+                    <span className="target-card__edit-link" style={{ flexShrink: 0, alignItems: "center", padding: "8px 10px", font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", textDecoration: "underline" }} onClick={(e) => { e.stopPropagation(); onEditTarget && onEditTarget(t.name); }}>편집</span>
                   </div>
                 );
               })}
@@ -965,7 +965,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
 
             {/* 액션 버튼 (하단 고정 · 세로 · 상단 divider) — 상세보기=onStartMeasure(정상=brand emphasis outline/감육검출=error outline) / 탐촉자 설정=onEditChannel(default) */}
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: "auto", paddingTop: 16, borderTop: "1px solid var(--border-low)" }}>
-              <button className="erut-btn erut-btn--default" style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, color: isDefectSel ? "var(--system-error)" : "var(--content-emphasis)", borderColor: isDefectSel ? "var(--system-error)" : "var(--border-emphasis)" }} onClick={() => onStartMeasure && onStartMeasure(selected)}>
+              <button className={"erut-btn " + (isDefectSel ? "erut-btn--danger" : "erut-btn--outline-emphasis")} style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }} onClick={() => onStartMeasure && onStartMeasure(selected)}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
                 상세보기
               </button>
