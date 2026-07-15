@@ -691,6 +691,9 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
   // #2: 일괄 재교정 → [4-3-1] recal 모드 라우팅(onBatchRecal). 구 CalibrationWizard 모달 폐기.
   // v9.29 Wave D: 검사 대상 multi-select (array of names). 재클릭 = 토글 해제
   const [selectedTargetSet, setSelectedTargetSet] = $s([]);
+  // C-PRJ-03: 좌 사이드바 아코디언 접기/펼치기
+  const [targetsOpen, setTargetsOpen] = $s(true);
+  const [daqInfoOpen, setDaqInfoOpen] = $s(true);
 
   React.useEffect(() => {
     if (focusChannel) {
@@ -759,140 +762,122 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
   ];
 
   return (
-    // v9.30: DAQ 정보 full-width 배너(row 2) + 검사 대상/64ch/우측 패널 동일 행(row 3)
-    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "260px 1fr 400px", gridTemplateRows: "0px auto 1fr", alignContent: "start", columnGap: 16, rowGap: 16, padding: "20px 24px 20px 0", height: "100%" }}>
+    // C-PRJ-03: 좌 사이드바(240·surface-base·오른쪽 보더 없음) + 중앙 64ch 그리드(흰색) + 우 상세패널(404·상태 tint) · full-bleed
+    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "240px 1fr 404px", height: "100%", minHeight: 0 }}>
 
-      {/* ───── v9.30: 좌측 검사 대상 세로 리스트 — row 3 col 1 (DAQ 배너 아래) ───── */}
-      <div style={{ gridRow: 3, gridColumn: 1, background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-medium)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-            <h3 style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>검사 대상</h3>
-            <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>{TARGETS.length}개</span>
-          </div>
-          <p style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", margin: "4px 0 0" }}>카드 클릭으로 다중 선택 가능</p>
-        </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "8px 12px" }}>
-          {TARGETS.map(t => {
-            const isSelected = selectedTargetSet.includes(t.name);
-            const isDimmed = selectedTargetSet.length > 0 && !isSelected;
-            // v9.31: 결함 표시 border 삭제 — 결함 표시는 웹에서 처리 예정
-            // v15.1: '측정 중' → 등록 채널 신호 상태 집계 (우선순위: 나쁨 > 약함 > 정상). 등록 채널 0개면 표시 hide.
-            const targetActiveCells = cells.filter(c => c.targetName === t.name && c.sensor);
-            const sigCounts = targetActiveCells.reduce((acc, c) => { acc[c.sensor.state] = (acc[c.sensor.state] || 0) + 1; return acc; }, {});
-            const sigStatus = targetActiveCells.length === 0 ? null
-              : (sigCounts.err > 0)  ? "err"
-              : (sigCounts.warn > 0) ? "warn"
-              : "ok";
-            const sigLabel = sigStatus === "err" ? "나쁨" : sigStatus === "warn" ? "약함" : "정상";
-            const sigColor = sigStatus === "err" ? "var(--system-error)" : sigStatus === "warn" ? "var(--system-caution)" : "var(--system-success)";
-            return (
-              <div
-                key={t.name}
-                className="target-card target-card-v9"
-                onClick={() => onTargetCardClick(t.name)}
-                style={{
-                  position: "relative",
-                  background: isSelected ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "var(--surface-base)",
-                  border: isSelected ? "1px solid var(--border-emphasis)" : "1px solid var(--border-medium)",
-                  padding: "10px 12px",
-                  marginBottom: 8,
-                  opacity: isDimmed ? 0.6 : 1,
-                  cursor: "pointer",
-                  transition: "opacity 120ms ease",
-                }}
-              >
-                {/* 카드 = 검사 대상명 + 신호 상태만 (메타·채널 범위 제거) */}
-                <div className="target-card__name" style={{ color: isSelected ? "var(--content-emphasis)" : "var(--content-high)" }}>{t.name}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-                  {sigStatus && (
-                    <span style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: sigColor, display: "inline-flex", alignItems: "center", gap: 4 }}>
-                      <span style={{ width: 6, height: 6, background: sigColor, borderRadius: "50%" }}/>{sigLabel}
-                    </span>
-                  )}
-                </div>
-                {/* hover 시 우하단 "편집 →" 링크 */}
-                <span className="target-card__edit-link" style={{
-                  position: "absolute", bottom: 6, right: 10,
-                  font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em",
-                  color: "var(--content-emphasis)", textDecoration: "underline",
-                }} onClick={(e) => { e.stopPropagation(); onEditTarget && onEditTarget(t.name); }}>편집 →</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      {/* ───── 좌측 정보 사이드바 (surface-base · 오른쪽 보더 없음) ───── */}
+      <aside style={{ background: "var(--surface-base)", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 20, minHeight: 0, overflowY: "auto" }}>
 
-      {/* ───── v9.30: DAQ 정보 — row 2 cols 1-3 (full-width 배너) ───── */}
-      <div style={{ gridRow: 2, gridColumn: "1 / -1", background: "transparent", border: "1px solid var(--border-medium)", padding: "12px 16px", marginLeft: 24 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <span style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>MCuF-001</span>
-            <span className="erut-pill" style={{ padding: "2px 8px", fontSize: 11, lineHeight: 1 }}>
-              <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
-              연결됨
-            </span>
-          </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            {/* DAQ 단위 측정 제어 — idle=측정 시작 / measuring=측정 중지 (일시정지 폐기) */}
-            {bSt === "idle" ? (
-              <button className="erut-btn erut-btn--emphasis erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title="측정 시작 (F6)" onClick={() => onBoardControl && onBoardControl(boardId, "start")}>
-                <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><polygon points="4,2 14,8 4,14"/></svg>측정 시작
-              </button>
-            ) : (
-              <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--system-error)", borderColor: "var(--system-error)" }} title="측정 중지 (F7)" onClick={() => onBoardControl && onBoardControl(boardId, "stop")}>
-                <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="3" width="10" height="10"/></svg>측정 중지
-              </button>
-            )}
-            {/* 보고서 출력·진단/로그 → toolbar로 이동 (전역 컨텍스트 액션) */}
-          </div>
+        {/* DAQ명 + 연결 상태 pill */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+          <span style={{ font: "700 22px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>MCuF-001</span>
+          <span className="erut-pill" style={{ padding: "2px 8px", fontSize: 11, lineHeight: 1 }}>
+            <span className="erut-led is-green" style={{ width: 8, height: 8 }}><span className="erut-led__halo"/><span className="erut-led__dot"/></span>
+            연결됨
+          </span>
         </div>
-        {/* v8.8: 메타 정보 4-col stripe (Config/샘플링/펌웨어는 진단/로그 모달로 이동) */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, paddingTop: 10, borderTop: "1px solid var(--border-low)" }}>
-          {META.map((m) => (
-            <div key={m.label}>
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 }}>{m.label}</div>
-              <div style={{
-                font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em",
-                color: m.emphasis ? "var(--content-emphasis)" : m.success ? "var(--system-success)" : m.link ? "var(--content-emphasis)" : "var(--content-high)",
-                textDecoration: m.link ? "underline" : "none",
-                cursor: m.link ? "pointer" : "default",
-              }}>{m.value}</div>
+
+        {/* 측정 제어 + DAQ 설정 (세로 full-width) — DAQ 단위 제어(idle=시작 / measuring=중지) */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {bSt === "idle" ? (
+            <button className="erut-btn erut-btn--emphasis" style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }} title="측정 시작 (F6)" onClick={() => onBoardControl && onBoardControl(boardId, "start")}>
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><polygon points="4,2 14,8 4,14"/></svg>측정 시작
+            </button>
+          ) : (
+            <button className="erut-btn erut-btn--danger" style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }} title="측정 중지 (F7)" onClick={() => onBoardControl && onBoardControl(boardId, "stop")}>
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="3" width="10" height="10"/></svg>측정 중지
+            </button>
+          )}
+          <button className="erut-btn erut-btn--default" style={{ width: "100%" }}>DAQ 설정</button>
+        </div>
+
+        {/* 검사 대상 아코디언 — 카드 클릭 = 다중 선택(그리드 dim) · 편집 링크 = onEditTarget */}
+        <div style={{ borderTop: "1px solid var(--border-low)", paddingTop: 16 }}>
+          <button
+            onClick={() => setTargetsOpen(o => !o)}
+            style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", background: "transparent", border: "none", padding: 0, cursor: "pointer", font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}
+          >
+            검사 대상
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ transform: targetsOpen ? "rotate(180deg)" : "none", transition: "transform 120ms ease", color: "var(--content-low)" }}><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          {targetsOpen && (
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+              {TARGETS.map(t => {
+                const isSelected = selectedTargetSet.includes(t.name);
+                const isDimmed = selectedTargetSet.length > 0 && !isSelected;
+                // 등록 채널 신호 상태 집계 (우선순위: 나쁨 > 약함 > 정상)
+                const targetActiveCells = cells.filter(c => c.targetName === t.name && c.sensor);
+                const sigCounts = targetActiveCells.reduce((acc, c) => { acc[c.sensor.state] = (acc[c.sensor.state] || 0) + 1; return acc; }, {});
+                const sigStatus = (sigCounts.err > 0) ? "err" : (sigCounts.warn > 0) ? "warn" : "ok";
+                const sigLabel = sigStatus === "err" ? "나쁨" : sigStatus === "warn" ? "약함" : "정상";
+                const sigColor = sigStatus === "err" ? "var(--system-error)" : sigStatus === "warn" ? "var(--system-caution)" : "var(--system-success)";
+                return (
+                  <div
+                    key={t.name}
+                    className="target-card target-card-v9"
+                    onClick={() => onTargetCardClick(t.name)}
+                    style={{
+                      position: "relative",
+                      display: "flex", alignItems: "center", gap: 8,
+                      background: isSelected ? "linear-gradient(var(--overlay-high),var(--overlay-high)), var(--surface-base)" : "var(--surface-base)",
+                      border: isSelected ? "1px solid var(--border-emphasis)" : "1px solid var(--border-medium)",
+                      padding: "8px 10px",
+                      opacity: isDimmed ? 0.6 : 1,
+                      cursor: "pointer",
+                      transition: "opacity 120ms ease",
+                    }}
+                  >
+                    {/* 상태 badge(정상 green/약함 orange/나쁨 red) + 대상명 + 편집 링크 */}
+                    <span style={{ flexShrink: 0, padding: "3px 6px", font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)", background: sigColor }}>{sigLabel}</span>
+                    <span style={{ flex: 1, minWidth: 0, font: "700 12px/1.3 var(--font-kr)", letterSpacing: ".02em", color: isSelected ? "var(--content-emphasis)" : "var(--content-high)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</span>
+                    <span className="target-card__edit-link" style={{ flexShrink: 0, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", textDecoration: "underline" }} onClick={(e) => { e.stopPropagation(); onEditTarget && onEditTarget(t.name); }}>편집</span>
+                  </div>
+                );
+              })}
             </div>
-          ))}
+          )}
         </div>
-      </div>
 
-      {/* ───── v9.30: 중앙 64ch 그리드 — row 3 col 2 ───── */}
-      <div style={{ gridRow: 3, gridColumn: 2, minWidth: 0, display: "flex", flexDirection: "column" }}>
-        {/* v9.9: 1행 = h3 + 우측 서브 안내 + 우측 끝 버튼 / 2행 = 카운터 좌측 정렬 */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-            <h3 style={{ font: "700 15px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>64CH 채널 상태</h3>
-            <span style={{ font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>더블 클릭 → 우측 패널 A-scan 확대</span>
-          </div>
-          {/* v12.0: '+ 탐촉자 추가' 좌측 — 교정 필요 채널 일괄 재교정 진입 (N > 0 시에만 노출) */}
+        {/* DAQ 정보 아코디언 (시리얼번호·IP·등록채널·송신일시) */}
+        <div style={{ borderTop: "1px solid var(--border-low)", paddingTop: 16 }}>
+          <button
+            onClick={() => setDaqInfoOpen(o => !o)}
+            style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", background: "transparent", border: "none", padding: 0, cursor: "pointer", font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}
+          >
+            DAQ 정보
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ transform: daqInfoOpen ? "rotate(180deg)" : "none", transition: "transform 120ms ease", color: "var(--content-low)" }}><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          {daqInfoOpen && (
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
+              {META.map(m => (
+                <div key={m.label}>
+                  <div style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>{m.label}</div>
+                  <div style={{ font: "400 14px/1.3 var(--font-kr)", letterSpacing: ".02em", color: m.emphasis ? "var(--content-emphasis)" : m.success ? "var(--system-success)" : "var(--content-medium)", marginTop: 6 }}>{m.value}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+      </aside>
+
+      {/* ───── 중앙 64ch 그리드 (흰색) ───── */}
+      <section style={{ minWidth: 0, display: "flex", flexDirection: "column", padding: "20px 24px", overflowY: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+          <h3 style={{ font: "700 18px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>
+            64CH 탐촉자 상태 <span style={{ color: "var(--content-emphasis)" }}>{cells.length}</span> / 64
+          </h3>
+          {/* 일괄 재교정(교정 주기 초과 N>0 시) + 탐촉자 추가 */}
           <div style={{ display: "flex", gap: 8 }}>
             {(() => {
               const needsCalibChannels = cells.filter(c => c.calibrationStatus === "expired");
               if (needsCalibChannels.length === 0) return null;
               return (
-                <button
-                  className="erut-btn erut-btn--default erut-btn--sm"
-                  style={{ color: "var(--system-caution)", borderColor: "var(--system-caution)" }}
-                  onClick={() => onBatchRecal && onBatchRecal(needsCalibChannels)}
-                  title={`교정 주기 초과 ${needsCalibChannels.length}채널 일괄 재교정`}
-                >
-                  일괄 재교정
-                </button>
+                <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => onBatchRecal && onBatchRecal(needsCalibChannels)} title={`교정 주기 초과 ${needsCalibChannels.length}채널 일괄 재교정`}>일괄 재교정</button>
               );
             })()}
-            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => onAddSensor && onAddSensor()}>+ 탐촉자 추가</button>
+            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => onAddSensor && onAddSensor()}>+ 추가</button>
           </div>
-        </div>
-        <div style={{ display: "flex", justifyContent: "flex-start", gap: 10, marginBottom: 8, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-success)" }}/>정상 {okCount}</span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-caution)" }}/>약함 {warnCount}</span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--system-error)" }}/>나쁨 {errCount}</span>
         </div>
         <window.ChannelGrid
           cells={cells}
@@ -904,106 +889,91 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
           focusActive={focusActive}
           showTitle={false}
           showAttachCounters={false}
+          showDefectLegend={false}
           onCellClick={(id) => setSelected(id)}
           onCellDoubleClick={(id) => onStartMeasure && onStartMeasure(id)}
         />
+        {/* 단일 legend — 정상·약함·나쁨(신호 LED) + 감육 검출(마커) */}
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 14, marginTop: 12, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--system-success)" }}/>정상 {okCount}</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--system-caution)" }}/>약함 {warnCount}</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--system-error)" }}/>나쁨 {errCount}</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span className="erut-ch-cell is-defect" style={{ width: 14, height: 14, padding: 0, minWidth: 0, cursor: "default" }}><span className="erut-ch-cell__flaw"/></span>감육 검출 {DEFECT_CHANNELS.length}</span>
+        </div>
+      </section>
 
-        {/* v9.16: [1-1] 대시보드 deep link 안내 배너 삭제 — v7.0에서 [1-1] 폐기로 메시지 obsolete */}
-      </div>
+      {/* ───── 우측 상세 패널 (404 · 상태 tint: 정상=연블루 / 감육검출=peach) ───── */}
+      {(() => {
+        const selectedCell = cells.find(c => c.id === selected);
+        const isDefectSel = !!(selectedCell && selectedCell.defect);
+        const nominal = 10;                                        // 공칭 두께 (PIPE-A)
+        const thinDelta = ((cur.thickness - nominal) / nominal * 100).toFixed(1);
+        const isBad  = cur.state === "err";
+        const isWeak = cur.state === "warn";
+        const ampColor = isBad ? "var(--system-error)" : isWeak ? "var(--system-caution)" : "var(--system-success)";
+        const ampText  = isBad ? "나쁨" : isWeak ? "약함" : "정상";
+        const selTargetName = selectedCell ? (selectedCell.targetName || "—") : "—";
+        const lbl = { font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" };
+        const val = { font: "700 14px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 8 };
+        return (
+          <aside style={{ minWidth: 0, background: isDefectSel ? "rgba(243,53,35,0.06)" : "var(--surface-subtle-3)", padding: 20, display: "flex", flexDirection: "column", gap: 16, overflowY: "auto" }}>
 
-      {/* v9.30: 우측 사이드패널 — row 3 col 3 */}
-      <div className="erut-panel" style={{ gridRow: 3, gridColumn: 3, minWidth: 0 }}>
-        <div className="erut-panel__header">{selected.toUpperCase().replace("CH","CH ")}</div>
-        <div className="erut-panel__body" style={{ overflowY: "auto", padding: 16, display: "flex", flexDirection: "column" }}>
-
-          {/* v8.8: 채널 메타 한 줄 이동 — 측정 통계 컨테이너 하단으로 (아래로 옮김) */}
-
-          {/* A-SCAN 미리보기 */}
-          <div style={{ marginTop: 0 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-              <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>A-SCAN</div>
-              <div style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>0 – 100 μs · Gate A · Gate B</div>
+            {/* 헤더: CH + 두께 값(+델타%) + 감육검출 badge */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <span style={{ font: "700 18px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{selected.toUpperCase().replace("CH", "CH ")}</span>
+                <span style={{ font: "700 18px/1 var(--font-kr)", letterSpacing: ".02em", color: isDefectSel ? "var(--system-error)" : "var(--content-emphasis)" }}>
+                  {cur.thickness.toFixed(2)}mm <span style={{ font: "400 13px/1 var(--font-kr)", color: "var(--content-low)" }}>({thinDelta}%)</span>
+                </span>
+              </div>
+              {isDefectSel && (
+                <span className="erut-pill" style={{ padding: "3px 8px", fontSize: 11, lineHeight: 1, border: "1px solid var(--system-caution)", color: "var(--system-caution)", boxShadow: "none", background: "var(--surface-base)" }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+                  감육 검출
+                </span>
+              )}
             </div>
-            <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", height: 200, position: "relative" }}>
-              {/* Gate A (적색) */}
-              <div style={{ position: "absolute", top: 0, bottom: 0, left: "18%", width: "22%", background: "var(--system-error)", opacity: 0.10, borderLeft: "2px solid var(--system-error)", borderRight: "2px solid var(--system-error)" }}/>
-              <div style={{ position: "absolute", top: 4, left: "19%", font: "700 9px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>Gate A</div>
-              {/* Gate B (브랜드) */}
-              <div style={{ position: "absolute", top: 0, bottom: 0, left: "55%", width: "25%", background: "var(--brand-primary)", opacity: 0.10, borderLeft: "2px solid var(--brand-primary)", borderRight: "2px solid var(--brand-primary)" }}/>
-              <div style={{ position: "absolute", top: 4, left: "56%", font: "700 9px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--brand-primary)" }}>Gate B</div>
-              {/* Threshold 라인 */}
-              <div style={{ position: "absolute", left: 0, right: 0, top: "35%", borderTop: "1px dashed var(--content-low)" }}/>
-              <div style={{ position: "absolute", right: 4, top: "32%", font: "400 9px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>Threshold 50%</div>
-              {/* v8.6: 정적 파형 SVG (애니메이션 제거) */}
-              <svg viewBox="0 0 300 200" preserveAspectRatio="none" width="100%" height="100%" style={{ position: "absolute", top: 0, left: 0 }}>
+
+            {/* A-scan mini (kit .erut-ascan + Gate A/Gate B) */}
+            <div className="erut-ascan" style={{ height: 200 }}>
+              <div className="erut-ascan__gate" style={{ left: "18%", width: "22%" }}/>
+              <div className="erut-ascan__gate-label" style={{ left: "19%" }}>Gate A</div>
+              <div className="erut-ascan__gate erut-ascan__gate--b" style={{ left: "55%", width: "25%" }}/>
+              <div className="erut-ascan__gate-label erut-ascan__gate-label--b" style={{ left: "56%" }}>Gate B</div>
+              <svg className="erut-ascan__wave" viewBox="0 0 300 200" preserveAspectRatio="none" width="100%" height="100%">
                 <line x1="0" y1="170" x2="300" y2="170" stroke="var(--border-low)" strokeWidth="1"/>
                 <path
                   d={isCurWarn
                     ? "M0 170 L50 170 L60 145 L66 25 L72 180 L78 170 L155 170 L165 150 L171 60 L177 180 L183 170 L300 170"
                     : "M0 170 L50 170 L60 165 L70 20 L80 178 L90 168 L155 168 L165 140 L172 60 L180 175 L188 168 L300 168"}
-                  stroke={isCurWarn ? "var(--system-caution)" : "var(--brand-primary)"}
+                  stroke={isDefectSel ? "var(--system-error)" : isCurWarn ? "var(--system-caution)" : "var(--brand-primary)"}
                   strokeWidth="1.5"
                   fill="none"
                 />
               </svg>
             </div>
-          </div>
 
-          {/* 측정 통계 (감육 모델: ToF→두께·감육률 / 상태=Amp 신뢰도) */}
-          {(() => {
-            const nominal = 10;                              // 공칭 두께 (PIPE-A)
-            const thinMm = Math.max(0, nominal - cur.thickness);
-            const thinPct = (thinMm / nominal * 100).toFixed(1);
-            const isBad = cur.state === "err";               // Amp 나쁨(1-5%) → 측정 불가
-            const isWeak = cur.state === "warn";             // Amp 약함(6-50%) → 신뢰도 낮음
-            const detected = !isBad && thinMm >= 2.0;        // 허용 감육 2.0mm 초과
-            const lbl = { font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginBottom: 4 };
-            const val = { font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" };
-            const unit = { fontSize: 10, color: "var(--content-low)", fontWeight: 400 };
-            const relColor = isBad ? "var(--system-error)" : isWeak ? "var(--system-caution)" : "var(--system-success)";
-            const relText = isBad ? "나쁨 (미부착)" : isWeak ? "약함 (점검 요망)" : "정상";
-            return (
-              <>
-                <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 12px", padding: 12, background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)" }}>
-                  <div><div style={lbl}>측정 두께</div><div style={val}>{isBad ? "—" : cur.thickness.toFixed(2)} <span style={unit}>mm / 공칭 10</span></div></div>
-                  <div><div style={lbl}>감육률 <span style={{ color: "var(--content-low)" }}>(감육량 {isBad ? "—" : thinMm.toFixed(1) + "mm"})</span></div><div style={{ ...val, color: "var(--system-error)" }}>{isBad ? "—" : thinPct + " %" + (isWeak ? " ⚠" : "")}</div></div>
-                  <div><div style={lbl}>ToF</div><div style={val}>{cur.tof} <span style={unit}>μs</span></div></div>
-                  <div><div style={lbl}>신호 세기 <span style={{ color: "var(--content-low)" }}>(Amp)</span></div><div style={{ ...val, color: relColor, display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, background: relColor, borderRadius: "50%" }}/>{relText}</div></div>
-                </div>
-                {detected && (
-                  <div style={{ marginTop: 8, font: "700 12px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--system-error)" }}>⚠ 감육 검출 · 허용 감육 2.0 mm 초과</div>
-                )}
-              </>
-            );
-          })()}
+            {/* 2열 spec grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 12px" }}>
+              <div><div style={lbl}>검사 대상</div><div style={val}>{selTargetName}</div></div>
+              <div><div style={lbl}>공칭 두께</div><div style={val}>10 mm</div></div>
+              <div><div style={lbl}>ToF</div><div style={val}>{cur.tof} μs</div></div>
+              <div><div style={lbl}>Gain</div><div style={val}>SW 12&nbsp;&nbsp;D 12&nbsp;&nbsp;A 12</div></div>
+              <div><div style={lbl}>신호 세기(Amp)</div><div style={{ ...val, color: ampColor, display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: ampColor }}/>{ampText}</div></div>
+              <div><div style={lbl}>최근 교정일</div><div style={val}>2026-06-30</div></div>
+            </div>
 
-          {/* v8.8: 채널 메타 한 줄 (측정 통계 컨테이너 하단으로 이동) */}
-          <div style={{ font: "400 12px/1.7 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", padding: "12px 0 0", marginTop: 12, borderTop: "1px solid var(--border-low)" }}>
-            주파수 5 MHz · Pulser 200V<br/>
-            {/* #7: Gain 3종 표시 — [4-3-1]에서 설정한 소프트웨어/디지털/아날로그 */}
-            Gain SW 12 · Digital 8 · Analog 8 dB<br/>
-            영점 정상 · 마지막 측정 {cur.age}
-          </div>
-
-          {/* 액션 버튼 (사이드패널 하단) — v14.0: 교정/Gate 통합 → 'Gain·Gate·교정 통합 편집' 단일 진입점 */}
-          {(() => {
-            const selectedCell = cells.find(c => c.id === selected);
-            const needsCalib = selectedCell && selectedCell.calibrationStatus === "expired";
-            return (
-              <button
-                className={"erut-btn " + (needsCalib ? "erut-btn--emphasis" : "erut-btn--default") + " erut-btn--m"}
-                style={{ width: "100%", marginTop: 12, ...(needsCalib ? { background: "var(--system-caution)", borderColor: "var(--system-caution)" } : {}) }}
-                onClick={() => onEditChannel && onEditChannel(selected)}
-                title={needsCalib ? "이 채널 교정 필요 — 편집 화면에서 교정·Gate 통합 처리" : "Gain·교정·Gate 통합 편집"}
-              >
-                {needsCalib ? "교정 필요 — 이 채널 설정 편집" : "이 채널 설정 편집"}
+            {/* 액션 버튼 (하단 고정 · 세로) — 상세보기=onStartMeasure / 탐촉자 설정=onEditChannel */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: "auto", paddingTop: 8 }}>
+              <button className="erut-btn erut-btn--default" style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, ...(isDefectSel ? { color: "var(--system-error)", borderColor: "var(--system-error)" } : {}) }} onClick={() => onStartMeasure && onStartMeasure(selected)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+                상세보기
               </button>
-            );
-          })()}
-          {/* v18.1: 보고서 출력 버튼은 DAQ 정보 옆 '진단/로그' 왼쪽으로 이동 (단위 일관성) */}
-          <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%", marginTop: 8 }} onClick={() => onStartMeasure && onStartMeasure(selected)}>A-scan 스캔 상세보기 ↗</button>
-        </div>
-      </div>
+              <button className="erut-btn erut-btn--default" style={{ width: "100%" }} onClick={() => onEditChannel && onEditChannel(selected)}>탐촉자 설정</button>
+            </div>
+          </aside>
+        );
+      })()}
 
       {/* v9.35 Wave E+F: 탐촉자 추가 + 교정을 한 화면으로 통합 → 풀스크린 [4-3-1] ChannelCommissioning 페이지로 라우팅 */}
 

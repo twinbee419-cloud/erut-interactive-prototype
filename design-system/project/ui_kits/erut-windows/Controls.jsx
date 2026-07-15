@@ -317,6 +317,9 @@ window.ChannelGrid = function ChannelGrid({
                   {/* 채널 번호 (정사각형 셀) */}
                   <span style={{ font: "700 9px/1 var(--font-kr)", color: "var(--content-high)" }}>{c.num != null ? String(c.num).padStart(2, "0") : ""}</span>
                 </>
+              ) : needsCalibration ? (
+                /* 재교정 필요 — 진회색 solid 셀(kit .is-needs-calibration) + 흰 텍스트 */
+                <span style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)", width: "100%", textAlign: "center" }}>재교정 필요</span>
               ) : (
                 <>
                   {/* v22.6: 감육 검출 마커 — 좌상단 코너(단일·등급 없음) */}
