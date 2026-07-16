@@ -671,7 +671,7 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
                     onClick={() => onTargetCardClick(t.name)}
                     style={{
                       position: "relative",
-                      display: "flex", alignItems: "stretch",
+                      display: "flex", flexDirection: "row", alignItems: "stretch", gap: 0,
                       background: isSelected ? "linear-gradient(var(--overlay-high),var(--overlay-high)), var(--surface-base)" : "var(--surface-base)",
                       border: isSelected ? "1px solid var(--border-emphasis)" : "1px solid var(--border-medium)",
                       opacity: isDimmed ? 0.6 : 1,
@@ -680,10 +680,10 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
                       transition: "opacity 120ms ease",
                     }}
                   >
-                    {/* 가로 1행: [상태 badge(전체 높이·flush·고정폭)] [대상명(줄바꿈)] [편집 링크(hover)] */}
+                    {/* 가로 1행(세로 중앙): [상태 badge(전체 높이·flush·고정폭)] [대상명(줄바꿈·flex)] [편집 링크(우측·hover)] */}
                     <span style={{ flexShrink: 0, width: 64, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "6px 8px", font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-inverse)", background: sigColor }}>{sigLabel}</span>
                     <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "10px 12px", font: "700 13px/1.35 var(--font-kr)", letterSpacing: ".02em", color: isSelected ? "var(--content-emphasis)" : "var(--content-high)", wordBreak: "break-all" }}>{t.name}</span>
-                    <span className="target-card__edit-link" style={{ flexShrink: 0, alignItems: "center", padding: "10px 12px", font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", textDecoration: "underline" }} onClick={(e) => { e.stopPropagation(); onEditTarget && onEditTarget(t.name); }}>편집</span>
+                    <span className="target-card__edit-link" style={{ flexShrink: 0, alignSelf: "center", padding: "10px 12px", font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", textDecoration: "underline", whiteSpace: "nowrap" }} onClick={(e) => { e.stopPropagation(); onEditTarget && onEditTarget(t.name); }}>편집</span>
                   </div>
                 );
               })}
