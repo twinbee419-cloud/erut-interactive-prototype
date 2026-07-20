@@ -3588,91 +3588,218 @@ function TargetPresetManage({ onBack }) {
   );
 }
 
-// ───── 검사 매핑 — 탐촉자(채널) ↔ 검사 대상(모재) 표면 위치 매핑 대표 화면 (목업). 실제 3D 배치·엔코더 좌표 편집은 스캔형(FastView) 범위 — 준비 중 ─────
+// ───── 검사 매핑 — 검사 대상(모재)의 형상 수치로 isometric 3D 도면을 생성하고, 표면 클릭으로 탐촉자를 배치하는 화면 ─────
+// 스캔형(FastView) 매핑 개념의 대표 목업. 3D 엔진 아님(형상 비율 반영 SVG isometric). 실제 저장·정밀 좌표는 백엔드 범위.
+const clampNum = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// 선택 모재의 형상 수치(외경·내경·길이·두께)로 isometric SVG 도면 요소를 생성.
+// 배관·원통형 탱크 = 수평 원통 / 그 외(플랜지·용접부·Dome·구형·기타) = isometric 판형.
+function IsoShape({ shape, dims, gid }) {
+  const OD = parseFloat(dims.od) || 300;
+  const ID = parseFloat(dims.idim) || OD * 0.86;
+  const L  = parseFloat(dims.length) || OD * 6;
+  const isCyl = shape === "배관" || shape === "탱크 (원통형)";
+
+  if (isCyl) {
+    const ratio = clampNum(L / OD, 1.4, 9);               // 길이/외경 비율 반영
+    const bodyW = clampNum(120 + ratio * 32, 170, 400);   // 원통 몸통 길이
+    const ry    = clampNum(38 + (OD / 1500) * 60, 42, 96);// 외경 → 반지름
+    const rx    = ry * 0.34;                               // 원근용 타원 가로반경
+    const ryIn  = ry * clampNum(ID / OD, 0.3, 0.95);      // 내경 → 벽 두께 표현
+    const rxIn  = ryIn * 0.34;
+    const cy    = 180;
+    const leftX = 300 - bodyW / 2;
+    const rightX = 300 + bodyW / 2;
+    return (
+      <>
+        {/* 뒤쪽 마구리(back cap) */}
+        <ellipse cx={leftX} cy={cy} rx={rx} ry={ry} fill="var(--surface-strong)" stroke="var(--content-high)" strokeWidth="1"/>
+        {/* 원통 몸통 — 세로 그라데이션으로 곡률 음영 */}
+        <rect x={leftX} y={cy - ry} width={bodyW} height={ry * 2} fill={"url(#" + gid + ")"} stroke="none"/>
+        <line x1={leftX} y1={cy - ry} x2={rightX} y2={cy - ry} stroke="var(--content-high)" strokeWidth="1"/>
+        <line x1={leftX} y1={cy + ry} x2={rightX} y2={cy + ry} stroke="var(--content-high)" strokeWidth="1"/>
+        {/* 앞쪽 마구리(front cap) + 내경(벽 두께) */}
+        <ellipse cx={rightX} cy={cy} rx={rx} ry={ry} fill="var(--surface-subtle-1)" stroke="var(--content-high)" strokeWidth="1"/>
+        <ellipse cx={rightX} cy={cy} rx={rxIn} ry={ryIn} fill="var(--surface-strong)" stroke="var(--border-high)" strokeWidth="1"/>
+      </>
+    );
+  }
+
+  // 판형(isometric box) — 플랜지·용접부·Dome·구형·평판·기타
+  const w = clampNum(60 + (L / 1500) * 240, 120, 360);
+  const d = clampNum(60 + (OD / 1500) * 160, 80, 220);
+  const h = 30;
+  const cx = 300, topY = 90;
+  const p = {
+    tl: [cx - w / 2, topY + d / 2],
+    tt: [cx,         topY],
+    tr: [cx + w / 2, topY + d / 2],
+    tb: [cx,         topY + d],
+  };
+  const fx = (pt) => pt[0] + "," + pt[1];
+  return (
+    <>
+      {/* 상면(검사면) — 컬러 그라데이션 */}
+      <polygon points={[fx(p.tl), fx(p.tt), fx(p.tr), fx(p.tb)].join(" ")} fill={"url(#" + gid + ")"} stroke="var(--content-high)" strokeWidth="1"/>
+      {/* 좌측면 */}
+      <polygon points={[fx(p.tl), fx(p.tb), (p.tb[0]) + "," + (p.tb[1] + h), (p.tl[0]) + "," + (p.tl[1] + h)].join(" ")} fill="var(--surface-strong)" stroke="var(--content-high)" strokeWidth="1"/>
+      {/* 우측면 */}
+      <polygon points={[fx(p.tr), fx(p.tb), (p.tb[0]) + "," + (p.tb[1] + h), (p.tr[0]) + "," + (p.tr[1] + h)].join(" ")} fill="var(--surface-subtle-1)" stroke="var(--content-high)" strokeWidth="1"/>
+      {/* 상면 격자(참조선) */}
+      <line x1={(p.tl[0] + p.tt[0]) / 2} y1={(p.tl[1] + p.tt[1]) / 2} x2={(p.tr[0] + p.tb[0]) / 2} y2={(p.tr[1] + p.tb[1]) / 2} stroke="var(--surface-base)" strokeWidth="0.6"/>
+      <line x1={(p.tt[0] + p.tr[0]) / 2} y1={(p.tt[1] + p.tr[1]) / 2} x2={(p.tl[0] + p.tb[0]) / 2} y2={(p.tl[1] + p.tb[1]) / 2} stroke="var(--surface-base)" strokeWidth="0.6"/>
+    </>
+  );
+}
+
 function InspectionMapping({ onBack }) {
-  const channels = window.MOCK.sensors.slice(0, 24); // 대표 채널 목록 (PIPE-A-204 소속 24ch)
-  const [selectedCh, setSelectedCh] = $s(channels[0] && channels[0].id);
-  const [target, setTarget] = $s(window.MOCK.targets[0] && window.MOCK.targets[0].id);
-  const idx = Math.max(0, channels.findIndex((c) => c.id === selectedCh));
+  const targets = window.MOCK.targets;
+  const [targetId, setTargetId] = $s(targets[0] && targets[0].id);
+  // 배치된 탐촉자 — { id, ch, x, y } (x·y = 3D 도면 컨테이너 기준 %). seq로 채널 번호 부여.
+  const [placements, setPlacements] = $s([]);
+  const [seq, setSeq] = $s(1);
+  const [selectedId, setSelectedId] = $s(null);
+
+  const target = targets.find((t) => t.id === targetId) || targets[0];
+  const form = buildTargetForm(target);        // 형상 수치(외경·내경·길이·두께·형태) 재사용
+  const gid = "iso-map-grad";
+
+  // 3D 도면 표면 클릭 → 해당 위치에 탐촉자 마커 추가
+  const placeProbe = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * 100;
+    const y = ((e.clientY - r.top) / r.height) * 100;
+    const ch = "CH " + String(seq).padStart(2, "0");
+    const id = "pl-" + seq + "-" + Math.round(x) + "-" + Math.round(y);
+    setPlacements((prev) => [...prev, { id, ch, x, y }]);
+    setSeq((s) => s + 1);
+    setSelectedId(id);
+  };
+  const removeProbe = (id, e) => {
+    if (e) e.stopPropagation();
+    setPlacements((prev) => prev.filter((p) => p.id !== id));
+    if (selectedId === id) setSelectedId(null);
+  };
+  const clearAll = () => { setPlacements([]); setSeq(1); setSelectedId(null); };
+
+  // 모재 변경 시 배치 초기화(모재마다 형상이 달라 좌표 무의미)
+  const changeTarget = (id) => { setTargetId(id); clearAll(); };
+
+  const specRow = (label, value, unit) => (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "7px 0", borderBottom: "1px solid var(--border-low)" }}>
+      <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>{label}</span>
+      <span style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{value || "—"}{value ? (unit || "") : ""}</span>
+    </div>
+  );
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 0, height: "100%" }}>
-      {/* 좌측: 탐촉자 채널 목록 */}
-      <div style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
-        <div style={{ padding: "16px 16px 10px", font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>탐촉자 채널 {channels.length}</div>
-        <div style={{ flex: 1, overflowY: "auto", paddingBottom: 12 }}>
-          {channels.map((c) => {
-            const active = c.id === selectedCh;
-            return (
-              <button
-                key={c.id}
-                onClick={() => setSelectedCh(c.id)}
-                className={"erut-tree__item" + (active ? " is-active" : "")}
-                style={{ justifyContent: "space-between", padding: "9px 16px" }}
-              >
-                <span>{c.id.toUpperCase().replace("CH", "CH ")}</span>
-                <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>매핑됨</span>
-              </button>
-            );
-          })}
+    <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 0, height: "100%" }}>
+      {/* ───── 좌측: 검사 대상(모재) 선택 + 형상 수치 ───── */}
+      <div style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", display: "flex", flexDirection: "column", overflowY: "auto" }}>
+        <div style={{ padding: "16px 16px 8px", font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>검사 대상(모재)</div>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {targets.map((t) => (
+            <button key={t.id} onClick={() => changeTarget(t.id)} className={"erut-tree__item" + (t.id === targetId ? " is-active" : "")} style={{ padding: "9px 16px", fontWeight: 700, fontSize: 13 }}>
+              {t.name}
+            </button>
+          ))}
+        </div>
+        <div style={{ padding: "18px 16px 8px", font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>형상 수치</div>
+        <div style={{ padding: "0 16px 16px" }}>
+          {specRow("형태", form.shape)}
+          {specRow("외경", form.od, " mm")}
+          {specRow("내경", form.idim, " mm")}
+          {specRow("길이", form.length, " mm")}
+          {specRow("공칭두께", form.th, " mm")}
+          {specRow("소재", form.material)}
         </div>
       </div>
 
-      {/* 우측: 매핑 캔버스 */}
+      {/* ───── 우측: 3D 도면 + 배치 ───── */}
       <div style={{ padding: "20px 30px", overflowY: "auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>검사 매핑</h2>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <select className="erut-field" value={target} onChange={(e) => setTarget(e.target.value)} style={{ width: 200 }}>
-              {window.MOCK.targets.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
-            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onBack}>〈 이전</button>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div>
+            <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>검사 매핑</h2>
+            <p style={{ font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", margin: "4px 0 0" }}>선택한 모재의 형상 수치로 생성한 3D 도면입니다. 표면을 클릭하면 해당 위치에 탐촉자가 배치됩니다.</p>
           </div>
+          <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onBack}>〈 이전</button>
         </div>
 
-        <div style={{ background: "var(--surface-subtle-2)", border: "1px dashed var(--border-medium)", padding: "12px 16px", marginBottom: 20 }}>
-          <div style={{ font: "700 12px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>준비 중</div>
-          <div style={{ font: "400 11px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>탐촉자와 검사 대상(모재) 표면의 3D 배치·편집 기능은 준비 중입니다. 아래는 배관 전개도 기준 대표 배치 예시(참고용, 읽기 전용)입니다.</div>
-        </div>
-
-        {/* 배관 전개도 스키매틱 + 채널 마커 */}
-        <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "24px 20px", position: "relative", height: 200 }}>
-          <svg width="100%" height="100%" viewBox="0 0 900 140" preserveAspectRatio="none">
-            <rect x="0" y="30" width="900" height="80" fill="none" stroke="var(--border-high)" strokeWidth="1.5"/>
-            <line x1="0" y1="70" x2="900" y2="70" stroke="var(--border-low)" strokeWidth="1" strokeDasharray="4 4"/>
+        {/* 3D 도면 (형상 기반 생성) — 표면 클릭 = 탐촉자 배치 */}
+        <div
+          onClick={placeProbe}
+          title="표면을 클릭하여 탐촉자를 배치해 주세요"
+          style={{ position: "relative", background: "var(--surface-base)", border: "1px solid var(--border-medium)", height: 320, cursor: "crosshair", overflow: "hidden" }}
+        >
+          <svg width="100%" height="100%" viewBox="0 0 600 320" preserveAspectRatio="xMidYMid meet" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+            <defs>
+              <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#F1F5FC"/>
+                <stop offset="0.5" stopColor="#D5DEEC"/>
+                <stop offset="1" stopColor="#AEB8CA"/>
+              </linearGradient>
+            </defs>
+            <IsoShape shape={form.shape} dims={form} gid={gid}/>
           </svg>
-          {channels.map((c, i) => {
-            const left = 4 + (i / Math.max(1, channels.length - 1)) * 92; // %
-            const active = c.id === selectedCh;
+
+          {/* 배치된 탐촉자 마커 */}
+          {placements.map((p) => {
+            const sel = p.id === selectedId;
             return (
               <div
-                key={c.id}
-                onClick={() => setSelectedCh(c.id)}
-                title={c.id}
+                key={p.id}
+                onClick={(e) => { e.stopPropagation(); setSelectedId(p.id); }}
+                onDoubleClick={(e) => removeProbe(p.id, e)}
+                title={p.ch + " · 더블클릭으로 삭제"}
                 style={{
-                  position: "absolute", top: "50%", left: left + "%", transform: "translate(-50%,-50%)",
-                  width: active ? 16 : 10, height: active ? 16 : 10, borderRadius: "50%",
-                  background: active ? "var(--brand-primary)" : "var(--content-low)",
-                  border: "2px solid var(--surface-base)", cursor: "pointer",
+                  position: "absolute", left: p.x + "%", top: p.y + "%", transform: "translate(-50%,-50%)",
+                  minWidth: 30, height: 20, padding: "0 6px", display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  background: sel ? "var(--brand-primary)" : "var(--content-medium)",
+                  color: "var(--content-inverse)", font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em",
+                  border: "2px solid var(--surface-base)", cursor: "pointer", whiteSpace: "nowrap",
                 }}
-              />
+              >
+                {p.ch}
+              </div>
             );
           })}
+
+          {placements.length === 0 && (
+            <div style={{ position: "absolute", left: 0, right: 0, bottom: 14, textAlign: "center", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", pointerEvents: "none" }}>
+              도면 표면을 클릭해 탐촉자를 배치해 주세요
+            </div>
+          )}
         </div>
 
-        {/* 선택 채널 참고 정보 (읽기 전용) */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px 18px", marginTop: 20 }}>
-          <div style={{ padding: "10px 12px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)" }}>
-            <div style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)", marginBottom: 4 }}>선택 채널</div>
-            <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-high)" }}>{selectedCh ? selectedCh.toUpperCase().replace("CH", "CH ") : "—"}</div>
+        {/* 배치된 탐촉자 목록 */}
+        <div className="erut-panel" style={{ marginTop: 18 }}>
+          <div className="erut-panel__header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>배치된 탐촉자 {placements.length}개</span>
+            {placements.length > 0 && <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={clearAll}>전체 삭제</button>}
           </div>
-          <div style={{ padding: "10px 12px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)" }}>
-            <div style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)", marginBottom: 4 }}>전개도 위치</div>
-            <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-high)" }}>{idx + 1} / {channels.length}</div>
-          </div>
-          <div style={{ padding: "10px 12px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)" }}>
-            <div style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)", marginBottom: 4 }}>매핑 대상</div>
-            <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-high)" }}>{target}</div>
+          <div className="erut-panel__body" style={{ padding: 0 }}>
+            {placements.length === 0 ? (
+              <div style={{ padding: "16px 16px", font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>배치된 탐촉자가 없습니다. 위 도면 표면을 클릭해 추가해 주세요.</div>
+            ) : (
+              placements.map((p) => {
+                const sel = p.id === selectedId;
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => setSelectedId(p.id)}
+                    style={{
+                      display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 14, alignItems: "center",
+                      padding: "10px 16px", borderTop: "1px solid var(--border-low)", cursor: "pointer",
+                      background: sel ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "transparent",
+                    }}
+                  >
+                    <span style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: sel ? "var(--content-emphasis)" : "var(--content-high)" }}>{p.ch}</span>
+                    <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>{target.name} · 표면 위치 X {p.x.toFixed(0)}% · Y {p.y.toFixed(0)}%</span>
+                    <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ color: "var(--system-error)", borderColor: "var(--system-error)" }} onClick={(e) => removeProbe(p.id, e)}>삭제</button>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>
