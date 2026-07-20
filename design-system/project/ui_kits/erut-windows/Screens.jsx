@@ -3655,63 +3655,98 @@ function IsoShape({ shape, dims, gid }) {
 function InspectionMapping({ onBack }) {
   const targets = window.MOCK.targets;
   const [targetId, setTargetId] = $s(targets[0] && targets[0].id);
-  // 배치된 탐촉자 — { id, ch, x, y } (x·y = 3D 도면 컨테이너 기준 %). seq로 채널 번호 부여.
+  // 배치된 탐촉자 — { id, ch, x, y, targetId } (x·y = 3D 도면 컨테이너 기준 %). 검사 대상별로 유지.
   const [placements, setPlacements] = $s([]);
-  const [seq, setSeq] = $s(1);
+  const [seq, setSeq] = $s(1);              // 전역 채널 번호 카운터 (검사 대상 넘어 연속)
   const [selectedId, setSelectedId] = $s(null);
+  const [placing, setPlacing] = $s(false);  // 배치 모드(컨텍스트 메뉴 '+ 탐촉자 추가' → 다음 표면 클릭으로 배치)
+  // 우클릭 컨텍스트 메뉴 — { x, y, kind: "target"|"probe", targetId?, placementId? } (뷰포트 좌표)
+  const [ctx, setCtx] = $s(null);
 
   const target = targets.find((t) => t.id === targetId) || targets[0];
   const form = buildTargetForm(target);        // 형상 수치(외경·내경·길이·두께·형태) 재사용
   const gid = "iso-map-grad";
+  const shown = placements.filter((p) => p.targetId === targetId); // 현재 검사 대상의 마커만 표시
 
-  // 3D 도면 표면 클릭 → 해당 위치에 탐촉자 마커 추가
+  const openCtx = (e, kind, extra) => { e.preventDefault(); e.stopPropagation(); setCtx({ x: e.clientX, y: e.clientY, kind, ...(extra || {}) }); };
+  const closeCtx = () => setCtx(null);
+
+  // 3D 도면 표면 클릭 → 현재 검사 대상에 탐촉자 마커 추가
   const placeProbe = (e) => {
     const r = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - r.left) / r.width) * 100;
     const y = ((e.clientY - r.top) / r.height) * 100;
     const ch = "CH " + String(seq).padStart(2, "0");
-    const id = "pl-" + seq + "-" + Math.round(x) + "-" + Math.round(y);
-    setPlacements((prev) => [...prev, { id, ch, x, y }]);
+    const id = "pl-" + seq;
+    setPlacements((prev) => [...prev, { id, ch, x, y, targetId }]);
     setSeq((s) => s + 1);
     setSelectedId(id);
+    setPlacing(false);
   };
   const removeProbe = (id, e) => {
     if (e) e.stopPropagation();
     setPlacements((prev) => prev.filter((p) => p.id !== id));
     if (selectedId === id) setSelectedId(null);
   };
-  const clearAll = () => { setPlacements([]); setSeq(1); setSelectedId(null); };
+  const clearTarget = () => {
+    setPlacements((prev) => prev.filter((p) => p.targetId !== targetId));
+    setSelectedId(null);
+  };
+  // 컨텍스트 메뉴 '+ 탐촉자 추가' → 해당 검사 대상 활성화 + 배치 모드 진입
+  const startPlace = (tid) => { setTargetId(tid); setPlacing(true); setSelectedId(null); };
 
-  // 모재 변경 시 배치 초기화(모재마다 형상이 달라 좌표 무의미)
-  const changeTarget = (id) => { setTargetId(id); clearAll(); };
+  const ctxItems = !ctx ? [] : (
+    ctx.kind === "probe"
+      ? [{ label: "- 탐촉자 삭제", onClick: () => { removeProbe(ctx.placementId); closeCtx(); } }]
+      : [{ label: "+ 탐촉자 추가", onClick: () => { startPlace(ctx.targetId || targetId); closeCtx(); } }]
+  );
 
-  const specRow = (label, value, unit) => (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "7px 0", borderBottom: "1px solid var(--border-low)" }}>
-      <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>{label}</span>
-      <span style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{value || "—"}{value ? (unit || "") : ""}</span>
-    </div>
+  const specChip = (label, value, unit) => (
+    <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
+      <span style={{ color: "var(--content-low)" }}>{label} </span>
+      <span style={{ font: "700 11px/1 var(--font-kr)", color: "var(--content-high)" }}>{value || "—"}{value ? (unit || "") : ""}</span>
+    </span>
   );
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 0, height: "100%" }}>
-      {/* ───── 좌측: 검사 대상(모재) 선택 + 형상 수치 ───── */}
-      <div style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", display: "flex", flexDirection: "column", overflowY: "auto" }}>
-        <div style={{ padding: "16px 16px 8px", font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>검사 대상(모재)</div>
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          {targets.map((t) => (
-            <button key={t.id} onClick={() => changeTarget(t.id)} className={"erut-tree__item" + (t.id === targetId ? " is-active" : "")} style={{ padding: "9px 16px", fontWeight: 700, fontSize: 13 }}>
-              {t.name}
-            </button>
-          ))}
-        </div>
-        <div style={{ padding: "18px 16px 8px", font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>형상 수치</div>
-        <div style={{ padding: "0 16px 16px" }}>
-          {specRow("형태", form.shape)}
-          {specRow("외경", form.od, " mm")}
-          {specRow("내경", form.idim, " mm")}
-          {specRow("길이", form.length, " mm")}
-          {specRow("공칭두께", form.th, " mm")}
-          {specRow("소재", form.material)}
+      {/* ───── 좌측: 검사 대상(모재) ▸ 배치 탐촉자 트리 ───── */}
+      <div
+        className="erut-tree"
+        onContextMenu={(e) => openCtx(e, "target", { targetId })}
+        style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", overflowY: "auto" }}
+      >
+        <div className="erut-tree__group">검사 대상(모재)</div>
+        {targets.map((t) => {
+          const kids = placements.filter((p) => p.targetId === t.id);
+          return (
+            <div key={t.id}>
+              <button
+                className={"erut-tree__item" + (t.id === targetId ? " is-active" : "")}
+                onClick={() => setTargetId(t.id)}
+                onContextMenu={(e) => openCtx(e, "target", { targetId: t.id })}
+              >
+                {t.name}
+              </button>
+              {kids.length > 0 && (
+                <div className="erut-tree__sub">
+                  {kids.map((p) => (
+                    <button
+                      key={p.id}
+                      className={"erut-tree__item" + (p.id === selectedId ? " is-active" : "")}
+                      onClick={() => { setTargetId(t.id); setSelectedId(p.id); }}
+                      onContextMenu={(e) => openCtx(e, "probe", { placementId: p.id, targetId: t.id })}
+                    >
+                      {p.ch}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        <div style={{ padding: "12px 16px", font: "400 10px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+          검사 대상을 우클릭해 탐촉자를 추가하거나, 탐촉자를 우클릭해 삭제할 수 있습니다.
         </div>
       </div>
 
@@ -3720,16 +3755,16 @@ function InspectionMapping({ onBack }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <div>
             <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>검사 매핑</h2>
-            <p style={{ font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", margin: "4px 0 0" }}>선택한 모재의 형상 수치로 생성한 3D 도면입니다. 표면을 클릭하면 해당 위치에 탐촉자가 배치됩니다.</p>
+            <p style={{ font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", margin: "4px 0 0" }}>{target.name}의 형상 수치로 생성한 3D 도면입니다. 표면을 클릭하면 해당 위치에 탐촉자가 배치됩니다.</p>
           </div>
           <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onBack}>〈 이전</button>
         </div>
 
-        {/* 3D 도면 (형상 기반 생성) — 표면 클릭 = 탐촉자 배치 */}
+        {/* 3D 도면 (형상 기반 생성) — 표면 클릭 = 탐촉자 배치 · 형상 수치 오버레이 */}
         <div
           onClick={placeProbe}
           title="표면을 클릭하여 탐촉자를 배치해 주세요"
-          style={{ position: "relative", background: "var(--surface-base)", border: "1px solid var(--border-medium)", height: 320, cursor: "crosshair", overflow: "hidden" }}
+          style={{ position: "relative", background: "var(--surface-base)", border: "1px solid var(--border-medium)", height: 340, cursor: "crosshair", overflow: "hidden" }}
         >
           <svg width="100%" height="100%" viewBox="0 0 600 320" preserveAspectRatio="xMidYMid meet" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
             <defs>
@@ -3742,15 +3777,32 @@ function InspectionMapping({ onBack }) {
             <IsoShape shape={form.shape} dims={form} gid={gid}/>
           </svg>
 
-          {/* 배치된 탐촉자 마커 */}
-          {placements.map((p) => {
+          {/* 형상 수치 오버레이 (상단 바) */}
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, display: "flex", flexWrap: "wrap", gap: "4px 16px", alignItems: "center", padding: "8px 12px", background: "var(--surface-subtle-1)", borderBottom: "1px solid var(--border-low)", pointerEvents: "none" }}>
+            {specChip("형태", form.shape)}
+            {specChip("외경", form.od, " mm")}
+            {specChip("내경", form.idim, " mm")}
+            {specChip("길이", form.length, " mm")}
+            {specChip("공칭두께", form.th, " mm")}
+            {specChip("소재", form.material)}
+          </div>
+
+          {/* 배치 모드 안내 배너 */}
+          {placing && (
+            <div style={{ position: "absolute", top: 40, left: 12, padding: "5px 10px", background: "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)", border: "1px solid var(--border-emphasis)", font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-emphasis)", pointerEvents: "none" }}>
+              배치 모드 · 도면 표면을 클릭해 탐촉자를 배치해 주세요
+            </div>
+          )}
+
+          {/* 현재 검사 대상의 탐촉자 마커 */}
+          {shown.map((p) => {
             const sel = p.id === selectedId;
             return (
               <div
                 key={p.id}
                 onClick={(e) => { e.stopPropagation(); setSelectedId(p.id); }}
-                onDoubleClick={(e) => removeProbe(p.id, e)}
-                title={p.ch + " · 더블클릭으로 삭제"}
+                onContextMenu={(e) => openCtx(e, "probe", { placementId: p.id, targetId })}
+                title={p.ch + " · 우클릭으로 삭제"}
                 style={{
                   position: "absolute", left: p.x + "%", top: p.y + "%", transform: "translate(-50%,-50%)",
                   minWidth: 30, height: 20, padding: "0 6px", display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -3764,45 +3816,29 @@ function InspectionMapping({ onBack }) {
             );
           })}
 
-          {placements.length === 0 && (
+          {shown.length === 0 && !placing && (
             <div style={{ position: "absolute", left: 0, right: 0, bottom: 14, textAlign: "center", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", pointerEvents: "none" }}>
               도면 표면을 클릭해 탐촉자를 배치해 주세요
             </div>
           )}
         </div>
 
-        {/* 배치된 탐촉자 목록 */}
-        <div className="erut-panel" style={{ marginTop: 18 }}>
-          <div className="erut-panel__header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span>배치된 탐촉자 {placements.length}개</span>
-            {placements.length > 0 && <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={clearAll}>전체 삭제</button>}
-          </div>
-          <div className="erut-panel__body" style={{ padding: 0 }}>
-            {placements.length === 0 ? (
-              <div style={{ padding: "16px 16px", font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>배치된 탐촉자가 없습니다. 위 도면 표면을 클릭해 추가해 주세요.</div>
-            ) : (
-              placements.map((p) => {
-                const sel = p.id === selectedId;
-                return (
-                  <div
-                    key={p.id}
-                    onClick={() => setSelectedId(p.id)}
-                    style={{
-                      display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 14, alignItems: "center",
-                      padding: "10px 16px", borderTop: "1px solid var(--border-low)", cursor: "pointer",
-                      background: sel ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "transparent",
-                    }}
-                  >
-                    <span style={{ font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: sel ? "var(--content-emphasis)" : "var(--content-high)" }}>{p.ch}</span>
-                    <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>{target.name} · 표면 위치 X {p.x.toFixed(0)}% · Y {p.y.toFixed(0)}%</span>
-                    <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ color: "var(--system-error)", borderColor: "var(--system-error)" }} onClick={(e) => removeProbe(p.id, e)}>삭제</button>
-                  </div>
-                );
-              })
-            )}
-          </div>
+        {/* 하단 툴바 — 현재 검사 대상 배치 수 + 전체 삭제 */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
+          <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>{target.name} · 배치된 탐촉자 {shown.length}개</span>
+          {shown.length > 0 && <button className="erut-btn erut-btn--subtle erut-btn--sm" onClick={clearTarget}>전체 삭제</button>}
         </div>
       </div>
+
+      {/* 우클릭 컨텍스트 메뉴 (ContextMenu 재사용) */}
+      {ctx && (
+        <>
+          <div onClick={closeCtx} onContextMenu={(e) => { e.preventDefault(); closeCtx(); }} style={{ position: "fixed", inset: 0, zIndex: 200 }}/>
+          <div style={{ position: "fixed", left: ctx.x, top: ctx.y, zIndex: 201 }}>
+            <window.ContextMenu width={180} items={ctxItems}/>
+          </div>
+        </>
+      )}
     </div>
   );
 }
