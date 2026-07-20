@@ -161,4 +161,13 @@ window.EIcon = {
       <line x1="9" y1="15" x2="15" y2="15"/>
     </svg>
   ),
+  // 최근 프로젝트 열기 (file-clock)
+  FileClock: (p) => (
+    <svg viewBox="0 0 24 24" width={p?.size ?? 20} height={p?.size ?? 20} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" {...p}>
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5"/>
+      <polyline points="14 3 14 9 20 9"/>
+      <circle cx="16" cy="16" r="4.5"/>
+      <polyline points="16 14 16 16 17.5 17"/>
+    </svg>
+  ),
 };

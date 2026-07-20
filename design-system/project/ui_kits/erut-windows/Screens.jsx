@@ -286,84 +286,47 @@ window.MOCK = {
 // 공통 접근자 — DeviceDetail / index.html F6 차단 다이얼로그 / DiagCalibHistory 모두 이걸 참조. 재교정 대상 = 교정 주기 초과 채널만
 window.MOCK.needsCalibrationChannels = [...window.MOCK.expiredChannels];
 
-// =================== Screen · [0] PROJECT PICKER ===================
-// 진입 화면 — 최근 프로젝트 선택 / 새 프로젝트 만들기 / 파일에서 불러오기. (고정형·스캔형 통합 — 유형 구분 없음)
-window.ProjectPicker = function ProjectPicker({ onPick, onNew, onLoad }) {
-  const [query, setQuery] = $s("");
-  const projects = window.MOCK.recentProjects;
-  const filtered = projects.filter(p =>
-    !query || p.name.includes(query) || (p.note || "").includes(query)
-  );
+// =================== Screen · [0] PROJECT PICKER (런처) ===================
+// 진입 화면 — 프로젝트 불러오기 / 최근 프로젝트 열기 / 새 프로젝트 등록 3카드 런처. (고정형·스캔형 통합 — 유형 구분 없음)
+window.ProjectPicker = function ProjectPicker({ onLoad, onRecent, onNew }) {
+  // 런처 카드 — 카드 중앙 상단 큰 아이콘(연한 브랜드톤) + 제목 + 설명
+  const CARD = { width: 280, minHeight: 320, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24, padding: "40px 28px", background: "var(--surface-base)", cursor: "pointer", textAlign: "center" };
+  const title = { font: "700 20px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" };
+  const desc  = { font: "400 14px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", maxWidth: 200 };
+
+  const CARDS = [
+    { key: "load",   icon: window.EIcon.FileSearch, title: "프로젝트 불러오기", desc: "저장된 .erut 파일을 열어 작업을 이어서 진행합니다.",   onClick: onLoad,   emphasis: false },
+    { key: "recent", icon: window.EIcon.FileClock,  title: "최근 프로젝트 열기", desc: "최근 파일을 열어 작업을 이어서 진행합니다.",          onClick: onRecent, emphasis: false },
+    { key: "new",    icon: window.EIcon.FilePlus,   title: "새 프로젝트 등록",   desc: "필요한 정보를 입력하고 새로운 작업을 시작할 수 있습니다.", onClick: onNew,    emphasis: true  },
+  ];
 
   return (
-    <div className="erut-page-enter" style={{ padding: "36px 60px", height: "100%", display: "flex", flexDirection: "column", gap: 24 }}>
-      {/* 컴팩트 hero + 우상단 보조 액션 */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-        <div>
-          <div style={{ font: "700 24px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>프로젝트를 선택해 주세요.</div>
-          <div style={{ font: "400 14px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 6 }}>최근 프로젝트를 클릭하거나, 새 프로젝트를 만들 수 있습니다.</div>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <window.Button variant="default" size="m" onClick={onLoad}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-              <window.EIcon.Folder size={14}/>
-              <span>파일에서 불러오기</span>
-            </span>
-          </window.Button>
-          <window.Button variant="emphasis" size="m" onClick={onNew}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-              <window.EIcon.Add size={14}/>
-              <span>새 프로젝트 만들기</span>
-            </span>
-          </window.Button>
-        </div>
+    <div className="erut-page-enter" style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 40, overflow: "hidden" }}>
+      {/* 배경 'ERUT' 워터마크 */}
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", font: "700 340px/1 var(--font-kr)", letterSpacing: ".08em", color: "var(--surface-subtle-2)", userSelect: "none", zIndex: 0 }}>ERUT</div>
+
+      {/* 안내 문구 */}
+      <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
+        <div style={{ font: "700 24px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>ERUT를 시작하기 위한 첫 단계입니다.</div>
+        <div style={{ font: "400 15px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 10 }}>편리한 작업 환경을 구성해 보세요.</div>
       </div>
 
-      {/* 최근 프로젝트 패널 */}
-      <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-        {/* 검색 + 헤더 */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 22px", borderBottom: "1px solid var(--border-medium)", background: "var(--surface-subtle-1)" }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <h3 style={{ font: "700 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>최근 프로젝트</h3>
-            <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>총 {projects.length}개</span>
+      {/* 카드 3개 (가로) */}
+      <div style={{ position: "relative", zIndex: 1, display: "flex", gap: 24 }}>
+        {CARDS.map(c => (
+          <div
+            key={c.key}
+            className="erut-target-card"
+            style={c.emphasis
+              ? { ...CARD, borderColor: "var(--border-emphasis)", background: "linear-gradient(rgba(34,133,239,0.04),rgba(34,133,239,0.04)), var(--surface-base)" }
+              : { ...CARD, borderColor: "var(--border-medium)" }}
+            onClick={c.onClick}
+          >
+            <c.icon size={64} style={{ color: c.emphasis ? "var(--content-emphasis)" : "var(--brand-subtle)" }}/>
+            <div style={title}>{c.title}</div>
+            <div style={desc}>{c.desc}</div>
           </div>
-          <window.Field value={query} onChange={setQuery} placeholder="프로젝트명 · 비고 검색" width={320}/>
-        </div>
-
-        {/* 카드 그리드 3×3 */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, padding: "18px 22px", flex: 1, overflow: "auto" }}>
-          {filtered.map((p, idx) => {
-            const featured = idx === 0;
-            return (
-              <div
-                key={p.id}
-                className="erut-target-card"
-                style={{
-                  minHeight: 0, padding: "14px 16px",
-                  background: featured ? "linear-gradient(rgba(34,133,239,0.04),rgba(34,133,239,0.04)), var(--surface-base)" : "var(--surface-base)",
-                  borderColor: featured ? "var(--border-emphasis)" : "var(--border-medium)",
-                }}
-                onClick={() => onPick && onPick(p.id)}
-              >
-                {/* 생성일 */}
-                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "flex-start" }}>
-                  <span style={{ font: "400 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>생성일 {p.startDate}</span>
-                </div>
-                <div style={{ font: "700 14px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{p.name}</div>
-                {p.note && <div style={{ font: "400 11px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.note}</div>}
-                <div style={{ display: "flex", gap: 12, paddingTop: 10, borderTop: "1px solid var(--border-low)", font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-                  <span>검사 대상 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.targets}</strong></span>
-                  <span>감육 검출 <strong style={{ fontWeight: 700, color: "var(--content-high)" }}>{p.defects}</strong></span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* 더보기 footer */}
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "12px 22px", borderTop: "1px solid var(--border-low)", background: "var(--surface-subtle-1)" }}>
-          <window.Button variant="subtle" size="sm">전체 보기 (총 24개) →</window.Button>
-        </div>
+        ))}
       </div>
     </div>
   );

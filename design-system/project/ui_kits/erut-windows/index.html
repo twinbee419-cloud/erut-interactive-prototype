@@ -327,9 +327,9 @@ function App() {
       <div className="erut-window__content" onClick={closeMenus} style={{ position: "relative" }}>
         {screen === "project" && (
           <window.ProjectPicker
-            onPick={(pid) => { setPickedProject(pid); goto("main"); }}
+            onLoad={() => goto("main")}   /* 프로젝트 불러오기 — 파일 탐색기 mock → 메인 */
+            onRecent={() => goto("main")} /* 최근 프로젝트 열기 — 최근 파일 mock → 메인 */
             onNew={() => setShowNewProject(true)}
-            onLoad={() => {}} /* v8.8: 추후 윈도우 파일 탐색기 연동 예정 — 현재는 no-op */
           />
         )}
         {screen === "connect" && (
