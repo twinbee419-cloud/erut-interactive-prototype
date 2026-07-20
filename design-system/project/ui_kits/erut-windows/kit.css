@@ -695,6 +695,30 @@
 /* v20.1: compact 변형 — 카드 내부 등 좁은 영역용 (28px·12px) */
 .erut-tab--sm{ height: 28px; padding: 0 14px; font-size: 12px; }
 
+/* ---------- Tree nav (설정 좌측 메뉴 — 그룹 + 하위 항목 공용) ---------- */
+.erut-tree{ display: flex; flex-direction: column; }
+.erut-tree__group{
+  font: 700 11px/1 var(--font-kr); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--content-low);
+  padding: 14px 20px 6px;
+}
+.erut-tree__sub{ display: flex; flex-direction: column; }
+.erut-tree__item{
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 12px 20px;
+  font: 700 14px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-medium);
+  background: transparent; border: 0; border-left: 3px solid transparent;
+  cursor: pointer; text-align: left;
+}
+.erut-tree__item:hover{ background: var(--surface-subtle-2); }
+.erut-tree__item.is-active{
+  color: var(--content-emphasis);
+  background: linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base);
+  border-left: 3px solid var(--brand-primary);
+}
+.erut-tree__sub .erut-tree__item{ padding-left: 44px; font-weight: 400; font-size: 13px; }
+
 /* ---------- Side mini-nav (interactive prototype only) ---------- */
 .erut-protonav{
   position: fixed; top: 16px; right: 16px; z-index: 1000;

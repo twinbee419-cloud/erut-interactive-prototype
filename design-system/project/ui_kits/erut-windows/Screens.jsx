@@ -3151,55 +3151,101 @@ window.CalibrationWizard = function CalibrationWizard({ onClose, mode = "recalib
 };
 
 window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubView, onBack }) {
-  // initialSubView: null | "mc-add" | "mc-edit" — 외부 진입 시 sub-view 직접 지정 가능
-  // 예: [1] 메인 "+ 장비 추가" → initialSubView="mc-add"로 즉시 폼 진입
-  const [menu, setMenu] = $s(initialMenu || "mc");          // "mc" | "mqtt" | "probe"
+  // initialMenu: 좌측 트리 리프 id 직접 지정 (예: "daq-basic" | "daq-probe" | "daq-holder" | "daq-encoder" | "daq-mqtt" | "target" | "preset" | "mapping")
+  // initialSubView: null | "mc-add" | "mc-edit" — "daq-basic" 진입 시 sub-view 직접 지정 가능
+  // 예: [1] 메인 "+ 장비 추가" → initialMenu="daq-basic" + initialSubView="mc-add"로 즉시 폼 진입
+  const [menu, setMenu] = $s(initialMenu || "daq-basic");
   const [subView, setSubView] = $s(initialSubView || null); // null | "mc-add" | "mc-edit"
   const [editingBoardId, setEditingBoardId] = $s(null);
 
   // 메뉴 변경 시 sub-view 리셋
   const switchMenu = (m) => { setSubView(null); setEditingBoardId(null); setMenu(m); };
 
-  const menuItems = [
-    { id: "mc",    label: "DAQ 설정", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="6" width="14" height="12"/><line x1="16" y1="12" x2="20" y2="12"/><line x1="18" y1="10" x2="18" y2="14"/></svg> },
-    { id: "mqtt",  label: "MQTT 설정",   icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 12a10 10 0 0 1 14 0"/><path d="M8.5 15a5 5 0 0 1 7 0"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg> },
+  // DAQ 설정 그룹 하위 항목 — 기본 설정(=DAQ 보드) + 스캔형 하드웨어 설정(탐촉자·홀더·엔코더, 준비 중) + MQTT
+  const daqChildren = [
+    { id: "daq-basic",   label: "기본 설정",       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="6" width="14" height="12"/><line x1="16" y1="12" x2="20" y2="12"/><line x1="18" y1="10" x2="18" y2="14"/></svg> },
+    { id: "daq-probe",   label: "탐촉자 설정",     icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 3h6v6l-3 4-3-4z"/><rect x="8" y="13" width="8" height="8"/></svg> },
+    { id: "daq-holder",  label: "탐촉자 홀더 설정", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="3" y1="6" x2="21" y2="6"/><rect x="3" y="9" width="3" height="11"/><rect x="8" y="9" width="3" height="11"/><rect x="13" y="9" width="3" height="11"/><rect x="18" y="9" width="3" height="11"/></svg> },
+    { id: "daq-encoder", label: "엔코더 설정",     icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="8"/><line x1="12" y1="12" x2="12" y2="6"/><line x1="12" y1="12" x2="16" y2="14"/></svg> },
+    { id: "daq-mqtt",    label: "MQTT 설정",       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 12a10 10 0 0 1 14 0"/><path d="M8.5 15a5 5 0 0 1 7 0"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg> },
   ];
-  // #2: '탐촉자 설정' 메뉴 폐기 — 탐촉자 등록은 [2] +탐촉자 추가 → [4-3-1] ChannelCommissioning (적용 범위로 일괄)
+  // 트리 최상위 항목 — 검사 대상(모재) 관리·프리셋·매핑
+  const topItems = [
+    { id: "target",  label: "검사 대상(모재) 관리",       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="4" y="4" width="16" height="16"/><circle cx="12" cy="12" r="4"/></svg> },
+    { id: "preset",  label: "검사 대상(모재) 프리셋 관리", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 3h12v18l-6-4-6 4z"/></svg> },
+    { id: "mapping", label: "검사 매핑",                  icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><line x1="8" y1="8" x2="16" y2="16"/></svg> },
+  ];
+  // #2: '탐촉자 설정' 개별 채널 등록 메뉴 폐기 유지 — 탐촉자 채널 등록은 [2] +탐촉자 추가 → [4-3-1] ChannelCommissioning. 본 트리의 '탐촉자 설정'은 DAQ 단위 기본 특성(준비 중)으로 별개.
 
   return (
     <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 0, padding: 0, height: "100%" }}>
-      {/* ───── 좌측 사이드 메뉴 ───── */}
-      <div style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", padding: "20px 0" }}>
-        <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "0 20px 14px" }}>장비 연결 관리</div>
-        {menuItems.map((item) => {
-          const active = menu === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => switchMenu(item.id)}
-              style={{
-                display: "flex", alignItems: "center", gap: 10,
-                width: "100%", padding: "12px 20px",
-                font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em",
-                color: active ? "var(--content-emphasis)" : "var(--content-medium)",
-                background: active ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "transparent",
-                border: "none",
-                borderLeft: "3px solid " + (active ? "var(--brand-primary)" : "transparent"),
-                cursor: "pointer", textAlign: "left",
-              }}
-            >
-              {item.icon}
-              {item.label}
+      {/* ───── 좌측 트리 메뉴 ───── */}
+      <div className="erut-tree" style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", padding: "20px 0", overflowY: "auto" }}>
+        <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "0 20px 14px" }}>설정 메뉴</div>
+
+        <div className="erut-tree__group">DAQ 설정</div>
+        <div className="erut-tree__sub">
+          {daqChildren.map((item) => (
+            <button key={item.id} className={"erut-tree__item" + (menu === item.id ? " is-active" : "")} onClick={() => switchMenu(item.id)}>
+              {item.icon}{item.label}
             </button>
-          );
-        })}
+          ))}
+        </div>
+
+        {topItems.map((item) => (
+          <button key={item.id} className={"erut-tree__item" + (menu === item.id ? " is-active" : "")} onClick={() => switchMenu(item.id)}>
+            {item.icon}{item.label}
+          </button>
+        ))}
       </div>
 
       {/* ───── 우측 콘텐츠 ───── */}
-      <div style={{ padding: "20px 30px", overflowY: "auto" }}>
-        {menu === "mc" && !subView && <MCBoardList onAdd={() => setSubView("mc-add")} onEdit={(id) => { setEditingBoardId(id); setSubView("mc-edit"); }}/>}
-        {menu === "mc" && subView && <MCBoardForm mode={subView} editingId={editingBoardId} onCancel={() => setSubView(null)} onSave={() => setSubView(null)}/>}
-        {menu === "mqtt" && <MQTTSettings onBack={onBack}/>}
+      <div style={{ padding: menu === "target" ? 0 : "20px 30px", overflowY: menu === "target" ? "hidden" : "auto" }}>
+        {menu === "daq-basic" && !subView && <MCBoardList onAdd={() => setSubView("mc-add")} onEdit={(id) => { setEditingBoardId(id); setSubView("mc-edit"); }}/>}
+        {menu === "daq-basic" && subView && <MCBoardForm mode={subView} editingId={editingBoardId} onCancel={() => setSubView(null)} onSave={() => setSubView(null)}/>}
+        {menu === "daq-probe" && (
+          <SettingsPlaceholder
+            title="탐촉자 설정"
+            subtitle="DAQ 단위 탐촉자 기본 특성(유형·주파수·굴절각) 사전 등록 기능은 준비 중입니다. 현재는 [4-3-1] 채널 설정에서 채널별로 직접 입력합니다."
+            onBack={onBack}
+            fields={[
+              { label: "탐촉자 유형", value: "수직 탐촉자", type: "select" },
+              { label: "주파수 (MHz)", value: "5" },
+              { label: "소자 직경 (mm)", value: "10" },
+              { label: "굴절각 (°)", value: "0" },
+            ]}
+          />
+        )}
+        {menu === "daq-holder" && (
+          <SettingsPlaceholder
+            title="탐촉자 홀더 설정"
+            subtitle="스캔형(이동형) 8-탐촉자 홀더 간격·오프셋 사전 등록 기능은 준비 중입니다."
+            onBack={onBack}
+            fields={[
+              { label: "홀더 유형", value: "8-탐촉자 배열", type: "select" },
+              { label: "탐촉자 간격 (mm)", value: "25" },
+              { label: "Z축 오프셋 (mm)", value: "0" },
+              { label: "접촉압", value: "표준", type: "select" },
+            ]}
+          />
+        )}
+        {menu === "daq-encoder" && (
+          <SettingsPlaceholder
+            title="엔코더 설정"
+            subtitle="스캔형(이동형) 좌표 산출용 엔코더 해상도·방향 사전 등록 기능은 준비 중입니다."
+            onBack={onBack}
+            fields={[
+              { label: "엔코더 유형", value: "로터리", type: "select" },
+              { label: "해상도 (pulse/mm)", value: "100" },
+              { label: "방향", value: "정방향", type: "select" },
+              { label: "트리거 모드", value: "연속", type: "select" },
+            ]}
+          />
+        )}
+        {menu === "daq-mqtt" && <MQTTSettings onBack={onBack}/>}
+        {menu === "target"   && <window.TargetManage onBack={onBack}/>}
+        {menu === "preset"   && <TargetPresetManage onBack={onBack}/>}
+        {menu === "mapping"  && <InspectionMapping onBack={onBack}/>}
       </div>
     </div>
   );
@@ -3518,6 +3564,159 @@ function MQTTSettings({ onBack }) {
   );
 }
 
+// ───── DAQ 하드웨어 설정 목업 공용 (탐촉자 · 탐촉자 홀더 · 엔코더) ─────
+// 스캔형(이동형·FastView) 하드웨어 사전 등록 개념 — 실제 CRUD 미구현, 대표 필드만(전 필드 disabled). '준비 중' 배너로 명시.
+function SettingsPlaceholder({ title, subtitle, fields, onBack }) {
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, marginTop: 4 }}>
+        <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>{title}</h2>
+        <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onBack}>〈 이전</button>
+      </div>
+      <div style={{ background: "var(--surface-subtle-2)", border: "1px dashed var(--border-medium)", padding: "12px 16px", marginBottom: 20 }}>
+        <div style={{ font: "700 12px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>준비 중</div>
+        <div style={{ font: "400 11px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>{subtitle}</div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 24px" }}>
+        {fields.map((f) => (
+          <div key={f.label}>
+            <div style={{ font: "700 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>{f.label}</div>
+            {f.type === "select" ? (
+              <select className="erut-field is-disabled" disabled style={{ width: "100%" }}>
+                <option>{f.value}</option>
+              </select>
+            ) : (
+              <input className="erut-field is-disabled" value={f.value} disabled readOnly style={{ width: "100%" }}/>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ───── 검사 대상(모재) 프리셋 관리 — TargetManage 우측 상시 패널의 프리셋 개념을 독립 화면으로 (카드 리스트 + 추가/편집/삭제 어포던스 목업, 비동작) ─────
+function TargetPresetManage({ onBack }) {
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, marginTop: 4 }}>
+        <div>
+          <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>검사 대상(모재) 프리셋 관리</h2>
+          <p style={{ font: "400 13px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4, marginBottom: 0 }}>등록된 프리셋 {TARGET_PRESETS_MOCK.length}개. 검사 대상 등록 시 형상·소재·운영 환경을 한 번에 불러올 수 있습니다.</p>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="erut-btn erut-btn--emphasis erut-btn--sm">+ 프리셋 추가</button>
+          <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onBack}>〈 이전</button>
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {TARGET_PRESETS_MOCK.map((p) => (
+          <div key={p.id} style={{ border: "1px solid var(--border-medium)", background: "var(--surface-base)", padding: "14px 18px", display: "grid", gridTemplateColumns: "1fr auto auto", gap: 16, alignItems: "center" }}>
+            <div>
+              <div style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 4 }}>{p.name}</div>
+              <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{p.shape} · {p.th}mm · {p.data.material} · {p.data.fluid}</div>
+            </div>
+            <button className="erut-btn erut-btn--default erut-btn--sm">편집</button>
+            <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ color: "var(--system-error)", borderColor: "var(--system-error)" }}>삭제</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ───── 검사 매핑 — 탐촉자(채널) ↔ 검사 대상(모재) 표면 위치 매핑 대표 화면 (목업). 실제 3D 배치·엔코더 좌표 편집은 스캔형(FastView) 범위 — 준비 중 ─────
+function InspectionMapping({ onBack }) {
+  const channels = window.MOCK.sensors.slice(0, 24); // 대표 채널 목록 (PIPE-A-204 소속 24ch)
+  const [selectedCh, setSelectedCh] = $s(channels[0] && channels[0].id);
+  const [target, setTarget] = $s(window.MOCK.targets[0] && window.MOCK.targets[0].id);
+  const idx = Math.max(0, channels.findIndex((c) => c.id === selectedCh));
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 0, height: "100%" }}>
+      {/* 좌측: 탐촉자 채널 목록 */}
+      <div style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
+        <div style={{ padding: "16px 16px 10px", font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase" }}>탐촉자 채널 {channels.length}</div>
+        <div style={{ flex: 1, overflowY: "auto", paddingBottom: 12 }}>
+          {channels.map((c) => {
+            const active = c.id === selectedCh;
+            return (
+              <button
+                key={c.id}
+                onClick={() => setSelectedCh(c.id)}
+                className={"erut-tree__item" + (active ? " is-active" : "")}
+                style={{ justifyContent: "space-between", padding: "9px 16px" }}
+              >
+                <span>{c.id.toUpperCase().replace("CH", "CH ")}</span>
+                <span style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)" }}>매핑됨</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 우측: 매핑 캔버스 */}
+      <div style={{ padding: "20px 30px", overflowY: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>검사 매핑</h2>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <select className="erut-field" value={target} onChange={(e) => setTarget(e.target.value)} style={{ width: 200 }}>
+              {window.MOCK.targets.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onBack}>〈 이전</button>
+          </div>
+        </div>
+
+        <div style={{ background: "var(--surface-subtle-2)", border: "1px dashed var(--border-medium)", padding: "12px 16px", marginBottom: 20 }}>
+          <div style={{ font: "700 12px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>준비 중</div>
+          <div style={{ font: "400 11px/1.6 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>탐촉자와 검사 대상(모재) 표면의 3D 배치·편집 기능은 준비 중입니다. 아래는 배관 전개도 기준 대표 배치 예시(참고용, 읽기 전용)입니다.</div>
+        </div>
+
+        {/* 배관 전개도 스키매틱 + 채널 마커 */}
+        <div style={{ background: "var(--surface-base)", border: "1px solid var(--border-medium)", padding: "24px 20px", position: "relative", height: 200 }}>
+          <svg width="100%" height="100%" viewBox="0 0 900 140" preserveAspectRatio="none">
+            <rect x="0" y="30" width="900" height="80" fill="none" stroke="var(--border-high)" strokeWidth="1.5"/>
+            <line x1="0" y1="70" x2="900" y2="70" stroke="var(--border-low)" strokeWidth="1" strokeDasharray="4 4"/>
+          </svg>
+          {channels.map((c, i) => {
+            const left = 4 + (i / Math.max(1, channels.length - 1)) * 92; // %
+            const active = c.id === selectedCh;
+            return (
+              <div
+                key={c.id}
+                onClick={() => setSelectedCh(c.id)}
+                title={c.id}
+                style={{
+                  position: "absolute", top: "50%", left: left + "%", transform: "translate(-50%,-50%)",
+                  width: active ? 16 : 10, height: active ? 16 : 10, borderRadius: "50%",
+                  background: active ? "var(--brand-primary)" : "var(--content-low)",
+                  border: "2px solid var(--surface-base)", cursor: "pointer",
+                }}
+              />
+            );
+          })}
+        </div>
+
+        {/* 선택 채널 참고 정보 (읽기 전용) */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px 18px", marginTop: 20 }}>
+          <div style={{ padding: "10px 12px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)" }}>
+            <div style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)", marginBottom: 4 }}>선택 채널</div>
+            <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-high)" }}>{selectedCh ? selectedCh.toUpperCase().replace("CH", "CH ") : "—"}</div>
+          </div>
+          <div style={{ padding: "10px 12px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)" }}>
+            <div style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)", marginBottom: 4 }}>전개도 위치</div>
+            <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-high)" }}>{idx + 1} / {channels.length}</div>
+          </div>
+          <div style={{ padding: "10px 12px", background: "var(--surface-subtle-2)", border: "1px solid var(--border-low)" }}>
+            <div style={{ font: "400 10px/1 var(--font-kr)", color: "var(--content-low)", marginBottom: 4 }}>매핑 대상</div>
+            <div style={{ font: "700 13px/1 var(--font-kr)", color: "var(--content-high)" }}>{target}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ───── 탐촉자 설정 (메인 SLIDE 12 [4-3]) ─────
 
 // =================== Screen · [6] TARGET MANAGE ===================
@@ -3596,6 +3795,16 @@ function buildTargetForm(target) {
   };
 }
 
+// 표준 프리셋 (앱 내장 라이브러리) — 카드 = 프리셋명 + 형태·두께. data = 파트2 형상 + 파트3 소재·운영만 (파트1 기본 정보 제외).
+// TargetManage 우측 상시 패널 + [설정] › 검사 대상(모재) 프리셋 관리(TargetPresetManage) 공용 — 단일 진실 공급원.
+const TARGET_PRESETS_MOCK = [
+  { id: "p1", name: "탄소강 배관 2",           shape: "배관",         th: "100", data: { shape: "배관", th: "100", allow: "3.0", od: "320", idim: "120", length: "6000", material: "탄소강 (S355)", fluid: "고온 스팀", temp: "380", press: "4.2" } },
+  { id: "p2", name: "고온 스팀에 적합한 프리셋", shape: "플랜지",       th: "30",  data: { shape: "플랜지", th: "30", allow: "3.0", od: "200", idim: "140", length: "", material: "탄소강 (S355)", fluid: "고온 스팀", temp: "200", press: "3.5" } },
+  { id: "p3", name: "상용 탱크 스펙",           shape: "탱크 (원통형)", th: "25",  data: { shape: "탱크 (원통형)", th: "25", allow: "2.5", od: "800", idim: "750", length: "400", material: "스테인레스 (304)", fluid: "액체 — 물", temp: "60", press: "1.0" } },
+  { id: "p4", name: "우선 설정용",             shape: "용접부",       th: "15",  data: { shape: "용접부", th: "15", allow: "2.0", od: "", idim: "", length: "800", material: "탄소강 (S355)", fluid: "고온 스팀", temp: "150", press: "2.0" } },
+  { id: "p5", name: "스뎅",                    shape: "배관",         th: "50",  data: { shape: "배관", th: "50", allow: "2.0", od: "120", idim: "20", length: "3000", material: "스테인레스 (304)", fluid: "액체 — 화학약품", temp: "40", press: "1.5" } },
+];
+
 window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   const targets = window.MOCK.targets;
   const isNewMode = initialMode === "new";
@@ -3628,14 +3837,8 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
     ? targets.filter(t => t.name.includes(search) || (t.desc || "").includes(search) || (buildTargetForm(t).code || "").includes(search))
     : targets;
 
-  // 표준 프리셋 (앱 내장 라이브러리) — 카드 = 프리셋명 + 형태·두께. data = 파트2 형상 + 파트3 소재·운영만 (파트1 기본 정보 제외).
-  const presets = [
-    { id: "p1", name: "탄소강 배관 2",           shape: "배관",         th: "100", data: { shape: "배관", th: "100", allow: "3.0", od: "320", idim: "120", length: "6000", material: "탄소강 (S355)", fluid: "고온 스팀", temp: "380", press: "4.2" } },
-    { id: "p2", name: "고온 스팀에 적합한 프리셋", shape: "플랜지",       th: "30",  data: { shape: "플랜지", th: "30", allow: "3.0", od: "200", idim: "140", length: "", material: "탄소강 (S355)", fluid: "고온 스팀", temp: "200", press: "3.5" } },
-    { id: "p3", name: "상용 탱크 스펙",           shape: "탱크 (원통형)", th: "25",  data: { shape: "탱크 (원통형)", th: "25", allow: "2.5", od: "800", idim: "750", length: "400", material: "스테인레스 (304)", fluid: "액체 — 물", temp: "60", press: "1.0" } },
-    { id: "p4", name: "우선 설정용",             shape: "용접부",       th: "15",  data: { shape: "용접부", th: "15", allow: "2.0", od: "", idim: "", length: "800", material: "탄소강 (S355)", fluid: "고온 스팀", temp: "150", press: "2.0" } },
-    { id: "p5", name: "스뎅",                    shape: "배관",         th: "50",  data: { shape: "배관", th: "50", allow: "2.0", od: "120", idim: "20", length: "3000", material: "스테인레스 (304)", fluid: "액체 — 화학약품", temp: "40", press: "1.5" } },
-  ];
+  // 표준 프리셋 — 앱 내장 라이브러리 (TARGET_PRESETS_MOCK 공용, 단일 진실 공급원)
+  const presets = TARGET_PRESETS_MOCK;
 
   const clickPreset = (p) => {
     if (selectedPresetId === p.id) {
