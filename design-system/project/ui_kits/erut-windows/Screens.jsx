@@ -634,6 +634,130 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
   );
 };
 
+// =================== C-PRJ-03 · 2D/3D 스캔 시각화 목업 (대표 시각화) ===================
+// 컬러맵은 SVG linearGradient/radialGradient stop-color(토큰 규칙 예외) 또는 system 색 opacity로 표현.
+
+// A-scan (파랑 파형 + Gate A/B) — 폐지된 우패널 A-scan 마크업 재사용, 부모 채움
+function ScanAPane({ warn, defect }) {
+  return (
+    <div className="erut-ascan" style={{ position: "absolute", inset: 0, border: "none" }}>
+      <div className="erut-ascan__gate" style={{ left: "18%", width: "22%" }}/>
+      <div className="erut-ascan__gate-label" style={{ left: "19%" }}>Gate A</div>
+      <div className="erut-ascan__gate erut-ascan__gate--b" style={{ left: "55%", width: "25%" }}/>
+      <div className="erut-ascan__gate-label erut-ascan__gate-label--b" style={{ left: "56%" }}>Gate B</div>
+      <svg className="erut-ascan__wave" viewBox="0 0 300 200" preserveAspectRatio="none" width="100%" height="100%">
+        <line x1="0" y1="170" x2="300" y2="170" stroke="var(--border-low)" strokeWidth="1"/>
+        <path
+          d={warn
+            ? "M0 170 L50 170 L60 145 L66 25 L72 180 L78 170 L155 170 L165 150 L171 60 L177 180 L183 170 L300 170"
+            : "M0 170 L50 170 L60 165 L70 20 L80 178 L90 168 L155 168 L165 140 L172 60 L180 175 L188 168 L300 168"}
+          stroke={defect ? "var(--system-error)" : warn ? "var(--system-caution)" : "var(--brand-primary)"}
+          strokeWidth="1.5" fill="none"
+        />
+      </svg>
+    </div>
+  );
+}
+
+// B-scan (단면 컬러맵 목업) — 재질 단면 + 감육으로 얇아진 backwall 프로파일
+function ScanBPane({ gid }) {
+  return (
+    <svg viewBox="0 0 300 200" preserveAspectRatio="none" width="100%" height="100%" style={{ position: "absolute", inset: 0 }}>
+      <defs>
+        <linearGradient id={gid} x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stopColor="#2BAEFF"/>
+          <stop offset="0.4" stopColor="#2ED218"/>
+          <stop offset="0.72" stopColor="#FF9200"/>
+          <stop offset="1" stopColor="#F33523"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="300" height="200" fill="var(--surface-base)"/>
+      <path d="M0,26 L300,26 L300,150 C262,150 250,174 208,168 C176,163 168,138 128,150 C94,160 80,150 40,160 L0,150 Z" fill={"url(#" + gid + ")"}/>
+      <line x1="0" y1="26" x2="300" y2="26" stroke="var(--content-high)" strokeWidth="1.2"/>
+      <path d="M300,150 C262,150 250,174 208,168 C176,163 168,138 128,150 C94,160 80,150 40,160 L0,150" fill="none" stroke="var(--content-high)" strokeWidth="1.2"/>
+    </svg>
+  );
+}
+
+// C-scan (평면 컬러맵 목업) — 흰~빨강 opacity 셀 그리드(감육 blob)
+function ScanCPane() {
+  const NX = 24, NY = 14;
+  const cells = [];
+  for (let y = 0; y < NY; y++) for (let x = 0; x < NX; x++) {
+    const dx = (x - 15) / 5, dy = (y - 6) / 4;
+    let v = 1 - (dx * dx + dy * dy);
+    const dx2 = (x - 5) / 3, dy2 = (y - 9) / 3;
+    v = Math.max(v, 0.85 * (1 - (dx2 * dx2 + dy2 * dy2)));
+    cells.push({ x, y, v: Math.max(0, Math.min(1, v)) });
+  }
+  return (
+    <svg viewBox={"0 0 " + NX + " " + NY} preserveAspectRatio="none" width="100%" height="100%" style={{ position: "absolute", inset: 0 }}>
+      <rect x="0" y="0" width={NX} height={NY} fill="var(--color-white)"/>
+      {cells.filter(c => c.v > 0.03).map(c => (
+        <rect key={c.x + "-" + c.y} x={c.x} y={c.y} width="1.02" height="1.02" fill="var(--system-error)" fillOpacity={c.v.toFixed(2)}/>
+      ))}
+    </svg>
+  );
+}
+
+// S-scan (섹터/부채꼴 스캔 목업) — apex에서 방사, 깊이(반경)에 따른 amplitude 컬러맵
+function ScanSPane({ gid }) {
+  const guides = [-42, -21, 0, 21, 42].map(deg => {
+    const r = 176, rad = (deg * Math.PI) / 180;
+    return { x: 150 + r * Math.sin(rad), y: 16 + r * Math.cos(rad) };
+  });
+  return (
+    <svg viewBox="0 0 300 200" preserveAspectRatio="xMidYMid meet" width="100%" height="100%" style={{ position: "absolute", inset: 0 }}>
+      <defs>
+        <radialGradient id={gid} cx="0.5" cy="0.08" r="0.95">
+          <stop offset="0" stopColor="#2BAEFF"/>
+          <stop offset="0.45" stopColor="#2ED218"/>
+          <stop offset="0.75" stopColor="#FF9200"/>
+          <stop offset="1" stopColor="#F33523"/>
+        </radialGradient>
+      </defs>
+      <rect x="0" y="0" width="300" height="200" fill="var(--surface-base)"/>
+      <path d={"M150,16 L" + guides[0].x.toFixed(1) + "," + guides[0].y.toFixed(1) + " A176,176 0 0 1 " + guides[4].x.toFixed(1) + "," + guides[4].y.toFixed(1) + " Z"} fill={"url(#" + gid + ")"}/>
+      {guides.map((g, i) => (
+        <line key={i} x1="150" y1="16" x2={g.x.toFixed(1)} y2={g.y.toFixed(1)} stroke="var(--border-low)" strokeWidth="0.6"/>
+      ))}
+    </svg>
+  );
+}
+
+// 3D View — C-scan 3D 재구성 목업(등축 슬래브 + 상면 컬러맵). placeholder.
+function Scan3DPane({ gid }) {
+  return (
+    <svg viewBox="0 0 300 200" preserveAspectRatio="xMidYMid meet" width="100%" height="100%" style={{ position: "absolute", inset: 0 }}>
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#2BAEFF"/>
+          <stop offset="0.45" stopColor="#2ED218"/>
+          <stop offset="0.75" stopColor="#FF9200"/>
+          <stop offset="1" stopColor="#F33523"/>
+        </linearGradient>
+      </defs>
+      {/* 좌·우 측면 */}
+      <polygon points="52,82 150,132 150,176 52,126" fill="var(--surface-strong)" stroke="var(--content-high)" strokeWidth="1"/>
+      <polygon points="248,82 150,132 150,176 248,126" fill="var(--surface-subtle-1)" stroke="var(--content-high)" strokeWidth="1"/>
+      {/* 상면 C-scan 컬러맵 */}
+      <polygon points="150,32 248,82 150,132 52,82" fill={"url(#" + gid + ")"} stroke="var(--content-high)" strokeWidth="1"/>
+      <line x1="101" y1="57" x2="199" y2="107" stroke="var(--surface-base)" strokeWidth="0.6"/>
+      <line x1="199" y1="57" x2="101" y2="107" stroke="var(--surface-base)" strokeWidth="0.6"/>
+    </svg>
+  );
+}
+
+// 스캔 지정 드롭다운(목업 · 비동작) — pane 우상단
+function ScanPickerMock({ value }) {
+  return (
+    <span style={{ position: "absolute", top: 8, right: 10, zIndex: 6, display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", background: "var(--surface-base)", border: "1px solid var(--border-medium)", font: "700 10px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", cursor: "default" }} title="스캔 지정 (목업)">
+      {value}
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </span>
+  );
+}
+
 // =================== Screen · [2] DEVICE DETAIL ===================
 window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targetId, focusChannel, onBack, onStartMeasure, onEditChannel, onAddTarget, onEditTarget, onAddSensor, onOpenReport, onBatchRecal }) {
   // v14.0: onOpenGate → onEditChannel — Gate/교정 분리 폐기, commission(edit 모드) 단일 진입점
@@ -653,6 +777,10 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
   // C-PRJ-03: 좌 사이드바 아코디언 접기/펼치기
   const [targetsOpen, setTargetsOpen] = $s(true);
   const [daqInfoOpen, setDaqInfoOpen] = $s(true);
+  // C-PRJ-03: 중앙 결과 뷰 탭 (2D View / 탐촉자 그리드 / 3D View) — 기본 2D View
+  const [viewTab, setViewTab] = $s("2d");
+  // C-PRJ-03: 2D pane 더블클릭 시 단독 확대 (null | "A"|"B"|"C"|"S")
+  const [detailScan, setDetailScan] = $s(null);
 
   React.useEffect(() => {
     if (focusChannel) {
@@ -721,8 +849,8 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
   ];
 
   return (
-    // C-PRJ-03: 좌 사이드바(240·surface-base·오른쪽 보더 없음 · 공통 .erut-sidebar) + 중앙 64ch 그리드(흰색) + 우 상세패널(404·상태 tint) · full-bleed(MainScreen과 동일 패턴 — window__content padding 상쇄해야 사이드바가 흰 중앙과 대비되어 보임)
-    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "240px 1fr 404px", height: "calc(100% + 40px)", width: "calc(100% + 80px)", margin: "-20px -40px", minHeight: 0 }}>
+    // C-PRJ-03: 좌 사이드바(240·surface-base·오른쪽 보더 없음 · 공통 .erut-sidebar) + 중앙 결과 뷰(1fr·흰색·탭 기반) · full-bleed(MainScreen과 동일 패턴 — window__content padding 상쇄해야 사이드바가 흰 중앙과 대비되어 보임)
+    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "240px 1fr", height: "calc(100% + 40px)", width: "calc(100% + 80px)", margin: "-20px -40px", minHeight: 0 }}>
 
       {/* ───── 좌측 정보 사이드바 (공통 .erut-sidebar — 아코디언 간격만 로컬 오버라이드) ───── */}
       <aside className="erut-sidebar" style={{ gap: 20, minHeight: 0 }}>
@@ -820,119 +948,170 @@ window.DeviceDetail = function DeviceDetail({ boardStates, onBoardControl, targe
 
       </aside>
 
-      {/* ───── 중앙 64ch 그리드 (흰색 — 좌 사이드바 surface-base와 대비되어 구분) ───── */}
-      <section style={{ minWidth: 0, background: "var(--color-white)", display: "flex", flexDirection: "column", padding: "20px 24px", overflowY: "auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
-          <h3 style={{ font: "700 18px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>
-            64CH 탐촉자 상태 <span style={{ color: "var(--content-emphasis)" }}>{cells.length}</span> / 64
-          </h3>
-          {/* 일괄 재교정(교정 주기 초과 N>0 시) + 탐촉자 추가 */}
-          <div style={{ display: "flex", gap: 8 }}>
-            {(() => {
-              const needsCalibChannels = cells.filter(c => c.calibrationStatus === "expired");
-              if (needsCalibChannels.length === 0) return null;
-              return (
-                <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => onBatchRecal && onBatchRecal(needsCalibChannels)} title={`교정 주기 초과 ${needsCalibChannels.length}채널 일괄 재교정`}>일괄 재교정</button>
-              );
-            })()}
-            <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => onAddSensor && onAddSensor()}>+ 추가</button>
-          </div>
-        </div>
-        <window.ChannelGrid
-          cells={cells}
-          totalCh={64}
-          selectedCh={selected}
-          selectedTargets={selectedTargetSet}
-          variant="device-detail"
-          forceStrongAll={false}
-          focusActive={focusActive}
-          showTitle={false}
-          showAttachCounters={false}
-          showDefectLegend={false}
-          onCellClick={(id) => setSelected(id)}
-          onCellDoubleClick={(id) => onStartMeasure && onStartMeasure(id)}
-        />
-        {/* 단일 legend — 정상·약함·나쁨(신호 LED) + 감육 검출(마커) */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 14, marginTop: 12, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--system-success)" }}/>정상 {okCount}</span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--system-caution)" }}/>약함 {warnCount}</span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--system-error)" }}/>나쁨 {errCount}</span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span className="erut-ch-cell is-defect" style={{ width: 14, height: 14, padding: 0, minWidth: 0, cursor: "default" }}><span className="erut-ch-cell__flaw"/></span>감육 검출 {DEFECT_CHANNELS.length}</span>
-        </div>
-      </section>
-
-      {/* ───── 우측 상세 패널 (404 · 상태 tint: 정상=연블루 / 감육검출=peach) ───── */}
-      {(() => {
-        const selectedCell = cells.find(c => c.id === selected);
-        const isDefectSel = !!(selectedCell && selectedCell.defect);
-        const nominal = 10;                                        // 공칭 두께 (PIPE-A)
-        const thinDelta = ((cur.thickness - nominal) / nominal * 100).toFixed(1);
-        const isBad  = cur.state === "err";
-        const isWeak = cur.state === "warn";
-        const ampColor = isBad ? "var(--system-error)" : isWeak ? "var(--system-caution)" : "var(--system-success)";
-        const ampText  = isBad ? "나쁨" : isWeak ? "약함" : "정상";
-        const selTargetName = selectedCell ? (selectedCell.targetName || "—") : "—";
-        const lbl = { font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" };
-        const val = { font: "700 14px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginTop: 8 };
-        return (
-          <aside style={{ minWidth: 0, background: isDefectSel ? "rgba(243,53,35,0.06)" : "var(--surface-subtle-3)", padding: 20, display: "flex", flexDirection: "column", gap: 16, overflowY: "auto" }}>
-
-            {/* 헤더: CH + 두께 값(+델타%) + 감육검출 badge */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                <span style={{ font: "700 18px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{selected.toUpperCase().replace("CH", "CH ")}</span>
-                <span style={{ font: "700 18px/1 var(--font-kr)", letterSpacing: ".02em", color: isDefectSel ? "var(--system-error)" : "var(--content-emphasis)" }}>
-                  {cur.thickness.toFixed(2)}mm <span style={{ font: "400 13px/1 var(--font-kr)", color: "var(--content-low)" }}>({thinDelta}%)</span>
-                </span>
+      {/* ───── 중앙 결과 뷰 (흰색 · 탭 기반: 2D View / 탐촉자 그리드 / 3D View) — full-bleed로 좌 사이드바(surface-base)와 대비 ───── */}
+      <section style={{ position: "relative", minWidth: 0, background: "var(--color-white)", display: "flex", flexDirection: "column", minHeight: 0 }}>
+        {(() => {
+          const selectedCell = cells.find(c => c.id === selected);
+          const isDefectSel = !!(selectedCell && selectedCell.defect);
+          const nominal = 10;                                      // 공칭 두께 (PIPE-A)
+          const thinDelta = ((cur.thickness - nominal) / nominal * 100).toFixed(1);
+          const selTargetName = selectedCell ? (selectedCell.targetName || "—") : "—";
+          const needsCalibChannels = cells.filter(c => c.calibrationStatus === "expired");
+          const sep = <span style={{ color: "var(--border-medium)" }}>|</span>;
+          const metaLbl = { font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" };
+          const metaVal = { font: "700 13px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" };
+          const TABS = [["2d", "2D View"], ["grid", "탐촉자 그리드"], ["3d", "3D View"]];
+          const QUAD = [
+            { k: "A", label: "A-SCAN", pick: "A-scan" },
+            { k: "B", label: "B-SCAN", pick: "B-scan" },
+            { k: "C", label: "C-SCAN", pick: "C-scan" },
+            { k: "S", label: "S-SCAN", pick: "S-scan" },
+          ];
+          const renderScan = (k, quad) => {
+            if (k === "A") return <ScanAPane warn={isCurWarn} defect={isDefectSel}/>;
+            if (k === "B") return <ScanBPane gid={quad ? "bscan-quad" : "bscan-detail"}/>;
+            if (k === "C") return <ScanCPane/>;
+            if (k === "S") return <ScanSPane gid={quad ? "sscan-quad" : "sscan-detail"}/>;
+            return null;
+          };
+          return (
+            <>
+              {/* 선택 채널 정보 헤더 바 (한 줄) — 폐지된 우패널 대체 · 상세보기/탐촉자 설정 액션 보존 */}
+              <div style={{ flexShrink: 0, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "12px 24px", borderBottom: "1px solid var(--border-low)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flexWrap: "wrap" }}>
+                  <span style={{ font: "700 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{selected.toUpperCase().replace("CH", "CH ")}</span>
+                  <span style={{ font: "700 16px/1 var(--font-kr)", letterSpacing: ".02em", color: isDefectSel ? "var(--system-error)" : "var(--content-emphasis)" }}>
+                    {cur.thickness.toFixed(2)}mm <span style={{ font: "400 12px/1 var(--font-kr)", color: "var(--content-low)" }}>({thinDelta}%)</span>
+                  </span>
+                  {sep}
+                  <span style={metaLbl}>검사 대상 <span style={metaVal}>{selTargetName}</span></span>
+                  {sep}
+                  <span style={metaLbl}>ToF <span style={metaVal}>{cur.tof} μs</span></span>
+                  {sep}
+                  <span style={metaLbl}>최근 교정일 <span style={metaVal}>2026-06-30</span></span>
+                  {isDefectSel && (
+                    <span className="erut-pill" style={{ padding: "3px 8px", fontSize: 11, lineHeight: 1, border: "1px solid var(--system-caution)", color: "var(--system-caution)", boxShadow: "none", background: "var(--surface-base)" }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+                      감육 검출
+                    </span>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                  <button className={"erut-btn erut-btn--sm " + (isDefectSel ? "erut-btn--danger" : "erut-btn--outline-emphasis")} style={{ display: "inline-flex", alignItems: "center", gap: 6 }} onClick={() => onStartMeasure && onStartMeasure(selected)}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+                    상세보기
+                  </button>
+                  <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => onEditChannel && onEditChannel(selected)}>탐촉자 설정</button>
+                </div>
               </div>
-              {isDefectSel && (
-                <span className="erut-pill" style={{ padding: "3px 8px", fontSize: 11, lineHeight: 1, border: "1px solid var(--system-caution)", color: "var(--system-caution)", boxShadow: "none", background: "var(--surface-base)" }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
-                  감육 검출
-                </span>
-              )}
-            </div>
 
-            {/* A-scan mini (kit .erut-ascan + Gate A/Gate B) */}
-            <div className="erut-ascan" style={{ height: 200 }}>
-              <div className="erut-ascan__gate" style={{ left: "18%", width: "22%" }}/>
-              <div className="erut-ascan__gate-label" style={{ left: "19%" }}>Gate A</div>
-              <div className="erut-ascan__gate erut-ascan__gate--b" style={{ left: "55%", width: "25%" }}/>
-              <div className="erut-ascan__gate-label erut-ascan__gate-label--b" style={{ left: "56%" }}>Gate B</div>
-              <svg className="erut-ascan__wave" viewBox="0 0 300 200" preserveAspectRatio="none" width="100%" height="100%">
-                <line x1="0" y1="170" x2="300" y2="170" stroke="var(--border-low)" strokeWidth="1"/>
-                <path
-                  d={isCurWarn
-                    ? "M0 170 L50 170 L60 145 L66 25 L72 180 L78 170 L155 170 L165 150 L171 60 L177 180 L183 170 L300 170"
-                    : "M0 170 L50 170 L60 165 L70 20 L80 178 L90 168 L155 168 L165 140 L172 60 L180 175 L188 168 L300 168"}
-                  stroke={isDefectSel ? "var(--system-error)" : isCurWarn ? "var(--system-caution)" : "var(--brand-primary)"}
-                  strokeWidth="1.5"
-                  fill="none"
-                />
-              </svg>
-            </div>
+              {/* 결과 뷰 탭 바 */}
+              <div className="erut-tabs" style={{ flexShrink: 0, padding: "0 24px" }}>
+                {TABS.map(([k, label]) => (
+                  <button key={k} className={"erut-tab" + (viewTab === k ? " is-active" : "")} onClick={() => setViewTab(k)}>{label}</button>
+                ))}
+              </div>
 
-            {/* 2열 spec grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 12px" }}>
-              <div><div style={lbl}>검사 대상</div><div style={val}>{selTargetName}</div></div>
-              <div><div style={lbl}>공칭 두께</div><div style={val}>10 mm</div></div>
-              <div><div style={lbl}>ToF</div><div style={val}>{cur.tof} μs</div></div>
-              <div><div style={lbl}>Gain</div><div style={val}>SW 12&nbsp;&nbsp;D 12&nbsp;&nbsp;A 12</div></div>
-              <div><div style={lbl}>신호 세기(Amp)</div><div style={{ ...val, color: ampColor, display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: ampColor }}/>{ampText}</div></div>
-              <div><div style={lbl}>최근 교정일</div><div style={val}>2026-06-30</div></div>
-            </div>
+              {/* 탭 콘텐츠 */}
+              <div style={{ flex: 1, minHeight: 0, overflow: "auto", padding: "20px 24px", display: "flex", flexDirection: "column" }}>
 
-            {/* 액션 버튼 (하단 고정 · 세로 · 상단 divider) — 상세보기=onStartMeasure(정상=brand emphasis outline/감육검출=error outline) / 탐촉자 설정=onEditChannel(default) */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: "auto", paddingTop: 16, borderTop: "1px solid var(--border-low)" }}>
-              <button className={"erut-btn " + (isDefectSel ? "erut-btn--danger" : "erut-btn--outline-emphasis")} style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }} onClick={() => onStartMeasure && onStartMeasure(selected)}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
-                상세보기
-              </button>
-              <button className="erut-btn erut-btn--default" style={{ width: "100%" }} onClick={() => onEditChannel && onEditChannel(selected)}>탐촉자 설정</button>
+                {/* ── 탐촉자 그리드 ── */}
+                {viewTab === "grid" && (
+                  <>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+                      <h3 style={{ font: "700 18px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>
+                        64CH 탐촉자 상태 <span style={{ color: "var(--content-emphasis)" }}>{cells.length}</span> / 64
+                      </h3>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        {needsCalibChannels.length > 0 && (
+                          <button className="erut-btn erut-btn--default erut-btn--sm" onClick={() => onBatchRecal && onBatchRecal(needsCalibChannels)} title={`교정 주기 초과 ${needsCalibChannels.length}채널 일괄 재교정`}>일괄 재교정</button>
+                        )}
+                        <button className="erut-btn erut-btn--emphasis erut-btn--sm" onClick={() => onAddSensor && onAddSensor()}>+ 추가</button>
+                      </div>
+                    </div>
+                    <window.ChannelGrid
+                      cells={cells}
+                      totalCh={64}
+                      selectedCh={selected}
+                      selectedTargets={selectedTargetSet}
+                      variant="device-detail"
+                      forceStrongAll={false}
+                      focusActive={focusActive}
+                      showTitle={false}
+                      showAttachCounters={false}
+                      showDefectLegend={false}
+                      onCellClick={(id) => setSelected(id)}
+                      onCellDoubleClick={(id) => onStartMeasure && onStartMeasure(id)}
+                    />
+                    {/* 단일 legend — 정상·약함·나쁨(신호 LED) + 감육 검출(마커) */}
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 14, marginTop: 12, font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--system-success)" }}/>정상 {okCount}</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--system-caution)" }}/>약함 {warnCount}</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--system-error)" }}/>나쁨 {errCount}</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span className="erut-ch-cell is-defect" style={{ width: 14, height: 14, padding: 0, minWidth: 0, cursor: "default" }}><span className="erut-ch-cell__flaw"/></span>감육 검출 {DEFECT_CHANNELS.length}</span>
+                    </div>
+                  </>
+                )}
+
+                {/* ── 2D View (A/B/C/S 4분할) ── */}
+                {viewTab === "2d" && (
+                  <>
+                    {/* 커스터마이징 어포던스 (목업 · 비동작) */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                      <span style={{ font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>각 pane 더블클릭 시 단독 확대</span>
+                      <button className="erut-btn erut-btn--default erut-btn--sm" title="뷰 추가 (목업)">+ 뷰 추가</button>
+                    </div>
+                    <div className="erut-quad" style={{ flex: 1, minHeight: 340 }}>
+                      {QUAD.map(p => (
+                        <div key={p.k} className="erut-quad__pane" style={{ cursor: "pointer" }} onDoubleClick={() => setDetailScan(p.k)} title="더블클릭 → 확대">
+                          <div className="erut-quad__label">{p.label}</div>
+                          <ScanPickerMock value={p.pick}/>
+                          {renderScan(p.k, true)}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* ── 3D View (C-scan 3D 재구성 목업) ── */}
+                {viewTab === "3d" && (
+                  <div style={{ flex: 1, minHeight: 340, position: "relative", border: "1px solid var(--border-low)", background: "var(--surface-base)" }}>
+                    <div className="erut-quad__label">3D VIEW (C-SCAN)</div>
+                    <Scan3DPane gid="scan-3d"/>
+                    <div style={{ position: "absolute", left: 0, right: 0, bottom: 14, textAlign: "center", font: "400 12px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>C-scan 3D 재구성 (목업)</div>
+                  </div>
+                )}
+
+              </div>
+            </>
+          );
+        })()}
+
+        {/* ── 상세 View — 2D pane 더블클릭 시 단독 확대(중앙 영역 덮음) ── */}
+        {detailScan && (() => {
+          const selectedCell = cells.find(c => c.id === selected);
+          const isDefectSel = !!(selectedCell && selectedCell.defect);
+          const NAMES = { A: "A-SCAN", B: "B-SCAN", C: "C-SCAN", S: "S-SCAN (Sectorial)" };
+          return (
+            <div style={{ position: "absolute", inset: 0, zIndex: 20, background: "var(--color-white)", display: "flex", flexDirection: "column" }}>
+              <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 12, padding: "12px 24px", borderBottom: "1px solid var(--border-low)" }}>
+                <button className="erut-btn erut-btn--default erut-btn--sm" style={{ display: "inline-flex", alignItems: "center", gap: 6 }} onClick={() => setDetailScan(null)}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="15 6 9 12 15 18"/></svg>
+                  뒤로
+                </button>
+                <span style={{ font: "700 15px/1 var(--font-kr)", letterSpacing: ".08em", color: "var(--content-high)", textTransform: "uppercase" }}>{NAMES[detailScan]}</span>
+                <span style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>{selected.toUpperCase().replace("CH", "CH ")}</span>
+              </div>
+              <div style={{ flex: 1, minHeight: 0, position: "relative", margin: 24, border: "1px solid var(--border-medium)", overflow: "hidden" }}>
+                {detailScan === "A" && <ScanAPane warn={isCurWarn} defect={isDefectSel}/>}
+                {detailScan === "B" && <ScanBPane gid="bscan-detail"/>}
+                {detailScan === "C" && <ScanCPane/>}
+                {detailScan === "S" && <ScanSPane gid="sscan-detail"/>}
+              </div>
             </div>
-          </aside>
-        );
-      })()}
+          );
+        })()}
+      </section>
 
       {/* v9.35 Wave E+F: 탐촉자 추가 + 교정을 한 화면으로 통합 → 풀스크린 [4-3-1] ChannelCommissioning 페이지로 라우팅 */}
 
