@@ -3120,6 +3120,7 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
   const [menu, setMenu] = $s(initialMenu || "daq-basic");
   const [subView, setSubView] = $s(initialSubView || null); // null | "mc-add" | "mc-edit"
   const [editingBoardId, setEditingBoardId] = $s(null);
+  const [daqOpen, setDaqOpen] = $s(true); // 좌측 트리 'DAQ 설정' branch 펼침/접힘 — 기본 펼침
 
   // 메뉴 변경 시 sub-view 리셋
   const switchMenu = (m) => { setSubView(null); setEditingBoardId(null); setMenu(m); };
@@ -3146,17 +3147,24 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
       <div className="erut-tree" style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", padding: "20px 0", overflowY: "auto" }}>
         <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "0 20px 14px" }}>설정 메뉴</div>
 
-        <div className="erut-tree__group">DAQ 설정</div>
-        <div className="erut-tree__sub">
-          {daqChildren.map((item) => (
-            <button key={item.id} className={"erut-tree__item" + (menu === item.id ? " is-active" : "")} onClick={() => switchMenu(item.id)}>
-              {item.icon}{item.label}
-            </button>
-          ))}
-        </div>
+        <button className="erut-tree__item erut-tree__item--branch" onClick={() => setDaqOpen((o) => !o)}>
+          <span className={"erut-tree__caret" + (daqOpen ? " is-open" : "")}><window.EIcon.ChevronRight size={16}/></span>
+          DAQ 설정
+        </button>
+        {daqOpen && (
+          <div className="erut-tree__sub">
+            {daqChildren.map((item) => (
+              <button key={item.id} className={"erut-tree__item erut-tree__item--leaf" + (menu === item.id ? " is-active" : "")} onClick={() => switchMenu(item.id)}>
+                <span className="erut-tree__caret"/>
+                {item.icon}{item.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {topItems.map((item) => (
-          <button key={item.id} className={"erut-tree__item" + (menu === item.id ? " is-active" : "")} onClick={() => switchMenu(item.id)}>
+          <button key={item.id} className={"erut-tree__item erut-tree__item--leaf" + (menu === item.id ? " is-active" : "")} onClick={() => switchMenu(item.id)}>
+            <span className="erut-tree__caret"/>
             {item.icon}{item.label}
           </button>
         ))}
@@ -3562,6 +3570,9 @@ function SettingsPlaceholder({ title, subtitle, fields, onBack }) {
 function TargetPresetManage({ onBack }) {
   const [selectedId, setSelectedId] = $s(TARGET_PRESETS_MOCK[0] && TARGET_PRESETS_MOCK[0].id);
   const selected = TARGET_PRESETS_MOCK.find((p) => p.id === selectedId) || null;
+  // 좌측 트리 형태(branch) 펼침/접힘 — shape별 open 상태(미지정 = 기본 펼침)
+  const [openShapes, setOpenShapes] = $s({});
+  const toggleShape = (shape) => setOpenShapes((o) => ({ ...o, [shape]: o[shape] === false ? true : false }));
 
   // 좌측 트리 — 형태(shape)별 그룹핑 (최상위 노드 = 형태 · 자식 = 프리셋명)
   const shapeGroups = {};
@@ -3572,18 +3583,29 @@ function TargetPresetManage({ onBack }) {
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 0, height: "100%" }}>
-      {/* ───── 좌측: 프리셋 트리 (형태 → 프리셋명) ───── */}
+      {/* ───── 좌측: 프리셋 트리 (형태 branch → 프리셋명 leaf) ───── */}
       <div className="erut-tree" style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", overflowY: "auto", padding: "8px 0" }}>
-        {Object.keys(shapeGroups).map((shape) => (
-          <div key={shape}>
-            <div className="erut-tree__group">{shape}</div>
-            <div className="erut-tree__sub">
-              {shapeGroups[shape].map((p) => (
-                <button key={p.id} className={"erut-tree__item" + (p.id === selectedId ? " is-active" : "")} onClick={() => setSelectedId(p.id)}>{p.name}</button>
-              ))}
+        {Object.keys(shapeGroups).map((shape) => {
+          const isOpen = openShapes[shape] !== false;
+          return (
+            <div key={shape}>
+              <button className="erut-tree__item erut-tree__item--branch" onClick={() => toggleShape(shape)}>
+                <span className={"erut-tree__caret" + (isOpen ? " is-open" : "")}><window.EIcon.ChevronRight size={16}/></span>
+                {shape}
+              </button>
+              {isOpen && (
+                <div className="erut-tree__sub">
+                  {shapeGroups[shape].map((p) => (
+                    <button key={p.id} className={"erut-tree__item erut-tree__item--leaf" + (p.id === selectedId ? " is-active" : "")} onClick={() => setSelectedId(p.id)}>
+                      <span className="erut-tree__caret"/>
+                      {p.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ───── 우측: 프리셋 상세 ───── */}
@@ -3695,6 +3717,9 @@ function InspectionMapping({ onBack }) {
   const [seq, setSeq] = $s(1);              // 전역 채널 번호 카운터 (검사 대상 넘어 연속)
   const [selectedId, setSelectedId] = $s(null);
   const [placing, setPlacing] = $s(false);  // 배치 모드(컨텍스트 메뉴 '+ 탐촉자 추가' → 다음 표면 클릭으로 배치)
+  // 좌측 트리 검사 대상(branch) 펼침/접힘 — targetId별 open 상태(미지정 = 기본 펼침)
+  const [openTargets, setOpenTargets] = $s({});
+  const toggleTarget = (tid, e) => { if (e) e.stopPropagation(); setOpenTargets((o) => ({ ...o, [tid]: o[tid] === false ? true : false })); };
   // 우클릭 컨텍스트 메뉴 — { x, y, kind: "target"|"probe", targetId?, placementId? } (뷰포트 좌표)
   const [ctx, setCtx] = $s(null);
 
@@ -3754,24 +3779,27 @@ function InspectionMapping({ onBack }) {
         <div className="erut-tree__group">검사 대상(모재)</div>
         {targets.map((t) => {
           const kids = placements.filter((p) => p.targetId === t.id);
+          const isOpen = openTargets[t.id] !== false;
           return (
             <div key={t.id}>
               <button
-                className={"erut-tree__item" + (t.id === targetId ? " is-active" : "")}
+                className={"erut-tree__item erut-tree__item--branch" + (t.id === targetId ? " is-active" : "")}
                 onClick={() => setTargetId(t.id)}
                 onContextMenu={(e) => openCtx(e, "target", { targetId: t.id })}
               >
+                <span className={"erut-tree__caret" + (isOpen ? " is-open" : "")} onClick={(e) => toggleTarget(t.id, e)}><window.EIcon.ChevronRight size={16}/></span>
                 {t.name}
               </button>
-              {kids.length > 0 && (
+              {kids.length > 0 && isOpen && (
                 <div className="erut-tree__sub">
                   {kids.map((p) => (
                     <button
                       key={p.id}
-                      className={"erut-tree__item" + (p.id === selectedId ? " is-active" : "")}
+                      className={"erut-tree__item erut-tree__item--leaf" + (p.id === selectedId ? " is-active" : "")}
                       onClick={() => { setTargetId(t.id); setSelectedId(p.id); }}
                       onContextMenu={(e) => openCtx(e, "probe", { placementId: p.id, targetId: t.id })}
                     >
+                      <span className="erut-tree__caret"/>
                       {p.ch}
                     </button>
                   ))}
@@ -3979,6 +4007,9 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   const [showResetConfirm, setShowResetConfirm] = $s(false);
   // 저장 시 필수 미입력 항목을 입력 필드 error 상태로 표시
   const [saveErr, setSaveErr] = $s(false);
+  // 좌측 트리 형태(branch) 펼침/접힘 — shape별 open 상태(미지정 = 기본 펼침)
+  const [openShapes, setOpenShapes] = $s({});
+  const toggleShape = (shape) => setOpenShapes((o) => ({ ...o, [shape]: o[shape] === false ? true : false }));
 
   React.useEffect(() => {
     setSelectedPresetId(null);
@@ -4034,23 +4065,37 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   );
   return (
     <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "300px 1fr 340px", gap: 0, padding: 0, height: "100%" }}>
-      {/* ───── 좌측: 검사 대상 트리 (형태 → 검사 대상명) ───── */}
+      {/* ───── 좌측: 검사 대상 트리 (형태 branch → 검사 대상명 leaf) ───── */}
       <div style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-medium)" }}>
           <input className="erut-field" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="검사 대상명, 코드" style={{ width: "100%", height: 36, fontSize: 12 }}/>
         </div>
         <div className="erut-tree" style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
-          <button className={"erut-tree__item" + (selectedId === null ? " is-active" : "")} onClick={() => setSelectedId(null)}>신규 검사 대상</button>
-          {Object.keys(shapeGroups).map((shape) => (
-            <div key={shape}>
-              <div className="erut-tree__group">{shape}</div>
-              <div className="erut-tree__sub">
-                {shapeGroups[shape].map((t) => (
-                  <button key={t.id} className={"erut-tree__item" + (t.id === selectedId ? " is-active" : "")} onClick={() => setSelectedId(t.id)}>{t.name}</button>
-                ))}
+          <button className={"erut-tree__item erut-tree__item--leaf" + (selectedId === null ? " is-active" : "")} onClick={() => setSelectedId(null)}>
+            <span className="erut-tree__caret"/>
+            신규 검사 대상
+          </button>
+          {Object.keys(shapeGroups).map((shape) => {
+            const isOpen = openShapes[shape] !== false;
+            return (
+              <div key={shape}>
+                <button className="erut-tree__item erut-tree__item--branch" onClick={() => toggleShape(shape)}>
+                  <span className={"erut-tree__caret" + (isOpen ? " is-open" : "")}><window.EIcon.ChevronRight size={16}/></span>
+                  {shape}
+                </button>
+                {isOpen && (
+                  <div className="erut-tree__sub">
+                    {shapeGroups[shape].map((t) => (
+                      <button key={t.id} className={"erut-tree__item erut-tree__item--leaf" + (t.id === selectedId ? " is-active" : "")} onClick={() => setSelectedId(t.id)}>
+                        <span className="erut-tree__caret"/>
+                        {t.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div style={{ padding: "16px 20px", borderTop: "1px solid var(--border-medium)" }}>
           <button className="erut-btn erut-btn--emphasis erut-btn--m" style={{ width: "100%" }} onClick={resetToNew}>+ 새 검사 대상</button>

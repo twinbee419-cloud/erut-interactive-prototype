@@ -113,6 +113,11 @@ window.EIcon = {
       <polyline points="15,6 9,12 15,18"/>
     </svg>
   ),
+  ChevronRight: (p) => (
+    <svg viewBox="0 0 24 24" width={p?.size ?? 16} height={p?.size ?? 16} fill="none" stroke="currentColor" strokeWidth="1.5" {...p}>
+      <polyline points="9,6 15,12 9,18"/>
+    </svg>
+  ),
   Layers: (p) => (
     <svg viewBox="0 0 24 24" width={p?.size ?? 20} height={p?.size ?? 20} fill="none" stroke="currentColor" strokeWidth="1.5" {...p}>
       <polygon points="12,2 22,8 12,14 2,8"/><polyline points="2,14 12,20 22,14"/>
