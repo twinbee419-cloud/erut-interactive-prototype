@@ -43,8 +43,16 @@ const TITLE_BY_SCREEN = {
   gate:      "ERUT - Ultrasonic Monitoring System  ·  CH 04 Gate 설정",
   realtime:  "ERUT - Ultrasonic Monitoring System  ·  MCuF-001 · 실시간 스캔 · 3개 대상",
   manage:    "ERUT - Ultrasonic Monitoring System  ·  검사 대상 관리",
-  settings:  "ERUT - Ultrasonic Monitoring System  ·  장비 연결 관리",
+  settings:  "ERUT - Ultrasonic Monitoring System  ·  DAQ 설정",
   // v18.0: report 스크린 라우팅 폐기 — 모달 전환
+};
+
+// v33.0: [설정] 화면(screen==="settings") 진입 시 settingsView별 타이틀·breadcrumb 라벨 — 4항목 독립 화면 표기용
+const SETTINGS_VIEW_LABEL = {
+  daq:     "DAQ 설정",
+  target:  "검사 대상(모재) 관리",
+  preset:  "검사 대상(모재) 프리셋 관리",
+  mapping: "검사 매핑",
 };
 
 // Screens where the device is "connected" (status bar green LEDs) — v18.0: "report" 제거 / v27: "history" 폐기
@@ -84,14 +92,16 @@ function App() {
     return next === cur ? s : { ...s, [id]: next };
   });
 
-  // [4] 장비 연결 관리 진입 시 sub-view 지정용 (예: + 장비 추가 → mc-add)
+  // v33.0: [설정] 드롭다운 4항목은 각각 독립 화면 — DAQ 설정(EquipmentSettings·DAQ 계층 트리) / 검사 대상(모재) 관리(TargetManage) /
+  // 검사 대상(모재) 프리셋 관리(TargetPresetManage) / 검사 매핑(InspectionMapping). 공유 트리 셸 없음 — screen==="settings" 진입 시 settingsView로 분기.
+  const [settingsView, setSettingsView] = useState("daq"); // "daq" | "target" | "preset" | "mapping"
+  // DAQ 설정 화면 진입 시 sub-view 지정용 (예: + DAQ 추가 → mc-add)
   const [settingsInitialSubView, setSettingsInitialSubView] = useState(null);
-  // 메뉴바 [설정] 드롭다운 · 장비 메뉴 진입 시 [설정] 좌측 트리의 초기 리프 노드 지정
-  // ("daq-basic" | "daq-probe" | "daq-holder" | "daq-encoder" | "daq-mqtt" | "target" | "preset" | "mapping")
+  // DAQ 설정 화면(좌측 DAQ 계층 트리)의 초기 선택 노드 지정 — "daq-basic"(기본 — DAQ 목록) | "daq-mqtt"(첫 DAQ 미니 PC ▸ MQTT)
   const [settingsInitialMenu, setSettingsInitialMenu] = useState("daq-basic");
-  // settings 화면을 떠날 때 초기 sub-view/menu 리셋 (다음 진입 시 list · 기본 설정 노드부터)
+  // settings 화면을 떠날 때 초기 상태 리셋 (다음 진입 시 DAQ 설정 · list부터)
   useEffect(() => {
-    if (screen !== "settings") { setSettingsInitialSubView(null); setSettingsInitialMenu("daq-basic"); }
+    if (screen !== "settings") { setSettingsView("daq"); setSettingsInitialSubView(null); setSettingsInitialMenu("daq-basic"); }
   }, [screen]);
 
   // v14.0: commission 화면 진입 모드 — "new" (탐촉자 추가) / "edit" ([2]에서 이 채널 설정 편집)
@@ -134,7 +144,7 @@ function App() {
     device:     [{ label: "메인" }, { label: "장비 상세 (MCuF-001)", current: true }],
     realtime:   [{ label: "메인" }, { label: "장비 상세" }, { label: "실시간 스캔", current: true }],
     commission: [{ label: "메인" }, { label: "장비 상세" }, { label: "채널 설정", current: true }],
-    settings:   [{ label: "메인" }, { label: "장비 연결 관리", current: true }],
+    settings:   [{ label: "메인" }, { label: SETTINGS_VIEW_LABEL[settingsView], current: true }],
     manage:     [{ label: "메인" }, { label: "검사 대상 관리", current: true }],
   };
 
@@ -146,10 +156,10 @@ function App() {
     { label: "종료" },
   ];
   const deviceMenu = [
-    { label: "MQTT 설정",     onClick: () => { setSettingsInitialMenu("daq-mqtt"); setSettingsInitialSubView(null); goto("settings"); } },
+    { label: "MQTT 설정",     onClick: () => { setSettingsView("daq"); setSettingsInitialMenu("daq-mqtt"); setSettingsInitialSubView(null); goto("settings"); } },
     { divider: true },
-    { label: "DAQ 추가",      onClick: () => { setSettingsInitialMenu("daq-basic"); setSettingsInitialSubView("mc-add"); goto("settings"); } },
-    { label: "DAQ 목록",      onClick: () => { setSettingsInitialMenu("daq-basic"); setSettingsInitialSubView(null); goto("settings"); } },
+    { label: "DAQ 추가",      onClick: () => { setSettingsView("daq"); setSettingsInitialMenu("daq-basic"); setSettingsInitialSubView("mc-add"); goto("settings"); } },
+    { label: "DAQ 목록",      onClick: () => { setSettingsView("daq"); setSettingsInitialMenu("daq-basic"); setSettingsInitialSubView(null); goto("settings"); } },
     { divider: true },
     { label: "검사 대상 추가", onClick: () => { setManageInitialMode("new"); goto("manage"); } },
     { label: "검사 대상 관리", onClick: () => { setManageInitialMode("edit"); goto("manage"); } },
@@ -157,12 +167,12 @@ function App() {
     { label: "탐촉자 추가",    onClick: () => { setCommissionMode("new"); goto("commission"); } },
     { label: "일괄 재교정",    onClick: () => setShowRecalibWizard(true) },
   ];
-  // v33.0: 메뉴바 [설정] 드롭다운 — DAQ·검사 대상(모재)·매핑 설정 진입점 + 하단 환경 설정(모달, 기존 동작 유지)
+  // v33.0: 메뉴바 [설정] 드롭다운 — 4항목 각각 독립 화면(settingsView) + 하단 환경 설정(모달, 기존 동작 유지)
   const settingsMenu = [
-    { label: "DAQ 설정",                 onClick: () => { setSettingsInitialMenu("daq-basic"); setSettingsInitialSubView(null); goto("settings"); } },
-    { label: "검사 대상(모재) 관리",       onClick: () => { setSettingsInitialMenu("target");    setSettingsInitialSubView(null); goto("settings"); } },
-    { label: "검사 대상(모재) 프리셋 관리", onClick: () => { setSettingsInitialMenu("preset");    setSettingsInitialSubView(null); goto("settings"); } },
-    { label: "검사 매핑",                 onClick: () => { setSettingsInitialMenu("mapping");   setSettingsInitialSubView(null); goto("settings"); } },
+    { label: "DAQ 설정",                 onClick: () => { setSettingsView("daq");     setSettingsInitialMenu("daq-basic"); setSettingsInitialSubView(null); goto("settings"); } },
+    { label: "검사 대상(모재) 관리",       onClick: () => { setSettingsView("target");  goto("settings"); } },
+    { label: "검사 대상(모재) 프리셋 관리", onClick: () => { setSettingsView("preset");  goto("settings"); } },
+    { label: "검사 매핑",                 onClick: () => { setSettingsView("mapping"); goto("settings"); } },
     { divider: true },
     { label: "환경 설정", onClick: () => setShowSettings(true) },
   ];
@@ -284,7 +294,7 @@ function App() {
 
   return (
     <div className="erut-window">
-      <window.TitleBar title={TITLE_BY_SCREEN[screen] || TITLE_BY_SCREEN.project}/>
+      <window.TitleBar title={screen === "settings" ? ("ERUT - Ultrasonic Monitoring System  ·  " + SETTINGS_VIEW_LABEL[settingsView]) : (TITLE_BY_SCREEN[screen] || TITLE_BY_SCREEN.project)}/>
       <div style={{ position: "relative" }}>
         <window.MenuBar
           items={["파일","장비","설정","도움말"]}
@@ -339,7 +349,7 @@ function App() {
           <window.MainScreen
             boardStates={boardStates}
             onBoardControl={controlBoard}
-            onAddDevice={() => { setSettingsInitialSubView("mc-add"); goto("settings"); }}
+            onAddDevice={() => { setSettingsView("daq"); setSettingsInitialMenu("daq-basic"); setSettingsInitialSubView("mc-add"); goto("settings"); }}
             onOpenDevice={() => { setSelectedChannel(null); goto("device"); }}
           />
         )}
@@ -402,12 +412,22 @@ function App() {
             onBack={() => goto("main")}
           />
         )}
-        {screen === "settings" && (
+        {/* v33.0: [설정] 드롭다운 4항목 = 각각 독립 화면(settingsView) — 공유 트리 셸 없음 */}
+        {screen === "settings" && settingsView === "daq" && (
           <window.EquipmentSettings
             initialMenu={settingsInitialMenu}
             initialSubView={settingsInitialSubView}
             onBack={() => goto("main")}
           />
+        )}
+        {screen === "settings" && settingsView === "target" && (
+          <window.TargetManage onBack={() => goto("main")}/>
+        )}
+        {screen === "settings" && settingsView === "preset" && (
+          <window.TargetPresetManage onBack={() => goto("main")}/>
+        )}
+        {screen === "settings" && settingsView === "mapping" && (
+          <window.InspectionMapping onBack={() => goto("main")}/>
         )}
         {screen === "realtime" && (
           <window.RealtimeScan

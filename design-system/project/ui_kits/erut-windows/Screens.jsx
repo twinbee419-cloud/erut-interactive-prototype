@@ -3113,71 +3113,119 @@ window.CalibrationWizard = function CalibrationWizard({ onClose, mode = "recalib
   );
 };
 
+// ───── DAQ 설정 — [설정] 드롭다운 4항목(DAQ 설정·검사 대상 관리·프리셋 관리·검사 매핑) 중 'DAQ 설정' 전용 화면.
+// 좌측 = DAQ 계층 트리(MCuF-00N ▸ 탐촉자(CH + 홀더1/2 ▸ CH) · 엔코더(x/y) · 미니 PC(네트워크/MQTT)) · 우측 = 선택 노드 설정.
+// 검사 대상(모재) 관리·프리셋 관리·검사 매핑은 더 이상 이 화면의 하위가 아님 — App에서 settingsView로 각각 독립 렌더.
 window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubView, onBack }) {
-  // initialMenu: 좌측 트리 리프 id 직접 지정 (예: "daq-basic" | "daq-probe" | "daq-holder" | "daq-encoder" | "daq-mqtt" | "target" | "preset" | "mapping")
-  // initialSubView: null | "mc-add" | "mc-edit" — "daq-basic" 진입 시 sub-view 직접 지정 가능
-  // 예: [1] 메인 "+ 장비 추가" → initialMenu="daq-basic" + initialSubView="mc-add"로 즉시 폼 진입
-  const [menu, setMenu] = $s(initialMenu || "daq-basic");
-  const [subView, setSubView] = $s(initialSubView || null); // null | "mc-add" | "mc-edit"
-  const [editingBoardId, setEditingBoardId] = $s(null);
-  const [daqOpen, setDaqOpen] = $s(true); // 좌측 트리 'DAQ 설정' branch 펼침/접힘 — 기본 펼침
+  // initialMenu: "daq-basic"(기본 — DAQ 목록) | "daq-mqtt"(첫 DAQ의 미니 PC ▸ MQTT 노드로 즉시 진입)
+  // initialSubView: null | "mc-add" — [1] 메인 "+ 장비 추가" / [장비] 메뉴 "DAQ 추가" → 새 DAQ 등록 폼 즉시 진입
+  const boards = window.MOCK.mcBoards;
 
-  // 메뉴 변경 시 sub-view 리셋
-  const switchMenu = (m) => { setSubView(null); setEditingBoardId(null); setMenu(m); };
+  // DAQ 계층 트리 데이터(mock) — 보드마다 동일 구조: 탐촉자(직속 CH + 홀더 1/2 ▸ CH) · 엔코더(x/y) · 미니 PC(네트워크/MQTT)
+  const daqTree = boards.map((b, i) => ({
+    id: b.id, boardId: b.id, label: "MCuF-" + String(i + 1).padStart(3, "0"), contentType: "daq-basic", defaultOpen: i === 0,
+    children: [
+      {
+        id: b.id + ":probe", label: "탐촉자", contentType: "probe", defaultOpen: i === 0,
+        children: [
+          { id: b.id + ":probe:ch03", label: "CH 03", contentType: "probe" },
+          { id: b.id + ":probe:ch17", label: "CH 17", contentType: "probe" },
+          {
+            id: b.id + ":probe:holder1", label: "홀더 1", contentType: "holder", defaultOpen: i === 0,
+            children: [
+              { id: b.id + ":probe:holder1:ch01", label: "CH 01", contentType: "probe" },
+              { id: b.id + ":probe:holder1:ch20", label: "CH 20", contentType: "probe" },
+            ],
+          },
+          {
+            id: b.id + ":probe:holder2", label: "홀더 2", contentType: "holder", defaultOpen: i === 0,
+            children: [
+              { id: b.id + ":probe:holder2:ch54", label: "CH 54", contentType: "probe" },
+              { id: b.id + ":probe:holder2:ch60", label: "CH 60", contentType: "probe" },
+            ],
+          },
+        ],
+      },
+      {
+        id: b.id + ":encoder", label: "엔코더", contentType: "encoder", defaultOpen: i === 0,
+        children: [
+          { id: b.id + ":encoder:x", label: "x-엔코더", contentType: "encoder" },
+          { id: b.id + ":encoder:y", label: "y-엔코더", contentType: "encoder" },
+        ],
+      },
+      {
+        id: b.id + ":pc", label: "미니 PC", contentType: "pc", defaultOpen: false,
+        children: [
+          { id: b.id + ":pc:network", label: "네트워크", contentType: "pc" },
+          { id: b.id + ":pc:mqtt",    label: "MQTT",     contentType: "pc-mqtt" },
+        ],
+      },
+    ],
+  }));
 
-  // DAQ 설정 그룹 하위 항목 — 기본 설정(=DAQ 보드) + 스캔형 하드웨어 설정(탐촉자·홀더·엔코더, 준비 중) + MQTT
-  const daqChildren = [
-    { id: "daq-basic",   label: "기본 설정",       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="6" width="14" height="12"/><line x1="16" y1="12" x2="20" y2="12"/><line x1="18" y1="10" x2="18" y2="14"/></svg> },
-    { id: "daq-probe",   label: "탐촉자 설정",     icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 3h6v6l-3 4-3-4z"/><rect x="8" y="13" width="8" height="8"/></svg> },
-    { id: "daq-holder",  label: "탐촉자 홀더 설정", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="3" y1="6" x2="21" y2="6"/><rect x="3" y="9" width="3" height="11"/><rect x="8" y="9" width="3" height="11"/><rect x="13" y="9" width="3" height="11"/><rect x="18" y="9" width="3" height="11"/></svg> },
-    { id: "daq-encoder", label: "엔코더 설정",     icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="8"/><line x1="12" y1="12" x2="12" y2="6"/><line x1="12" y1="12" x2="16" y2="14"/></svg> },
-    { id: "daq-mqtt",    label: "MQTT 설정",       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 12a10 10 0 0 1 14 0"/><path d="M8.5 15a5 5 0 0 1 7 0"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg> },
-  ];
-  // 트리 최상위 항목 — 검사 대상(모재) 관리·프리셋·매핑
-  const topItems = [
-    { id: "target",  label: "검사 대상(모재) 관리",       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="4" y="4" width="16" height="16"/><circle cx="12" cy="12" r="4"/></svg> },
-    { id: "preset",  label: "검사 대상(모재) 프리셋 관리", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 3h12v18l-6-4-6 4z"/></svg> },
-    { id: "mapping", label: "검사 매핑",                  icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><line x1="8" y1="8" x2="16" y2="16"/></svg> },
-  ];
-  // #2: '탐촉자 설정' 개별 채널 등록 메뉴 폐기 유지 — 탐촉자 채널 등록은 [2] +탐촉자 추가 → [4-3-1] ChannelCommissioning. 본 트리의 '탐촉자 설정'은 DAQ 단위 기본 특성(준비 중)으로 별개.
+  // id → node 평면 조회 (선택 노드의 contentType·boardId 확인용)
+  const nodeById = {};
+  (function indexNodes(nodes) { nodes.forEach((n) => { nodeById[n.id] = n; if (n.children) indexNodes(n.children); }); })(daqTree);
+
+  const [openMap, setOpenMap] = $s({});
+  const toggleOpen = (n, e) => {
+    if (e) e.stopPropagation();
+    setOpenMap((o) => ({ ...o, [n.id]: !(o[n.id] !== undefined ? o[n.id] : !!n.defaultOpen) }));
+  };
+
+  const [selectedNode, setSelectedNode] = $s(
+    initialMenu === "daq-mqtt" ? (boards[0] && boards[0].id + ":pc:mqtt") : null
+  );
+  const [addingBoard, setAddingBoard] = $s(initialSubView === "mc-add");
+  const selectNode = (n) => { setSelectedNode(n.id); setAddingBoard(false); };
+
+  const renderNode = (n) => {
+    const active = !addingBoard && selectedNode === n.id;
+    if (!n.children || n.children.length === 0) {
+      return (
+        <button key={n.id} className={"erut-tree__item erut-tree__item--leaf" + (active ? " is-active" : "")} onClick={() => selectNode(n)}>
+          <span className="erut-tree__caret"/>
+          {n.label}
+        </button>
+      );
+    }
+    const open = openMap[n.id] !== undefined ? openMap[n.id] : !!n.defaultOpen;
+    return (
+      <div key={n.id}>
+        <button className={"erut-tree__item erut-tree__item--branch" + (active ? " is-active" : "")} onClick={() => selectNode(n)}>
+          <span className={"erut-tree__caret" + (open ? " is-open" : "")} onClick={(e) => toggleOpen(n, e)}><window.EIcon.ChevronRight size={16}/></span>
+          {n.label}
+        </button>
+        {open && <div className="erut-tree__sub">{n.children.map(renderNode)}</div>}
+      </div>
+    );
+  };
+
+  const node = !addingBoard && selectedNode ? nodeById[selectedNode] : null;
 
   return (
-    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 0, padding: 0, height: "100%" }}>
-      {/* ───── 좌측 트리 메뉴 ───── */}
+    <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 0, padding: 0, height: "100%" }}>
+      {/* ───── 좌측: DAQ 계층 트리 ───── */}
       <div className="erut-tree" style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", padding: "20px 0", overflowY: "auto" }}>
-        <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "0 20px 14px" }}>설정 메뉴</div>
-
-        <button className="erut-tree__item erut-tree__item--branch" onClick={() => setDaqOpen((o) => !o)}>
-          <span className={"erut-tree__caret" + (daqOpen ? " is-open" : "")}><window.EIcon.ChevronRight size={16}/></span>
-          DAQ 설정
-        </button>
-        {daqOpen && (
-          <div className="erut-tree__sub">
-            {daqChildren.map((item) => (
-              <button key={item.id} className={"erut-tree__item erut-tree__item--leaf" + (menu === item.id ? " is-active" : "")} onClick={() => switchMenu(item.id)}>
-                <span className="erut-tree__caret"/>
-                {item.icon}{item.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {topItems.map((item) => (
-          <button key={item.id} className={"erut-tree__item erut-tree__item--leaf" + (menu === item.id ? " is-active" : "")} onClick={() => switchMenu(item.id)}>
-            <span className="erut-tree__caret"/>
-            {item.icon}{item.label}
-          </button>
-        ))}
+        <div className="erut-tree__group">DAQ 계층</div>
+        {daqTree.map(renderNode)}
       </div>
 
-      {/* ───── 우측 콘텐츠 ───── */}
-      <div style={{ padding: menu === "target" ? 0 : "20px 30px", overflowY: menu === "target" ? "hidden" : "auto" }}>
-        {menu === "daq-basic" && !subView && <MCBoardList onAdd={() => setSubView("mc-add")} onEdit={(id) => { setEditingBoardId(id); setSubView("mc-edit"); }}/>}
-        {menu === "daq-basic" && subView && <MCBoardForm mode={subView} editingId={editingBoardId} onCancel={() => setSubView(null)} onSave={() => setSubView(null)}/>}
-        {menu === "daq-probe" && (
+      {/* ───── 우측: 선택 노드 설정 ───── */}
+      <div style={{ padding: "20px 30px", overflowY: "auto" }}>
+        {addingBoard && (
+          <MCBoardForm mode="mc-add" onCancel={() => setAddingBoard(false)} onSave={() => setAddingBoard(false)}/>
+        )}
+        {!addingBoard && !node && (
+          <MCBoardList onAdd={() => setAddingBoard(true)} onEdit={(id) => setSelectedNode(id)}/>
+        )}
+        {!addingBoard && node && node.contentType === "daq-basic" && (
+          <MCBoardForm mode="mc-edit" editingId={node.boardId} onCancel={() => setSelectedNode(null)} onSave={() => setSelectedNode(null)}/>
+        )}
+        {!addingBoard && node && node.contentType === "probe" && (
           <SettingsPlaceholder
             title="탐촉자 설정"
-            subtitle="DAQ 단위 탐촉자 기본 특성(유형·주파수·굴절각) 사전 등록 기능은 준비 중입니다. 현재는 [4-3-1] 채널 설정에서 채널별로 직접 입력합니다."
+            subtitle="DAQ 채널별 탐촉자 기본 특성(유형·주파수·굴절각) 사전 등록 기능은 준비 중입니다. 현재는 [4-3-1] 채널 설정에서 채널별로 직접 입력합니다."
             onBack={onBack}
             fields={[
               { label: "탐촉자 유형", value: "수직 탐촉자", type: "select" },
@@ -3187,20 +3235,20 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
             ]}
           />
         )}
-        {menu === "daq-holder" && (
+        {!addingBoard && node && node.contentType === "holder" && (
           <SettingsPlaceholder
             title="탐촉자 홀더 설정"
-            subtitle="스캔형(이동형) 8-탐촉자 홀더 간격·오프셋 사전 등록 기능은 준비 중입니다."
+            subtitle="스캔형(이동형) 탐촉자 홀더 오프셋·설치 좌표 사전 등록 기능은 준비 중입니다."
             onBack={onBack}
             fields={[
               { label: "홀더 유형", value: "8-탐촉자 배열", type: "select" },
-              { label: "탐촉자 간격 (mm)", value: "25" },
-              { label: "Z축 오프셋 (mm)", value: "0" },
-              { label: "접촉압", value: "표준", type: "select" },
+              { label: "X 오프셋 (mm)", value: "0" },
+              { label: "Y 오프셋 (mm)", value: "0" },
+              { label: "설치 좌표 (X, Y, Z)", value: "0, 0, 0" },
             ]}
           />
         )}
-        {menu === "daq-encoder" && (
+        {!addingBoard && node && node.contentType === "encoder" && (
           <SettingsPlaceholder
             title="엔코더 설정"
             subtitle="스캔형(이동형) 좌표 산출용 엔코더 해상도·방향 사전 등록 기능은 준비 중입니다."
@@ -3213,10 +3261,20 @@ window.EquipmentSettings = function EquipmentSettings({ initialMenu, initialSubV
             ]}
           />
         )}
-        {menu === "daq-mqtt" && <MQTTSettings onBack={onBack}/>}
-        {menu === "target"   && <window.TargetManage onBack={onBack}/>}
-        {menu === "preset"   && <TargetPresetManage onBack={onBack}/>}
-        {menu === "mapping"  && <InspectionMapping onBack={onBack}/>}
+        {!addingBoard && node && node.contentType === "pc" && (
+          <SettingsPlaceholder
+            title="미니 PC 설정"
+            subtitle="DAQ 미니 PC 네트워크(IP·서브넷) 사전 등록 기능은 준비 중입니다. MQTT 연동은 하위 'MQTT' 노드에서 설정합니다."
+            onBack={onBack}
+            fields={[
+              { label: "호스트명", value: "erut-mini-pc" },
+              { label: "IP", value: "192.168.0.20" },
+              { label: "서브넷", value: "255.255.255.0" },
+              { label: "게이트웨이", value: "192.168.0.1" },
+            ]}
+          />
+        )}
+        {!addingBoard && node && node.contentType === "pc-mqtt" && <MQTTSettings onBack={onBack}/>}
       </div>
     </div>
   );
@@ -3566,8 +3624,8 @@ function SettingsPlaceholder({ title, subtitle, fields, onBack }) {
   );
 }
 
-// ───── 검사 대상(모재) 프리셋 관리 — TargetManage 우측 상시 패널의 프리셋 개념을 독립 화면으로 (카드 리스트 + 추가/편집/삭제 어포던스 목업, 비동작) ─────
-function TargetPresetManage({ onBack }) {
+// ───── 검사 대상(모재) 프리셋 관리 — [설정] 독립 화면 (카드 리스트 + 추가/편집/삭제 어포던스 목업, 비동작) ─────
+window.TargetPresetManage = function TargetPresetManage({ onBack }) {
   const [selectedId, setSelectedId] = $s(TARGET_PRESETS_MOCK[0] && TARGET_PRESETS_MOCK[0].id);
   const selected = TARGET_PRESETS_MOCK.find((p) => p.id === selectedId) || null;
   // 좌측 트리 형태(branch) 펼침/접힘 — shape별 open 상태(미지정 = 기본 펼침)
@@ -3709,7 +3767,7 @@ function IsoShape({ shape, dims, gid }) {
   );
 }
 
-function InspectionMapping({ onBack }) {
+window.InspectionMapping = function InspectionMapping({ onBack }) {
   const targets = window.MOCK.targets;
   const [targetId, setTargetId] = $s(targets[0] && targets[0].id);
   // 배치된 탐촉자 — { id, ch, x, y, targetId } (x·y = 3D 도면 컨테이너 기준 %). 검사 대상별로 유지.
