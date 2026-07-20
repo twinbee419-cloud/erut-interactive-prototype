@@ -3560,29 +3560,64 @@ function SettingsPlaceholder({ title, subtitle, fields, onBack }) {
 
 // ───── 검사 대상(모재) 프리셋 관리 — TargetManage 우측 상시 패널의 프리셋 개념을 독립 화면으로 (카드 리스트 + 추가/편집/삭제 어포던스 목업, 비동작) ─────
 function TargetPresetManage({ onBack }) {
+  const [selectedId, setSelectedId] = $s(TARGET_PRESETS_MOCK[0] && TARGET_PRESETS_MOCK[0].id);
+  const selected = TARGET_PRESETS_MOCK.find((p) => p.id === selectedId) || null;
+
+  // 좌측 트리 — 형태(shape)별 그룹핑 (최상위 노드 = 형태 · 자식 = 프리셋명)
+  const shapeGroups = {};
+  TARGET_PRESETS_MOCK.forEach((p) => {
+    const shape = p.shape || "기타";
+    (shapeGroups[shape] = shapeGroups[shape] || []).push(p);
+  });
+
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, marginTop: 4 }}>
-        <div>
-          <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>검사 대상(모재) 프리셋 관리</h2>
-          <p style={{ font: "400 13px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4, marginBottom: 0 }}>등록된 프리셋 {TARGET_PRESETS_MOCK.length}개. 검사 대상 등록 시 형상·소재·운영 환경을 한 번에 불러올 수 있습니다.</p>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button className="erut-btn erut-btn--emphasis erut-btn--sm">+ 프리셋 추가</button>
-          <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onBack}>〈 이전</button>
-        </div>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {TARGET_PRESETS_MOCK.map((p) => (
-          <div key={p.id} style={{ border: "1px solid var(--border-medium)", background: "var(--surface-base)", padding: "14px 18px", display: "grid", gridTemplateColumns: "1fr auto auto", gap: 16, alignItems: "center" }}>
-            <div>
-              <div style={{ font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", marginBottom: 4 }}>{p.name}</div>
-              <div style={{ font: "400 12px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>{p.shape} · {p.th}mm · {p.data.material} · {p.data.fluid}</div>
+    <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 0, height: "100%" }}>
+      {/* ───── 좌측: 프리셋 트리 (형태 → 프리셋명) ───── */}
+      <div className="erut-tree" style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", overflowY: "auto", padding: "8px 0" }}>
+        {Object.keys(shapeGroups).map((shape) => (
+          <div key={shape}>
+            <div className="erut-tree__group">{shape}</div>
+            <div className="erut-tree__sub">
+              {shapeGroups[shape].map((p) => (
+                <button key={p.id} className={"erut-tree__item" + (p.id === selectedId ? " is-active" : "")} onClick={() => setSelectedId(p.id)}>{p.name}</button>
+              ))}
             </div>
-            <button className="erut-btn erut-btn--default erut-btn--sm">편집</button>
-            <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ color: "var(--system-error)", borderColor: "var(--system-error)" }}>삭제</button>
           </div>
         ))}
+      </div>
+
+      {/* ───── 우측: 프리셋 상세 ───── */}
+      <div style={{ padding: "20px 30px", overflowY: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, marginTop: 4 }}>
+          <div>
+            <h2 style={{ font: "700 20px/1.2 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>검사 대상(모재) 프리셋 관리</h2>
+            <p style={{ font: "400 13px/1.4 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4, marginBottom: 0 }}>등록된 프리셋 {TARGET_PRESETS_MOCK.length}개. 검사 대상 등록 시 형상·소재·운영 환경을 한 번에 불러올 수 있습니다.</p>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="erut-btn erut-btn--emphasis erut-btn--sm">+ 프리셋 추가</button>
+            <button className="erut-btn erut-btn--default erut-btn--sm" onClick={onBack}>〈 이전</button>
+          </div>
+        </div>
+
+        {selected && (
+          <div style={{ border: "1px solid var(--border-medium)", background: "var(--surface-base)", padding: "18px 22px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div style={{ font: "700 16px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)" }}>{selected.name}</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="erut-btn erut-btn--default erut-btn--sm">편집</button>
+                <button className="erut-btn erut-btn--subtle erut-btn--sm" style={{ color: "var(--system-error)", borderColor: "var(--system-error)" }}>삭제</button>
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px 20px", font: "400 13px/1.5 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)" }}>
+              <div><span style={{ color: "var(--content-low)" }}>형태 </span>{selected.shape}</div>
+              <div><span style={{ color: "var(--content-low)" }}>두께 </span>{selected.th}mm</div>
+              <div><span style={{ color: "var(--content-low)" }}>소재 </span>{selected.data.material}</div>
+              <div><span style={{ color: "var(--content-low)" }}>유체 </span>{selected.data.fluid}</div>
+              <div><span style={{ color: "var(--content-low)" }}>온도 </span>{selected.data.temp || "—"}℃</div>
+              <div><span style={{ color: "var(--content-low)" }}>압력 </span>{selected.data.press || "—"}MPa</div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -3963,6 +3998,13 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
     ? targets.filter(t => t.name.includes(search) || (t.desc || "").includes(search) || (buildTargetForm(t).code || "").includes(search))
     : targets;
 
+  // 좌측 트리 — 형태(shape)별 그룹핑 (buildTargetForm 파생값. 최상위 노드 = 형태 · 자식 = 검사 대상명)
+  const shapeGroups = {};
+  filteredTargets.forEach((t) => {
+    const shape = buildTargetForm(t).shape || "기타";
+    (shapeGroups[shape] = shapeGroups[shape] || []).push(t);
+  });
+
   // 표준 프리셋 — 앱 내장 라이브러리 (TARGET_PRESETS_MOCK 공용, 단일 진실 공급원)
   const presets = TARGET_PRESETS_MOCK;
 
@@ -3990,26 +4032,24 @@ window.TargetManage = function TargetManage({ targetId, initialMode, onBack }) {
   const sectionHeader = (txt) => (
     <div style={{ gridColumn: "1 / -1", font: "700 12px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", padding: "12px 0 4px", borderBottom: "1px solid var(--border-low)" }}>{txt}</div>
   );
-  const tabStyle = (active) => ({
-    display: "block", width: "100%", textAlign: "center", padding: "11px 20px",
-    font: "700 14px/1 var(--font-kr)", letterSpacing: ".02em",
-    color: active ? "var(--content-emphasis)" : "var(--content-medium)",
-    background: active ? "linear-gradient(rgba(34,133,239,0.10),rgba(34,133,239,0.10)), var(--surface-base)" : "transparent",
-    border: "none", borderLeft: "3px solid " + (active ? "var(--brand-primary)" : "transparent"),
-    cursor: "pointer",
-  });
-
   return (
     <div className="erut-page-enter" style={{ display: "grid", gridTemplateColumns: "300px 1fr 340px", gap: 0, padding: 0, height: "100%" }}>
-      {/* ───── 좌측: 검사 대상 리스트 ───── */}
+      {/* ───── 좌측: 검사 대상 트리 (형태 → 검사 대상명) ───── */}
       <div style={{ background: "var(--surface-subtle-1)", borderRight: "1px solid var(--border-medium)", display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-medium)" }}>
           <input className="erut-field" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="검사 대상명, 코드" style={{ width: "100%", height: 36, fontSize: 12 }}/>
         </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
-          <button onClick={() => setSelectedId(null)} style={tabStyle(selectedId === null)}>신규 검사 대상</button>
-          {filteredTargets.map((t) => (
-            <button key={t.id} onClick={() => setSelectedId(t.id)} style={tabStyle(t.id === selectedId)}>{t.name}</button>
+        <div className="erut-tree" style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+          <button className={"erut-tree__item" + (selectedId === null ? " is-active" : "")} onClick={() => setSelectedId(null)}>신규 검사 대상</button>
+          {Object.keys(shapeGroups).map((shape) => (
+            <div key={shape}>
+              <div className="erut-tree__group">{shape}</div>
+              <div className="erut-tree__sub">
+                {shapeGroups[shape].map((t) => (
+                  <button key={t.id} className={"erut-tree__item" + (t.id === selectedId ? " is-active" : "")} onClick={() => setSelectedId(t.id)}>{t.name}</button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
         <div style={{ padding: "16px 20px", borderTop: "1px solid var(--border-medium)" }}>
