@@ -63,7 +63,6 @@ function App() {
   const [selectedTarget, setSelectedTarget]   = useState("PIPE-A-204");
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [pickedProject, setPickedProject]     = useState(null);
-  const [showNewProject, setShowNewProject]   = useState(false);
   // v10.0: 환경 설정 모달 — 메뉴바 [설정] + 툴바 gear 공통 진입
   const [showSettings, setShowSettings]       = useState(false);
   // v12.0: F6/툴바 play 측정 시작 차단 다이얼로그 (미교정/만료 채널 존재 시) + 일괄 재교정 모달
@@ -339,7 +338,7 @@ function App() {
           <window.ProjectPicker
             onLoad={() => goto("main")}   /* 프로젝트 불러오기 — 파일 탐색기 mock → 메인 */
             onRecent={() => goto("main")} /* 최근 프로젝트 열기 — 최근 파일 mock → 메인 */
-            onNew={() => setShowNewProject(true)}
+            onNew={() => { setSettingsView("daq"); setSettingsInitialMenu("daq-basic"); setSettingsInitialSubView("mc-add"); goto("settings"); }} /* 새 프로젝트 등록 폐기 — DAQ 설정 add로 이동 */
           />
         )}
         {screen === "connect" && (
@@ -351,6 +350,7 @@ function App() {
             onBoardControl={controlBoard}
             onAddDevice={() => { setSettingsView("daq"); setSettingsInitialMenu("daq-basic"); setSettingsInitialSubView("mc-add"); goto("settings"); }}
             onOpenDevice={() => { setSelectedChannel(null); goto("device"); }}
+            onEditSettings={() => setShowSettings(true)}
           />
         )}
         {/* v8.5: [1-1] dashboard 라우트 폐기 — DAQ 자산 중심 모델 */}
@@ -442,14 +442,6 @@ function App() {
           />
         )}
         {/* v18.0: [18] 보고서는 풀스크린 → 모달로 전환. v27: [7] 검사 이력 화면 폐기(라우팅·메뉴·진입 전면 제거) */}
-
-        {/* 새 프로젝트 모달 */}
-        {showNewProject && (
-          <window.NewProjectModal
-            onClose={() => setShowNewProject(false)}
-            onCreate={() => { setShowNewProject(false); goto("main"); }}
-          />
-        )}
 
         {/* v10.0: 환경 설정 모달 (메뉴바 [설정] + 툴바 gear 공통 진입) */}
         {showSettings && (

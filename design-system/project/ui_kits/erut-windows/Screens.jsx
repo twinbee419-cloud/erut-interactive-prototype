@@ -332,67 +332,6 @@ window.ProjectPicker = function ProjectPicker({ onLoad, onRecent, onNew }) {
   );
 };
 
-// =================== Modal · 새 프로젝트 만들기 ===================
-window.NewProjectModal = function NewProjectModal({ onCreate, onClose }) {
-  // 생성일·프로젝트 코드는 생성 시점에 자동 부여 (입력 불가). 담당 검사자·산업·표준은 웹에서 관리. (고정형·스캔형 통합 — 유형 선택 없음)
-  const autoStartDate = "2026-06-16";        // 생성 버튼 클릭 시점 자동 기록
-  const autoCode = "a3f29c1e-7b84-4d2f-9e10-5c8b1f2a6d04"; // UUID 자동 부여 (수정 불가)
-  const [form, setForm] = $s({ name: "", note: "" });
-  const setField = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const valid = !!form.name;
-
-  const footer = (
-    <>
-      <span style={{ font: "400 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginRight: "auto" }}>
-        <span style={{ color: "var(--system-error)" }}>*</span> 필수 항목
-      </span>
-      <window.Button variant="subtle" size="sm" onClick={onClose}>닫기</window.Button>
-      <window.Button variant={valid ? "emphasis" : "disabled"} size="sm" onClick={valid ? () => onCreate({ ...form, startDate: autoStartDate, code: autoCode }) : undefined}>프로젝트 생성 → [1] 메인</window.Button>
-    </>
-  );
-
-  const label = (txt, req) => (
-    <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-medium)", marginBottom: 4 }}>
-      {txt}{req && <span style={{ color: "var(--system-error)", marginLeft: 4 }}>*</span>}
-    </div>
-  );
-  const hint = (txt) => (
-    <div style={{ font: "400 10px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)", marginTop: 4 }}>{txt}</div>
-  );
-
-  return (
-    <window.Modal title="새 프로젝트 만들기" onClose={onClose} footer={footer}>
-      {/* 필수 정보 */}
-      <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", paddingBottom: 6, borderBottom: "1px solid var(--border-low)" }}>필수 정보</div>
-      <div>
-        {label("프로젝트명", true)}
-        <input className="erut-field" value={form.name} onChange={(e) => setField("name", e.target.value)} placeholder="예: 울산 #2 라인 2026 정기검사" style={{ width: "100%" }}/>
-      </div>
-
-      {/* 자동 부여 정보 */}
-      <div style={{ font: "700 11px/1 var(--font-kr)", letterSpacing: "0.08em", color: "var(--content-low)", textTransform: "uppercase", paddingBottom: 6, borderBottom: "1px solid var(--border-low)" }}>자동 부여</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 14 }}>
-        <div>
-          {label("생성일")}
-          <input className="erut-field is-disabled" value={autoStartDate} readOnly tabIndex={-1} style={{ width: "100%" }}/>
-          {hint("생성 시점 자동 기록")}
-        </div>
-        <div>
-          {label("프로젝트 코드")}
-          <input className="erut-field is-disabled" value={autoCode} readOnly tabIndex={-1} style={{ width: "100%" }}/>
-          {hint("UUID 자동 부여 · 수정 불가")}
-        </div>
-      </div>
-
-      {/* 비고 */}
-      <div>
-        {label("비고")}
-        <textarea className="erut-field" value={form.note} onChange={(e) => setField("note", e.target.value)} placeholder="자유 입력" rows={4} style={{ width: "100%", resize: "vertical", minHeight: 88, font: "400 14px/1.5 var(--font-kr)", letterSpacing: ".02em" }}/>
-      </div>
-    </window.Modal>
-  );
-};
-
 // =================== Screen · [1] MAIN ===================
 // Layout matches ServiceFlow_Analysis SLIDE 5 [1] 메인 페이지 (v2.0):
 //   프로젝트 헤더(통합 패널) + Tab → 장비 연결 상태 패널(3개 mini-card) → 검사 대상 4×2 grid
@@ -472,7 +411,7 @@ function MiniPill({ children, tone = "neutral", ledColor }) {
   );
 }
 
-window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevice, onOpenDevice }) {
+window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevice, onOpenDevice, onEditSettings }) {
   const proj = window.MOCK.project;
   const devices = window.MOCK.devices;
   // v22.1: 보드별 측정 상태 (공유 state) — 없으면 MOCK 기본값
@@ -554,8 +493,9 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
 
       {/* ▼ 좌측 정보 사이드바 (240px · surface-base — 공통 .erut-sidebar) ▼ */}
       <aside className="erut-sidebar">
-        {/* 프로젝트명 (줄바꿈 허용) */}
-        <h2 style={{ font: "700 22px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: 0 }}>{proj.name}</h2>
+        {/* 파일명 (불러오거나 생성한 .erut 파일 · 줄바꿈 허용) */}
+        <div style={{ font: "400 12px/1 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-low)" }}>파일명</div>
+        <h2 style={{ font: "700 22px/1.3 var(--font-kr)", letterSpacing: ".02em", color: "var(--content-high)", margin: "8px 0 0" }}>{proj.name}</h2>
 
         {/* 집계 3행 */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 24 }}>
@@ -582,7 +522,7 @@ window.MainScreen = function MainScreen({ boardStates, onBoardControl, onAddDevi
         {/* 버튼 (비고 아래 · 세로 2버튼) — Figma 위치: 하단 고정 아님 */}
         <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--border-low)", display: "flex", flexDirection: "column", gap: 8 }}>
           <button className="erut-btn erut-btn--subtle" onClick={onAddDevice}>+ DAQ 추가</button>
-          <button className="erut-btn erut-btn--default">편집</button>
+          <button className="erut-btn erut-btn--default" onClick={onEditSettings}>기본 설정</button>
         </div>
       </aside>
 
