@@ -7,7 +7,7 @@ ERUT의 **디자인 SSOT**. 모든 기획·UI·mockup의 시각 규칙·토큰·
 - 토큰: `02_design-system/project/colors_and_type.css` · 컴포넌트: `.../ui_kits/erut-windows/kit.css` (`.erut-*`).
 - 가이드(do/don't): `02_design-system/README.md` · `project/README.md` · `project/SKILL.md`.
 - 신규 산출물 `<head>`에 colors_and_type.css + kit.css `<link>`.
-- 충돌 우선순위: **design-system > 기타 참고자료**. 시각은 항상 design-system 기준.
+- 충돌 우선순위: **디자인 시스템 > 기타 참고자료**. 시각은 항상 `02_design-system/` 기준.
 
 ## 시각 원칙 + 금지
 - **각진(radius 0**; pill 100px·LED dot 50%만 예외) · **라이트 surface + 네이비 chrome** · **brand blue `#2285EF` 강조 전용**(큰 면적 fill 금지) · **NanumSquare**(letter-spacing +0.02em) · **한국어 우선** · **이모지 없음** · **드롭섀도우 없음**(border로 구분; status pill inset glow만 예외).

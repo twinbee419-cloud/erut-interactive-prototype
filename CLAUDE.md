@@ -19,7 +19,7 @@ Claude Code 작업 지침. **ERUT** (Eroun Realtime Ultrasonic Testing) — 자�
 - **프로토타입** = `02_design-system/project/ui_kits/erut-windows/` — 동작하는 React 프로토타입. **빌드 없음**: `index.html`이 CDN UMD(React 18.3.1) + Babel standalone로 `.jsx`를 브라우저에서 직접 트랜스파일. 화면 로직 = `Screens.jsx`(≈4100줄) · 창 chrome `Chrome.jsx` · 폼 컨트롤 `Controls.jsx` · 아이콘 `Icons.jsx`. 실행 = 파일을 브라우저로 열기.
 - **프로토타입 편집 = 원칙적 hold** — 개발자가 Figma를 직접 보고 개발 중. **사용자 명시 지시 있을 때만** JSX 수정. 평소 기획 반영 대상 = Notion 화면설계서(`/notion`).
 - **배포**: `vercel.json`이 `/` → `02_design-system/project/ui_kits/erut-windows/index.html`로 rewrite. **git push = Vercel 자동 배포**(git-tracked 변경만).
-- **git 추적 vs 로컬 전용**: 추적 = `02_design-system/` · `03_dev_handoff/` · `CLAUDE.md` · `index.html` · `vercel.json`. **gitignore(로컬)** = `01_materials/`(NDA) · `99_legacy/`(구 HTML·archive) · `*.pdf/pptx/docx/fig` 등.
+- **git 추적 vs 로컬 전용**: 추적 = `02_design-system/`(02 CLAUDE.md 포함) · `03_dev_handoff/` · 루트 `CLAUDE.md` · `index.html` · `vercel.json`. **gitignore(로컬)** = `01_materials/`(NDA) · `99_legacy/`(구 HTML·archive) · `*.pdf/pptx/docx/fig` 등.
 - 작업 완료 시 git-tracked 변경은 자동 commit+push(요청 없이도). 로컬 전용 파일은 배포 무관.
 
 ## 산출물 작업 지침
