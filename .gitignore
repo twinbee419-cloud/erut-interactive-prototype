@@ -1,5 +1,5 @@
-# ERUT 프로토타입 repo — 보수적 .gitignore (2026-05-27)
-# Vercel 배포 대상은 design-system/ 폴더만. 그 외 NDA 자료·메인 기획서는 git 제외.
+# ERUT 프로토타입 repo — 보수적 .gitignore
+# Vercel 배포 대상은 02_design-system/ 폴더만. 그 외 NDA 자료·구 기획서는 git 제외.
 
 # ───── Mac 시스템 파일 ─────
 .DS_Store
@@ -8,7 +8,8 @@
 # ───── Claude Code 작업 폴더 (로컬 도구) ─────
 .claude/
 
-# ───── 메인 기획서·작업 문서 (사용자 선택: 보수적) ─────
+# ───── 구 기획서·archive (99_legacy · 별도 지시 없으면 참고 안 함) ─────
+99_legacy/
 ERUT_ServiceFlow_FixedProbe.html
 ERUT_ServiceFlow_Crawler.html
 ERUT_FixedRobot_Plan_UI.html
@@ -16,8 +17,6 @@ ERUT_RealtimeScan_Plan_UI.html
 ERUT_UI_Design_Draft_v6.html
 ERUT_UI_Flow_GAP_Analysis.html
 ERUT_UI_Flow_GAP_Analysis.md
-
-# ───── archive (이전 버전 누적 백업 — 별도 보관) ─────
 archive/
 archive_crawler/
 
@@ -50,6 +49,7 @@ package-lock.json
 A 스캔, B 스캔, C 스캔이란 무엇입니까_ 2026년 전체 가이드.html
 A 스캔, B 스캔, C 스캔이란 무엇입니까_ 2026년 전체 가이드_files/
 
-# ───── 지사장님 교육자료 (1순위 NDA 도메인 · 로컬 전용) ─────
+# ───── 도메인 자료 (1순위 NDA · 로컬 전용 · CLAUDE.md 포함 전체 제외) ─────
+01_materials/
 지사장님_교육자료/
 *.ppt

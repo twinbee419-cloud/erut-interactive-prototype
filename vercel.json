@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/design-system/project/ui_kits/erut-windows/index.html" }
+    { "source": "/", "destination": "/02_design-system/project/ui_kits/erut-windows/index.html" }
   ],
   "headers": [
     {
