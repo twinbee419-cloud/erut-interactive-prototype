@@ -695,6 +695,30 @@
 /* v20.1: compact 변형 — 카드 내부 등 좁은 영역용 (28px·12px) */
 .erut-tab--sm{ height: 28px; padding: 0 14px; font-size: 12px; }
 
+/* contained 변형 — 컨테이너에 담긴 세그먼트형 탭.
+   용도: 화면 전환 토글(종합 결과 화면 / DAQ 장비 목록) · pane 스캔 유형 칩(A/B/C/D).
+   .erut-tabs와 달리 하단 보더가 없고, active가 brand-tint 칩으로 올라온다. */
+.erut-tabs--contained{
+  border-bottom: 0;
+  padding: 4px;
+  background: var(--surface-base);
+  border: var(--stroke-1-low);
+  align-self: flex-start;
+}
+.erut-tabs--contained .erut-tab{ height: 32px; padding: 0 16px; }
+.erut-tabs--contained .erut-tab:hover{ background: var(--surface-subtle-2); }
+.erut-tabs--contained .erut-tab.is-active{
+  background: var(--surface-subtle-3);
+  border: var(--stroke-1-emphasis);
+  color: var(--content-emphasis);
+  box-shadow: none;
+}
+.erut-tabs--contained .erut-tab:disabled{
+  color: var(--content-low); background: transparent; cursor: default;
+}
+/* chip 변형 — pane 좌상단 스캔 유형 선택(28×22). --contained와 함께 사용. */
+.erut-tabs--contained .erut-tab--chip{ height: 22px; padding: 0 8px; font-size: 12px; }
+
 /* ---------- Tree nav (설정 좌측 메뉴 — branch(캐럿+굵게, 펼침/접힘)·leaf(캐럿 자리만 유지) 공용) ---------- */
 .erut-tree{ display: flex; flex-direction: column; }
 .erut-tree__group{
@@ -1005,4 +1029,26 @@
   padding: 20px;
   display: flex; flex-direction: column;
   overflow-y: auto;
+}
+
+/* rail 변형 — 아이콘 전용 100px 레일([C-PRJ-02] 좌측).
+   텍스트 라벨 없이 56×56 아이콘 버튼을 8px 간격으로 세로 배치. */
+.erut-sidebar--rail{
+  width: 100px;
+  padding: 16px 0;
+  align-items: center;
+  gap: 8px;
+}
+.erut-sidebar__icon{
+  width: 56px; height: 56px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 0; cursor: pointer;
+  color: var(--content-medium);
+}
+.erut-sidebar__icon:hover{ background: var(--surface-subtle-2); color: var(--brand-primary); }
+.erut-sidebar__icon.is-active{
+  background: var(--surface-subtle-3); color: var(--content-emphasis);
+}
+.erut-sidebar__icon:disabled{
+  color: var(--content-low); background: transparent; cursor: default;
 }
