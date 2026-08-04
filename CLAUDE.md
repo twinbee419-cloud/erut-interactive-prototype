@@ -50,7 +50,7 @@ Claude Code 작업 지침. **ERUT** (Eroun Realtime Ultrasonic Testing) — 자�
 - 흐름: **[C-PRJ-01] 시작 → [C-PRJ-02] DAQ 장비 목록 → [C-RES-02] DAQ 결과 화면(측정)**. 종합 = [C-RES-01].
 - 설정(메뉴바 '설정' · 좌 트리/nav): **[C-SET-01]** DAQ 장비 설정(계층 트리 — DAQ/탐촉자/홀더(+장착 탐촉자)/I/O 장비/Bridge PC) · **[C-SET-02]** 모재 관리 · **[C-SET-03]** 모재 프리셋 관리 · **[C-SET-04]** 검사 시작 준비(맵핑) · **[C-SET-05]** 기본 설정 · **[C-SET-06]** 모니터링 서버 설정.
 - 교정 = **[C-CAL-01]** 탐촉자 설정(+01-01 재교정). 보고서 = **[C-RPT-01]** 측정 · **[C-RPT-02]** 스캔. 알림 NTF-01 · 로그 LOG-01.
-- **측정 제어 = DAQ 단위**(탐촉자 개별 start/stop 불가 · 동시 PRF). 단축키: **F6 시작 · F7 중지** · Ctrl+S 저장 · Ctrl+O 열기 · Ctrl+P 보고서. 일시정지 폐지. 상태바 우측 = F6/F7 상시 표시.
+- **측정 제어 = DAQ 단위**(탐촉자 개별 start/stop 불가 · 동시 PRF). 툴바 **▶ = 측정 준비 완료(F6) / ■ = 중단(F7)** — SW에 별도 '측정 시작' 액션 없음, **실제 기록 개시 = 외부 트리거**(로봇의 시작점 QR 인식 = 검사 시작 신호 · 검사자 수동 탐촉). 단축키: F6 준비 완료 · F7 중단 · Ctrl+S 저장 · Ctrl+O 열기 · Ctrl+P 보고서. 일시정지 폐지. 상태바 우측 = F6/F7 상시 표시.
 
 ## 기술 스택 (구현 단계 — 참고)
 - .NET 4.8 · WinForms · SQLite(WAL 필수) · Helix Toolkit(3D) · OxyPlot · AssimpNet · Newtonsoft.Json · NLog · LZ4(선택).
