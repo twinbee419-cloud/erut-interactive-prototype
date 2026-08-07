@@ -52,6 +52,10 @@ Claude Code 작업 지침. **ERUT** (Eroun Realtime Ultrasonic Testing) — 자�
 - 재교정 = **[C-CAL-01-01]** 탐촉자 재교정(교정 본체는 [C-PRJ-03-01]). 보고서 = **[C-RPT-01]** 측정 · **[C-RPT-02]** 스캔. 알림 NTF-01 · 로그 LOG-01.
 - **측정 제어 = DAQ 단위**(탐촉자 개별 start/stop 불가 · 동시 PRF). 툴바 **▶ = 측정 준비 완료(F6) / ■ = 중단(F7)** — SW에 별도 '측정 시작' 액션 없음, **실제 기록 개시 = 외부 트리거**(로봇의 시작점 QR 인식 = 검사 시작 신호 · 검사자 수동 탐촉). 단축키: F6 준비 완료 · F7 중단 · Ctrl+S 저장 · Ctrl+O 열기 · Ctrl+P 보고서. 일시정지 폐지. 상태바 우측 = F6/F7 상시 표시.
 
+## 시스템 연결 구조
+- **노트북(ERUT Client) → Bridge PC → DAQ 장비** — 노트북과 DAQ를 직접 연결하지 않음. 노트북↔Bridge PC 연결 후 이어서 Bridge PC↔DAQ 연결(2단계·둘 다 필수 / MQTT는 '사용 여부'에 따라 선택).
+- **Bridge PC를 두는 이유** = 서드파티 엔코더 제어 프로그램이 **API 제어 불가**(시작프로그램 등록·서비스 명령 모두 한계) → 자동 실행이 안 되어 브릿지 경유가 유일한 대안. 결선: 엔코더 박스↔PC = **USB** / 컨트롤러↔메인 PC = **이더넷**(스위칭 허브). (근거 = `01_materials/20260806_회의_요약.md`)
+
 ## 기술 스택 (구현 단계 — 참고)
 - .NET 4.8 · WinForms · SQLite(WAL 필수) · Helix Toolkit(3D) · OxyPlot · AssimpNet · Newtonsoft.Json · NLog · LZ4(선택).
 - 저장: DB = 메타데이터·JSON·파일경로 / 바이너리(.bin) = C-SCAN·A-SCAN (BLOB 금지, 파일 분리).
