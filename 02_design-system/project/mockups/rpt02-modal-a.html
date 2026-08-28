@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[C-RPT-02] 캡처 상세 모달 — A안</title>
+
+<!-- 디자인 SSOT: 토큰 + 컴포넌트를 직접 링크 (사본 아님) -->
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="../ui_kits/erut-windows/kit.css">
+
+<style>
+/* ─────────────────────────────────────────────────────────
+   이 파일 고유의 레이아웃만 정의. 색·타이포·컴포넌트는 전부
+   colors_and_type.css / kit.css 토큰과 .erut-* 클래스를 사용.
+   자체 클래스는 mk- 접두로 kit과 캐스케이드 충돌을 피함.
+   ───────────────────────────────────────────────────────── */
+
+*{ box-sizing: border-box; }
+
+body{
+  margin: 0;
+  background: var(--surface-base);
+  color: var(--content-high);
+  font-family: var(--font-kr);
+  letter-spacing: var(--letterspacing-default);
+  font-size: var(--body-sm-size, 14px);
+  line-height: 1.5;
+}
+
+.mk-stage{
+  max-width: 880px;
+  margin: 0 auto;
+  padding: var(--space-10, 40px) var(--space-5, 20px) var(--space-16, 64px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6, 24px);
+}
+
+/* ── 페이지 머리 ───────────────────────────── */
+.mk-head{ display: flex; flex-direction: column; gap: 6px; }
+.mk-head__eyebrow{
+  font: 700 11px/1 var(--font-kr);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--content-low);
+}
+.mk-head__title{
+  margin: 0;
+  font: 800 var(--h1-size, 24px)/1.3 var(--font-kr);
+  letter-spacing: var(--letterspacing-default);
+  color: var(--content-high);
+  text-wrap: balance;
+}
+.mk-head__sub{
+  margin: 0;
+  max-width: 62ch;
+  color: var(--content-medium);
+}
+
+/* ── 모달 (kit .erut-modal 위에 폭·헤더만 조정) ── */
+.mk-modal{ width: 720px; max-width: 100%; background: var(--color-white, #FFFFFF); }
+
+/* Figma 시안 기준 라이트 헤더.
+   kit.css .erut-modal__header 는 네이비(--content-medium) 배경이라 여기서 덮어씀. */
+.mk-modal .erut-modal__header{
+  height: 48px;
+  background: var(--color-white, #FFFFFF);
+  color: var(--content-high);
+  justify-content: space-between;
+  padding: 0 12px 0 20px;
+  border-bottom: 1px solid var(--border-low);
+}
+
+.mk-modal .erut-modal__body{ padding: 0; flex-direction: row; gap: 0; align-items: stretch; }
+.mk-modal .erut-modal__footer{ background: var(--surface-subtle-2); padding: 12px 16px; }
+
+.mk-iconbtn{
+  width: 32px; height: 32px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid transparent;
+  color: var(--content-medium); cursor: pointer;
+}
+.mk-iconbtn:hover{ background: var(--surface-subtle-2); }
+.mk-iconbtn:focus-visible{ outline: 2px solid var(--border-emphasis); outline-offset: -1px; }
+
+/* ── 좌 : 시각 영역 ────────────────────────── */
+.mk-visual{
+  flex: 1 1 auto; min-width: 0;
+  padding: var(--space-4, 16px);
+  display: flex; flex-direction: column; gap: var(--space-3, 12px);
+  border-right: 1px solid var(--border-low);
+}
+
+.mk-ident{ display: flex; flex-direction: column; gap: 2px; }
+.mk-ident__1{ font: 800 var(--h4-size, 16px)/1.3 var(--font-kr); letter-spacing: var(--letterspacing-default); }
+.mk-ident__2{ font: 700 12px/1.4 var(--font-kr); letter-spacing: var(--letterspacing-default); color: var(--content-medium); }
+.mk-ident__3{ font: 400 12px/1.4 var(--font-kr); letter-spacing: var(--letterspacing-default); color: var(--content-low); font-variant-numeric: tabular-nums; }
+
+.mk-scan{
+  margin: 0; position: relative;
+  width: 100%; aspect-ratio: 320 / 280;
+  border: 1px solid var(--border-medium);
+  background: var(--surface-strong);
+  overflow: hidden;
+}
+.mk-scan canvas,
+.mk-scan svg{ position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.mk-scan__tag{
+  position: absolute; right: 8px; bottom: 8px;
+  padding: 2px 8px;
+  background: var(--color-white, #FFFFFF);
+  border: 1px solid var(--border-medium);
+  font: 700 12px/1.4 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.mk-pos{ display: flex; align-items: flex-end; gap: var(--space-3, 12px); }
+.mk-pos__fig{
+  margin: 0; flex: 0 0 112px; width: 112px; height: 84px;
+  border: 1px solid var(--border-low);
+  background: var(--surface-subtle-2);
+}
+.mk-pos__fig svg{ width: 100%; height: 100%; display: block; }
+.mk-pos__meta{ display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mk-pos__label{ font: 700 12px/1.4 var(--font-kr); letter-spacing: var(--letterspacing-default); color: var(--content-low); }
+
+/* ── 우 : 정보 레일 ────────────────────────── */
+.mk-rail{
+  flex: 0 0 268px; width: 268px;
+  display: flex; flex-direction: column;
+  background: var(--color-white, #FFFFFF);
+}
+.mk-sec{
+  padding: 14px var(--space-4, 16px);
+  border-bottom: 1px solid var(--border-low);
+  display: flex; flex-direction: column; gap: var(--space-2, 8px);
+}
+.mk-sec:last-child{ border-bottom: 0; flex: 1 1 auto; }
+.mk-sec__head{
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font: 800 11px/1 var(--font-kr);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--content-low);
+}
+.mk-sec__tag{
+  font: 700 12px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-medium); text-transform: none;
+}
+.mk-sec__opt{
+  font: 400 11px/1 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-low); text-transform: none;
+}
+
+.mk-tabs{ overflow-x: auto; max-width: 100%; }
+
+.mk-kv{ margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; }
+.mk-kv dt{ font: 400 12px/1.4 var(--font-kr); letter-spacing: var(--letterspacing-default); color: var(--content-low); white-space: nowrap; }
+.mk-kv dd{
+  margin: 0; text-align: right;
+  font: 700 13px/1.4 var(--font-kr); letter-spacing: var(--letterspacing-default);
+  color: var(--content-high);
+  font-variant-numeric: tabular-nums;
+}
+.mk-kv dd.is-muted{ font-weight: 400; color: var(--content-low); }
+
+.mk-memo{ flex: 1 1 auto; min-height: 64px; width: 100%; resize: none; }
+
+/* ── 주석 ──────────────────────────────────── */
+.mk-notes{
+  margin: 0; padding: var(--space-4, 16px) var(--space-5, 20px);
+  list-style: none;
+  border: 1px solid var(--border-low);
+  background: var(--surface-subtle-2);
+  display: grid; gap: 10px;
+}
+.mk-notes li{
+  display: grid; grid-template-columns: 20px 1fr; gap: 10px;
+  font-size: 13px; color: var(--content-medium);
+}
+.mk-notes b{ color: var(--content-high); font-weight: 800; }
+.mk-notes .mk-n{
+  font: 800 12px/1.5 var(--font-kr);
+  color: var(--brand-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 760px){
+  .mk-modal .erut-modal__body{ flex-direction: column; }
+  .mk-visual{ border-right: 0; border-bottom: 1px solid var(--border-low); }
+  .mk-rail{ flex: 1 1 auto; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce){
+  *{ animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="mk-stage">
+
+  <header class="mk-head">
+    <div class="mk-head__eyebrow">ERUT Client · [C-RPT-02] 스캔 결과 보고서</div>
+    <h1 class="mk-head__title">캡처 상세 모달 — A안</h1>
+    <p class="mk-head__sub">좌측은 시각 영역, 우측은 정보 레일. 측정 탭을 누르면 값과 이미지 위 측정선이 함께 바뀝니다.</p>
+  </header>
+
+  <div class="erut-modal mk-modal" role="dialog" aria-label="캡처 상세">
+
+    <div class="erut-modal__header">
+      <span>캡처 상세</span>
+      <button class="mk-iconbtn" type="button" aria-label="닫기">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" aria-hidden="true">
+          <path d="M6 6 L18 18 M18 6 L6 18"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="erut-modal__body">
+
+      <!-- ── 좌 : 시각 영역 ───────────────────── -->
+      <section class="mk-visual">
+        <div class="mk-ident">
+          <div class="mk-ident__1">PIPE-A-204 · CH 07</div>
+          <div class="mk-ident__2">MCuF-001-0123</div>
+          <div class="mk-ident__3">2026-08-30 13:54:21</div>
+        </div>
+
+        <figure class="mk-scan">
+          <canvas id="cscan" width="320" height="280" aria-label="C-scan 캡처 이미지"></canvas>
+          <svg id="ovl" viewBox="0 0 320 280" aria-hidden="true"></svg>
+          <span class="mk-scan__tag">CH 07</span>
+        </figure>
+
+        <div class="mk-pos">
+          <figure class="mk-pos__fig">
+            <svg viewBox="0 0 112 84" aria-label="모재 3D 위치">
+              <g stroke="#A5B2CA" stroke-width="1" stroke-linecap="square" fill="none">
+                <path d="M10 74 L10 62"></path>
+                <path d="M10 74 L22 74"></path>
+                <path d="M10 74 L3 80"></path>
+              </g>
+              <text x="12" y="60" font-size="6" fill="#6B7C9B">Z</text>
+              <text x="24" y="76" font-size="6" fill="#6B7C9B">X</text>
+              <g fill="none" stroke="#354D74" stroke-width="1.2">
+                <ellipse cx="66" cy="20" rx="26" ry="8"></ellipse>
+                <path d="M40 20 L40 62"></path>
+                <path d="M92 20 L92 62"></path>
+                <path d="M40 62 A26 8 0 0 0 92 62"></path>
+              </g>
+              <path d="M40 62 A26 8 0 0 1 92 62" fill="none" stroke="#DADFEA" stroke-width="1.2" stroke-dasharray="3 3"></path>
+              <path d="M66 12 L66 4" stroke="#6B7C9B" stroke-width="1"></path>
+              <text x="69" y="8" font-size="6" fill="#6B7C9B">N</text>
+              <circle id="posdot" cx="52" cy="40" r="4.5" fill="#2285EF" stroke="#FFFFFF" stroke-width="1.5"></circle>
+            </svg>
+          </figure>
+          <div class="mk-pos__meta">
+            <span class="mk-pos__label">3D 위치</span>
+            <span class="erut-badge erut-badge--soft">C (2D)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 우 : 정보 레일 ───────────────────── -->
+      <aside class="mk-rail">
+
+        <div class="mk-sec">
+          <div class="mk-sec__head"><span>측정</span></div>
+          <div class="erut-tabs erut-tabs--contained mk-tabs" id="tabs" role="tablist" aria-label="측정 건"></div>
+          <dl class="mk-kv">
+            <dt>좌표축</dt><dd class="is-muted">X, Y (mm)</dd>
+            <dt>시작점</dt><dd id="v-start">(18, 242)</dd>
+            <dt>끝점</dt><dd id="v-end">(34, 187)</dd>
+            <dt>길이</dt><dd id="v-len">57.28 mm</dd>
+            <dt>결함 비율</dt><dd id="v-ratio">0.12 %</dd>
+            <dt>TOF</dt><dd id="v-tof">12.4 μs</dd>
+            <dt>Amplitude</dt><dd id="v-amp">78 %FSH</dd>
+          </dl>
+        </div>
+
+        <div class="mk-sec">
+          <div class="mk-sec__head"><span>설정</span></div>
+          <dl class="mk-kv">
+            <dt>Gain</dt><dd>32 dB</dd>
+          </dl>
+        </div>
+
+        <div class="mk-sec">
+          <div class="mk-sec__head"><span>모재</span><span class="mk-sec__tag">탱크형</span></div>
+          <dl class="mk-kv">
+            <dt>공칭 두께</dt><dd>4 mm</dd>
+            <dt>외경</dt><dd>30 mm</dd>
+            <dt>높이</dt><dd>400 mm</dd>
+            <dt>소재</dt><dd class="is-muted">---</dd>
+            <dt>허용 감육</dt><dd class="is-muted">---</dd>
+          </dl>
+        </div>
+
+        <div class="mk-sec">
+          <div class="mk-sec__head"><span>메모</span><span class="mk-sec__opt">선택</span></div>
+          <textarea class="erut-field erut-field--area mk-memo" aria-label="메모">비교적 작은 결함입니다.</textarea>
+        </div>
+
+      </aside>
+    </div>
+
+    <div class="erut-modal__footer">
+      <button class="erut-btn erut-btn--sm" type="button">닫기</button>
+      <button class="erut-btn erut-btn--sm" type="button">PNG 내보내기</button>
+      <button class="erut-btn erut-btn--sm" type="button">저장</button>
+      <button class="erut-btn erut-btn--sm erut-btn--emphasis" type="button">+ 보고서 생성</button>
+    </div>
+  </div>
+
+  <ul class="mk-notes">
+    <li><span class="mk-n">1</span><span><b>측정 탭이 값 바로 위에 있음.</b> 탭을 바꾸면 아래 7개 값과 좌측 측정선이 동시에 바뀌어 무엇이 달라졌는지 한 덩어리로 보입니다.</span></li>
+    <li><span class="mk-n">2</span><span><b>3D는 캡처 이미지 아래에 축소 배치.</b> 측정 대상은 캡처 이미지이고 3D는 위치 참조용이라 크기로 주·부를 구분합니다.</span></li>
+    <li><span class="mk-n">3</span><span><b>게이트 표시 없음.</b> A-scan 1점마다 게이트가 개별 적용되어 캡처 범위 전체를 한 값으로 적을 수 없습니다. 저장은 유지하고 화면에서만 제외했습니다.</span></li>
+    <li><span class="mk-n">4</span><span><b>작성자 필드 없음.</b> 작성자는 보고서 단위 속성이므로 [+ 보고서 생성] 확인 팝업에서 1회 입력합니다.</span></li>
+    <li><span class="mk-n">5</span><span><b>C-scan 이미지와 3D 형상은 구조 확인용 더미.</b> 실제 렌더는 개발팀의 분석 도구가 담당합니다.</span></li>
+  </ul>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* 측정 4건 — len 은 두 좌표의 실제 직선거리로 검산한 값 */
+  var M = [
+    { s:[18,242],  e:[34,187],  len:"57.28", ratio:"0.12", tof:"12.4", amp:"78", pos:[52,40] },
+    { s:[96,210],  e:[128,194], len:"35.78", ratio:"0.07", tof:"12.9", amp:"64", pos:[70,34] },
+    { s:[204,318], e:[233,341], len:"37.01", ratio:"0.09", tof:"12.1", amp:"71", pos:[80,52] },
+    { s:[61,152],  e:[70,133],  len:"21.02", ratio:"0.04", tof:"13.2", amp:"58", pos:[58,28] }
+  ];
+
+  function px(p){ return [p[0], p[1] - 100]; }   /* 캔버스 좌표 = (x, y-100) */
+
+  /* ── C-scan 진폭 컬러맵 (데이터 시각화 · 장식 아님) ── */
+  var cv = document.getElementById("cscan");
+  var W = cv.width, H = cv.height;
+  var ctx = cv.getContext("2d");
+  var img = ctx.createImageData(W, H);
+
+  var blobs = M.map(function(m){
+    var a = px(m.s), b = px(m.e);
+    return {
+      x: (a[0] + b[0]) / 2,
+      y: (a[1] + b[1]) / 2,
+      r: Math.max(16, Math.hypot(b[0] - a[0], b[1] - a[1]) * 0.62)
+    };
+  });
+
+  var STOPS = [
+    [0.00,  14,  32, 122],
+    [0.30,  20, 120, 205],
+    [0.50,  32, 178, 150],
+    [0.66,  96, 200,  70],
+    [0.82, 232, 196,  40],
+    [1.00, 214,  52,  34]
+  ];
+  function ramp(v){
+    if(v <= 0) return STOPS[0].slice(1);
+    if(v >= 1) return STOPS[STOPS.length - 1].slice(1);
+    for(var i = 1; i < STOPS.length; i++){
+      if(v <= STOPS[i][0]){
+        var a = STOPS[i-1], b = STOPS[i];
+        var t = (v - a[0]) / (b[0] - a[0]);
+        return [ a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t, a[3]+(b[3]-a[3])*t ];
+      }
+    }
+    return STOPS[STOPS.length - 1].slice(1);
+  }
+
+  /* 결정적 의사난수 — 새로고침해도 같은 화면 */
+  var seed = 20260830;
+  function rnd(){ seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }
+  var grain = new Float32Array(W * H);
+  for(var g = 0; g < grain.length; g++){ grain[g] = rnd(); }
+
+  for(var y = 0; y < H; y++){
+    for(var x = 0; x < W; x++){
+      var v = 0.06 + 0.10 * Math.sin(x * 0.035) * Math.cos(y * 0.028);
+      for(var k = 0; k < blobs.length; k++){
+        var d = Math.hypot(x - blobs[k].x, y - blobs[k].y) / blobs[k].r;
+        v += 1.05 * Math.exp(-d * d * 2.4);
+      }
+      v += (grain[y * W + x] - 0.5) * 0.05;
+      var c = ramp(Math.max(0, Math.min(1, v)));
+      var i4 = (y * W + x) * 4;
+      img.data[i4]     = c[0];
+      img.data[i4 + 1] = c[1];
+      img.data[i4 + 2] = c[2];
+      img.data[i4 + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+
+  /* ── 측정 오버레이 ── */
+  var NS = "http://www.w3.org/2000/svg";
+  var ovl = document.getElementById("ovl");
+  var groups = M.map(function(m, i){
+    var a = px(m.s), b = px(m.e);
+    var grp = document.createElementNS(NS, "g");
+
+    var line = document.createElementNS(NS, "line");
+    line.setAttribute("x1", a[0]); line.setAttribute("y1", a[1]);
+    line.setAttribute("x2", b[0]); line.setAttribute("y2", b[1]);
+    line.setAttribute("stroke", "#FFFFFF");
+    line.setAttribute("stroke-width", "2");
+    grp.appendChild(line);
+
+    [a, b].forEach(function(p){
+      var c = document.createElementNS(NS, "circle");
+      c.setAttribute("cx", p[0]); c.setAttribute("cy", p[1]); c.setAttribute("r", "4");
+      c.setAttribute("fill", "#FFFFFF");
+      c.setAttribute("stroke", "#0A1C3C");
+      c.setAttribute("stroke-width", "1.2");
+      grp.appendChild(c);
+    });
+
+    var label = document.createElementNS(NS, "text");
+    label.setAttribute("x", (a[0] + b[0]) / 2 + 8);
+    label.setAttribute("y", (a[1] + b[1]) / 2 - 6);
+    label.setAttribute("fill", "#FFFFFF");
+    label.setAttribute("font-size", "11");
+    label.setAttribute("font-weight", "700");
+    label.textContent = String(i + 1);
+    grp.appendChild(label);
+
+    ovl.appendChild(grp);
+    return grp;
+  });
+
+  /* ── 측정 탭 (kit: .erut-tabs--contained + .erut-tab--chip) ── */
+  var tabsEl = document.getElementById("tabs");
+  var tabs = M.map(function(m, i){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "erut-tab erut-tab--chip";
+    b.setAttribute("role", "tab");
+    b.textContent = String(i + 1);
+    b.addEventListener("click", function(){ select(i); });
+    tabsEl.appendChild(b);
+    return b;
+  });
+
+  var out = {
+    start: document.getElementById("v-start"),
+    end:   document.getElementById("v-end"),
+    len:   document.getElementById("v-len"),
+    ratio: document.getElementById("v-ratio"),
+    tof:   document.getElementById("v-tof"),
+    amp:   document.getElementById("v-amp")
+  };
+  var dot = document.getElementById("posdot");
+
+  function select(i){
+    var m = M[i];
+    out.start.textContent = "(" + m.s[0] + ", " + m.s[1] + ")";
+    out.end.textContent   = "(" + m.e[0] + ", " + m.e[1] + ")";
+    out.len.textContent   = m.len + " mm";
+    out.ratio.textContent = m.ratio + " %";
+    out.tof.textContent   = m.tof + " μs";
+    out.amp.textContent   = m.amp + " %FSH";
+    dot.setAttribute("cx", m.pos[0]);
+    dot.setAttribute("cy", m.pos[1]);
+    tabs.forEach(function(t, k){
+      t.classList.toggle("is-active", k === i);
+      t.setAttribute("aria-selected", k === i ? "true" : "false");
+    });
+    groups.forEach(function(grp, k){ grp.setAttribute("opacity", k === i ? "1" : "0.32"); });
+  }
+
+  select(0);
+})();
+</script>
+</body>
+</html>
