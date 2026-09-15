@@ -177,7 +177,7 @@ interface CalibrationHistoryEntry {
   channel: number;
   velocity: number;       // m/s (음속)
   zero: number;           // μs (영점)
-  wedgeAngle: number;     // ° (Wedge 각도)
+  refractionAngle: number; // ° (굴절각 실측 · 표면 법선 기준 · 0 = 수직)
   gain: number;           // dB
   testpiece: string;      // "IIW V1 (25mm · 탄소강)" 등
   result: "pass" | "warn" | "fail";  // 시편 확인 결과 (state 기반)
