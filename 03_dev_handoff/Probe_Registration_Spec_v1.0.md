@@ -62,13 +62,35 @@
 ### 3.2 감도 보정 — TCG / DGS 택1
 
 - **보정 방식** 라디오 (필수) — `TCG`(기본) / `DGS`. **DAC는 폐기**
-- `TCG` — 깊이별 실측 포인트(`ToF` μs + `Gain` dB) 테이블로 게인을 시간 보정. 포인트는 게이트 ToF와 연동 자동 입력
-- `DGS` — 탐촉자 파라미터로 이론 거리-진폭 곡선을 산출
-  - 필요 입력: **유효 진동자경 D_eff** · 주파수 · **재질 감쇠계수 α** · **기준 반사체 등가 FBH경**
-  - ⚠️ 현재 화면([C-PRJ-05] ④ 감도 보정)은 포인트 테이블만 제공 — DGS 선택 시 위 파라미터 입력 위치 미정 (§6 후속)
+- 선택에 따라 ④ 감도 보정 본문 전체가 교체된다. 두 방식의 입력 항목은 공유하지 않는다.
+
+#### TCG
+- `FSH`(%) 목표 진폭(기본 80) + `[✎ Gain]`(FSH에 맞춰 글로벌 게인 자동 조정) + `[✎ TCG]`(포인트별 보정 게인 자동 산출)
+- 포인트 테이블 — `ToF`(μs) + `Gain`(dB) · `ToF`는 게이트 ToF와 연동 자동 입력(수동 수정 가능)
+
+#### DGS — 탭 6종
+
+| 탭 | 필드 | 단위 | 비고 |
+|---|---|---|---|
+| `SETUP` | `DGS Mode` | 토글 | ON일 때만 파형 위에 곡선 표시. OFF여도 입력값 유지 |
+| | `DGS Curve` | mm | 곡선을 그릴 등가 결함 크기(ERS) |
+| `DGS PROB` | `XTAL Frequency` | MHz | **readonly** — 탐촉자 등록값(`frequencyMHz`) 승계 |
+| | `EFF. Diameter` | mm | **readonly** — 탐촉자 등록값에서 산출(원형 진동자 기준 ≈ 0.97 × 진동자 크기) |
+| | `Delay Velocity` | m/s | 웨지·지연재 구간 음속. 직접 입력 |
+| `REF ECHO` | `Reference Type` | select | 기본 `FBH`. 전체 옵션은 개발 확정 |
+| | `Ref Size` | mm | 기준 반사체 치수 |
+| | `Record Ref` | 토글 | ON 시 현재 게이트가 잡은 에코를 곡선 기준점으로 기록 |
+| `REF CORR` | `Ref Atten` | dB/m | 기준 시험편 감쇠 |
+| | `Ampl Correct` | dB | 기준 진폭 보정 |
+| | `Delete Ref` | 버튼 | 기록한 기준 에코 삭제 → 재기록 필요 |
+| `MAT ATTN` | `Test Atten` | dB/m | 시험체 감쇠계수 |
+| | `Transfer Corr.` | dB/m | 전이 보정(시험편↔모재 표면 조건 차) |
+| `OFFSET` | `Offset 1` ~ `Offset 4` | 토글 + dB/m | 기준 곡선에 ±dB 평행선 추가. 기본 `Offset 1`만 ON · OFF 행은 입력 비활성 |
+
 - **스코프 한정 (중요)**: 보정값은 **교정 메타 + 수집 시점 Amp 정규화 기준**으로만 저장·사용한다.
   - 결함 **크기 판정·등급**은 **웹 서비스 책임**. 윈도우 앱은 판정하지 않음.
   - 윈도우 앱은 정규화된 Amp(또는 raw Amp + 보정 파라미터)를 MQTT로 송신, 웹이 sizing 수행.
+- ⚠️ DGS는 기준점 1개와 파라미터로 전 깊이 곡선을 **계산**한다. `EFF. Diameter`·감쇠계수가 틀리면 모든 깊이의 ERS가 함께 틀어지며 화면상 드러나지 않으므로, 두 값의 출처를 고정하고 교정 이력에 반드시 기록한다.
 
 ## 4. DB 스키마 반영 (TB_SCAN_CONFIG.ProbeSettingsJson)
 
@@ -90,7 +112,16 @@
     "method": "tcg",                        // tcg | dgs  (dac 폐기)
     "purpose": "amplitude_normalization",   // 판정 아님 (웹 책임)
     "tcgPoints": [ { "tofUs": 20, "gainDb": 5 } ],
-    "dgs": { "effectiveDiameterMm": null, "attenuationDbPerMm": null, "refFbhDiameterMm": null }
+    "dgs": {
+      "curveErsMm": 3.0,
+      "mode": true,
+      "effectiveDiameterMm": 9.6,       // readonly · 탐촉자 등록값에서 산출
+      "delayVelocityMps": 2500,
+      "refType": "FBH", "refSizeMm": 3.0, "refRecorded": false,
+      "refAttenDbPerM": 0.0, "amplCorrectDb": 0.0,
+      "testAttenDbPerM": 0.0, "transferCorrDbPerM": 0.0,
+      "offsets": [ { "enabled": true, "valueDbPerM": 0.0 } ]
+    }
   }
 }
 ```
@@ -117,5 +148,6 @@
 
 - 경사각 채널 **횡파 음속** 자동 테이블 (현재 `SOUND_SPEEDS`는 종파만). 경사각 사용 본격화 시 도입
 - 입사점(BIP) 교정 · 실제 굴절각 검증 단계 (NDT 표준 경사각 절차) — 이번 범위 제외
-- DGS 곡선 산출에 필요한 탐촉자 파라미터(유효 진동자경 D_eff · 재질 감쇠계수 α · 기준 반사체 등가 FBH경) 입력 위치 확정
+- `Reference Type` 전체 옵션 확정 (현재 `FBH`만 확인)
+- `EFF. Diameter` 산출식 확정 — 탐촉자 `진동자 크기`에서 자동 산출할지, 탐촉자 등록에 별도 필드를 둘지
 - 진동자 사각형의 W×H 2-치수 입력 (현재 단일 크기)
