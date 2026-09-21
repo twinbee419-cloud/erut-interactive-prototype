@@ -70,27 +70,29 @@
 
 #### DGS — 탭 6종
 
+> **출처 = 참고한 상용 SW 화면.** 필드 구성·라벨·단위·기본값은 그 화면을 그대로 옮긴 것이며, 각 값의 의미·산출식·검증 범위는 개발 확정 대상이다. `01_materials`(1순위 도메인 자료)에는 DGS/AVG가 용어 사전의 명칭 1줄(`거리-게인-크기 선도(독일 방식)`)만 존재하고 원리·입력 파라미터·ERS는 0건이다.
+
 | 탭 | 필드 | 단위 | 비고 |
 |---|---|---|---|
-| `SETUP` | `DGS Mode` | 토글 | ON일 때만 파형 위에 곡선 표시. OFF여도 입력값 유지 |
-| | `DGS Curve` | mm | 곡선을 그릴 등가 결함 크기(ERS) |
+| `SETUP` | `DGS Mode` | 토글 | 기본 ON |
+| | `DGS Curve` | mm | 기본 3.00 |
 | `DGS PROB` | `XTAL Frequency` | MHz | **readonly** — 탐촉자 등록값(`frequencyMHz`) 승계 |
-| | `EFF. Diameter` | mm | **readonly** — 탐촉자 등록값에서 산출(원형 진동자 기준 ≈ 0.97 × 진동자 크기) |
-| | `Delay Velocity` | m/s | 웨지·지연재 구간 음속. 직접 입력 |
+| | `EFF. Diameter` | mm | **readonly** — 탐촉자 등록의 `진동자 유효 직경`과 동일 항목 (승계 방식 개발 확정) |
+| | `Delay Velocity` | m/s | 직접 입력. 기본 2500 — 1순위 자료의 아크릴(웨지) 종파 음속은 2,730 m/s로 불일치 |
 | `REF ECHO` | `Reference Type` | select | 기본 `FBH`. 전체 옵션은 개발 확정 |
 | | `Ref Size` | mm | 기준 반사체 치수 |
-| | `Record Ref` | 토글 | ON 시 현재 게이트가 잡은 에코를 곡선 기준점으로 기록 |
-| `REF CORR` | `Ref Atten` | dB/m | 기준 시험편 감쇠 |
-| | `Ampl Correct` | dB | 기준 진폭 보정 |
-| | `Delete Ref` | 버튼 | 기록한 기준 에코 삭제 → 재기록 필요 |
-| `MAT ATTN` | `Test Atten` | dB/m | 시험체 감쇠계수 |
-| | `Transfer Corr.` | dB/m | 전이 보정(시험편↔모재 표면 조건 차) |
-| `OFFSET` | `Offset 1` ~ `Offset 4` | 토글 + dB/m | 기준 곡선에 ±dB 평행선 추가. 기본 `Offset 1`만 ON · OFF 행은 입력 비활성 |
+| | `Record Ref` | 토글 | 기본 OFF |
+| `REF CORR` | `Ref Atten` | dB/m | — |
+| | `Ampl Correct` | dB | — |
+| | `Delete Ref` | 버튼 | — |
+| `MAT ATTN` | `Test Atten` | dB/m | 자료의 감쇠계수 단위는 dB/cm — 환산 필요 |
+| | `Transfer Corr.` | dB/m | 용어 정의만 자료에 존재(`교정 시편과 시험체 간 표면 차이 보정`) · 산출식 없음 |
+| `OFFSET` | `Offset 1` ~ `Offset 4` | 토글 + dB/m | 기본 `Offset 1`만 ON · OFF 행은 입력 비활성 |
 
 - **스코프 한정 (중요)**: 보정값은 **교정 메타 + 수집 시점 Amp 정규화 기준**으로만 저장·사용한다.
   - 결함 **크기 판정·등급**은 **웹 서비스 책임**. 윈도우 앱은 판정하지 않음.
   - 윈도우 앱은 정규화된 Amp(또는 raw Amp + 보정 파라미터)를 MQTT로 송신, 웹이 sizing 수행.
-- ⚠️ DGS는 기준점 1개와 파라미터로 전 깊이 곡선을 **계산**한다. `EFF. Diameter`·감쇠계수가 틀리면 모든 깊이의 ERS가 함께 틀어지며 화면상 드러나지 않으므로, 두 값의 출처를 고정하고 교정 이력에 반드시 기록한다.
+- 교정 이력에는 보정 방식과 위 전 필드 값을 함께 기록한다.
 
 ## 4. DB 스키마 반영 (TB_SCAN_CONFIG.ProbeSettingsJson)
 
@@ -148,6 +150,8 @@
 
 - 경사각 채널 **횡파 음속** 자동 테이블 (현재 `SOUND_SPEEDS`는 종파만). 경사각 사용 본격화 시 도입
 - 입사점(BIP) 교정 · 실제 굴절각 검증 단계 (NDT 표준 경사각 절차) — 이번 범위 제외
-- `Reference Type` 전체 옵션 확정 (현재 `FBH`만 확인)
-- `EFF. Diameter` 산출식 확정 — 탐촉자 `진동자 크기`에서 자동 산출할지, 탐촉자 등록에 별도 필드를 둘지
+- `Reference Type` 전체 옵션 확정 (현재 `FBH`만 확인 · 자료에는 SDH·FBH·BW 3종이 약어로만 등재)
+- `EFF. Diameter` 승계 방식 확정 — 탐촉자 등록값을 그대로 읽을지, 별도 산출식을 둘지
+- 감쇠 3필드 `dB/m` ↔ 자료 기준 `dB/cm` 환산·검증 범위
+- `Delay Velocity` 기본값 2500 ↔ 자료의 아크릴 2,730 m/s
 - 진동자 사각형의 W×H 2-치수 입력 (현재 단일 크기)
