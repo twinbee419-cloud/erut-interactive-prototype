@@ -11,6 +11,7 @@ ERUT 개발팀에 전달할 기능 사양서·API 명세·도메인 지식 문�
 | `Notification_System_Spec_v1.0.md` | 1.0 | 2026-06-12 | 통합 알림 시스템 — 메뉴바 종 + 드롭다운, 심각도 3단계, 교정/측정/통신/부착 일원화 |
 | `Store_And_Forward_Spec_v1.0.md` | 1.0 | 2026-06-24 | 서버 송신 버퍼링 — 끊김 시 로컬 보관 → 재연결 자동 재송신. 상태바 MQTT 표시 + 알림. **프로토타입 미시연 — 백엔드 구현 필요** |
 | `DAQ_Auto_Info_Spec_v1.0.md` | 1.0 | 2026-07-02 | DAQ 연결 시 자동 획득 정보(SN·펌웨어·채널수·HW rev·샘플링·MAC·Config). 제조일은 조건부(펌웨어 제공 시, 없으면 —) |
+| `Result_Analysis_Storage_Spec_v1.0.md` | 1.0 | 2026-09-23 | [C-PRJ-06] 결과 분석 저장 구조 — raw 1벌 불변 + 교정 설정값 2세트(origin/current) · 수정본 저장 시 raw 복사 금지 |
 
 ## 문서 작성 원칙
 
