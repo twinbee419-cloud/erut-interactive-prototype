@@ -8,18 +8,38 @@ Claude Code 작업 지침. **ERUT** (Eroun Realtime Ultrasonic Testing) — 자�
 - 동작: ① 지시 받으면 NDT/UX 관점 검토 ② 더 나은 안 적극 제시 ③ 옵션은 표+추천 명시 ④ 모순·중복·UX 부적합 발견 시 확인 요청 ⑤ "그대로 진행" 시에만 검토 없이 실행.
 - **무조건 수긍 금지** — 검토·질문에는 근거(도메인·§·데이터모델) 있는 의견·반론 적극 제시(Figma·외부안·사용자 가설도 틀리면 플래그). 단 재확인·반복 지시는 결정으로 존중.
 
+## 역할 경계 (Claude ↔ Codex)
+- **Codex = 구현 상태 및 명세 검토 파트너**(별도 세션 · 읽기 전용). 지침 = 루트 `AGENTS.md` · 맥락 = `ERUT_인수인계서_Codex.md`. **아래 표는 `AGENTS.md`와 동일하게 유지할 것.**
+
+| 영역 | Claude | Codex |
+|---|---|---|
+| 요구사항 분석 · 기능 정책 · 사용자 흐름 · 화면 구성 · UI 문구 · 예외 설계 | ✅ | ❌ |
+| 화면설계서(Notion) 작성·수정 | ✅ | ❌ 읽기만 |
+| 디자인 시스템 일관성 | ✅ | 보조(위반 지적까지) |
+| **기획 정합성** — 문서 간 충돌 · 자기모순 · 플로우 단절 · 작성 규칙 위반 | ✅ | ❌ |
+| **구현 가능성** — 이 명세로 구현 가능한가 · 상수·조건·예외가 비지 않았나 | ❌ | ✅ |
+| **코드 ↔ 명세 대조** · 구현 위치 설명 · 누락 사항 · 개발자 확인 질문 | ❌ | ✅ |
+| 코드 수정(프로토타입·제품) | ❌ hold | ❌ 읽기 전용 |
+| 도메인(NDT) 판단 | ✅ **판정** | **교차검증(대조만)** — 기획 서술과 `01_materials` §의 불일치를 찾아 보고 · 어느 쪽이 맞는지는 사용자가 결정 |
+
+- **판별 기준** : 묻는 질문이 **"기획이 서로 안 맞나?"** → Claude / **"이대로 구현할 수 있나? 어디가 비었나?"** → Codex.
+- **제품 코드가 생기기 전까지** Codex의 주 업무 = 명세의 **구현 가능성 검토** + 프로토타입 대조.
+- 기획 확정·Notion 반영·Figma sync는 **전부 Claude 소관** — Codex 결과를 받아 반영하는 것도 Claude가 함.
+- **적용 시점** — 위 경계는 **합의된 방향**이며, **사용자가 역할 분담을 지시하기 전까지는 Claude가 기존대로 전 범위를 단독 수행**함(도메인 검증 포함).
+
 ## 분리 문서 (SSOT 포인터)
 - **디자인 규칙·토큰·컴포넌트·카피** → `02_design-system/CLAUDE.md` (디자인 SSOT = `02_design-system/`).
 - **NDT 도메인 지식·1순위 근거 자료** → `01_materials/CLAUDE.md` (도메인 판단 1순위 근거 = `01_materials/*.md·*.pdf` · NDA).
+- **기획 리뷰 작업 지침**(회의록 → 기획 반영 전 가공) → `04_planning-review/CLAUDE.md`. 회의록·외부 요구는 **화면설계서에 직접 옮기지 않고** 이 폴더에서 리뷰 문서 1건으로 가공한 뒤 확정분만 반영.
 - **개발 인계 기능 사양** → `03_dev_handoff/*.md` (PRF 자동계산·탐촉자 등록·알림·DAQ 자동정보·Store&Forward 등). 화면 변경 시 관련 spec 동기화.
 - **화면 기획 SSOT** = Notion 화면설계서 DB(개발 인계 명세) → `/notion` 스킬로 작성·수정, Figma 프레임에서 sync.
 
 ## 저장소 구조 · 산출물 (빌드 없음)
-- **폴더**: `01_materials/`(도메인 자료·로컬 NDA) · `02_design-system/`(디자인 SSOT·프로토타입) · `03_dev_handoff/`(개발 사양) · `99_legacy/`(구 기획 HTML·archive · **별도 지시 없으면 참고 안 함**).
+- **폴더**: `01_materials/`(도메인 자료·로컬 NDA) · `02_design-system/`(디자인 SSOT·프로토타입) · `03_dev_handoff/`(개발 사양) · `04_planning-review/`(기획 리뷰·**로컬 NDA**) · `99_legacy/`(구 기획 HTML·archive · **별도 지시 없으면 참고 안 함**).
 - **프로토타입** = `02_design-system/project/ui_kits/erut-windows/` — 동작하는 React 프로토타입. **빌드 없음**: `index.html`이 CDN UMD(React 18.3.1) + Babel standalone로 `.jsx`를 브라우저에서 직접 트랜스파일. 화면 로직 = `Screens.jsx`(≈4100줄) · 창 chrome `Chrome.jsx` · 폼 컨트롤 `Controls.jsx` · 아이콘 `Icons.jsx`. 실행 = 파일을 브라우저로 열기.
 - **프로토타입 편집 = 원칙적 hold** — 개발자가 Figma를 직접 보고 개발 중. **사용자 명시 지시 있을 때만** JSX 수정. 평소 기획 반영 대상 = Notion 화면설계서(`/notion`).
 - **배포**: `vercel.json`이 `/` → `02_design-system/project/ui_kits/erut-windows/index.html`로 rewrite. **git push = Vercel 자동 배포**(git-tracked 변경만).
-- **git 추적 vs 로컬 전용**: 추적 = `02_design-system/`(02 CLAUDE.md 포함) · `03_dev_handoff/` · 루트 `CLAUDE.md` · `index.html` · `vercel.json`. **gitignore(로컬)** = `01_materials/`(NDA) · `99_legacy/`(구 HTML·archive) · `*.pdf/pptx/docx/fig` 등.
+- **git 추적 vs 로컬 전용**: 추적 = `02_design-system/`(02 CLAUDE.md 포함) · `03_dev_handoff/` · 루트 `CLAUDE.md` · `index.html` · `vercel.json`. **gitignore(로컬)** = `01_materials/`(NDA) · `04_planning-review/`(회의록·시방서 인용) · `99_legacy/`(구 HTML·archive) · `*.pdf/pptx/docx/fig` 등.
 - 작업 완료 시 git-tracked 변경은 자동 commit+push(요청 없이도). 로컬 전용 파일은 배포 무관.
 
 ## 산출물 작업 지침
@@ -31,7 +51,8 @@ Claude Code 작업 지침. **ERUT** (Eroun Realtime Ultrasonic Testing) — 자�
 6. **디자인 = 토큰·기존 `.erut-*` 컴포넌트만**. 없는 신규 필요 시 사전 확인 → `02_design-system/CLAUDE.md`.
 7. **기획 큰 변경**(새 화면·다중 화면·진입 변경) 사전 확인. 단일 화면 내 소변경은 즉시.
 8. **더 나은 UI/UX 방안** 발견 시 적극 제안 + 확인 후 진행.
-9. **신규 페이지보다 기존 플로우 통합 우선**(탭·인라인·팝업·아코디언). 통합 불가/4depth 초과 시 확인.
+9. **예외 4종 필수 점검** — 화면·기능 명세를 쓸 때 정상 경로만 적고 넘어가지 않음. ① **실패**(액션이 목적을 달성하지 못함 — 신호 없음·상한 도달·조건 미충족) ② **취소·이탈**(저장 전에 화면을 떠남 — 입력값 보존 여부) ③ **재실행**(같은 액션을 다시 누름 — 덮어씀·중복·무시) ④ **기존 데이터 영향**(무엇이 갱신되고 무엇이 불변인가). 각 항목에 **안내 문구와 복구 경로**까지 적음.
+10. **신규 페이지보다 기존 플로우 통합 우선**(탭·인라인·팝업·아코디언). 통합 불가/4depth 초과 시 확인.
 
 ## 사용자 확인 필수 (작업 전 멈추고 옵션+추천 제시)
 4 depth 이상 / 토큰에 없는 신규 색·컴포넌트 / 기획 큰 변경 / 더 나은 UX 발견 / 신규 페이지(통합 미검토) / 프로토타입 JSX 수정(명시 지시 없을 때).
@@ -40,7 +61,8 @@ Claude Code 작업 지침. **ERUT** (Eroun Realtime Ultrasonic Testing) — 자�
 - **도메인 검토 = 선발사**. NDT 판단이 필요할 것 같으면 `ndt-domain-review`를 **가장 먼저 백그라운드 위임**하고 결과를 기다리지 말 것 — 그 사이 Figma 읽기·Notion fetch를 진행. (에이전트 = 읽기 전용·부수효과 없음)
 - **읽기는 병렬 / 쓰기는 직렬**. Figma 프레임·Notion 문서 조회는 한 메시지에 몰아서. 반면 **같은 Notion 문서의 `fetch→edit→verify`는 병렬 금지**(부모+자식 재직렬화 quirk = silent failure). 화면ID 재배치·용어 전역 치환도 원자적 순차.
 - **확인은 배치로**. 단일 화면 내 소소한 결정(라벨·단위·자릿수·버튼 배치)은 발견할 때마다 묻지 말고 **모아서 한 번에**. 진행이 막히는 것만 즉시 확인.
-- **화면 1개 완료 시 정합성 검토**. `spec-consistency-review`를 백그라운드로 띄우고 요약을 진행 — 문서 간 충돌·자기모순·플로우 단절·규칙 위반·구현 가정을 `blocking/should-fix/nit`로 회수. **읽기 전용**이라 부수효과 없음. (도메인 근거 판정은 `ndt-domain-review` 소관 · 역할 겹치지 않음)
+- **화면 1개 완료 시 정합성 검토**. `spec-consistency-review`를 백그라운드로 띄우고 요약을 진행 — 문서 간 충돌·자기모순·플로우 단절·규칙 위반을 `blocking/should-fix/nit`로 회수. **읽기 전용**이라 부수효과 없음. (도메인 근거 판정은 `ndt-domain-review` 소관 · 역할 겹치지 않음)
+- **이 에이전트의 범위 = 기획 정합성까지.** **구현 가능성·코드 대조는 Codex 소관**이므로 '이 명세로 구현 가능한가'는 여기서 판정하지 않음(역할 경계 참조).
 - 작업 리듬 = **보통 1~2개 화면을 완성하고 다음으로**. 전 문서 일괄 수정은 드묾(전용 에이전트 두지 않음).
 
 ## 제품 분리 (윈도우 / 웹) + 검출 vs 판정
