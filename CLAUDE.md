@@ -30,7 +30,8 @@ Claude Code 작업 지침. **ERUT** (Eroun Realtime Ultrasonic Testing) — 자�
 ## 분리 문서 (SSOT 포인터)
 - **디자인 규칙·토큰·컴포넌트·카피** → `02_design-system/CLAUDE.md` (디자인 SSOT = `02_design-system/`).
 - **NDT 도메인 지식·1순위 근거 자료** → `01_materials/CLAUDE.md` (도메인 판단 1순위 근거 = `01_materials/*.md·*.pdf` · NDA).
-- **기획 리뷰 작업 지침**(회의록 → 기획 반영 전 가공) → `04_planning-review/CLAUDE.md`. 회의록·외부 요구는 **화면설계서에 직접 옮기지 않고** 이 폴더에서 리뷰 문서 1건으로 가공한 뒤 확정분만 반영.
+- **기획 리뷰 작업 지침**(회의록·신규 기능 요구 → 기획 반영 전 가공) → `04_planning-review/CLAUDE.md`. 회의록·외부 요구는 **화면설계서에 직접 옮기지 않고** 리뷰 문서 1건으로 가공한 뒤 확정분만 반영.
+  - **세션 분리** — 리뷰는 **`/planning`**으로 별도 창에서. 폴더·메모리·Notion은 공유하되 **쓰기 영역을 가른다** : 리뷰 세션 = `04_planning-review/`·아티팩트·메모리 / 메인 세션 = **Notion 화면설계서·`03_dev_handoff/`**. 같은 Notion 문서를 두 세션이 동시에 쓰면 silent failure. **핸드오프 = 메모리**(리뷰가 '반영 대기'로 적고 메인이 반영 후 삭제). 운영 규칙 정본 = `.claude/skills/planning/SKILL.md`.
 - **개발 인계 기능 사양** → `03_dev_handoff/*.md` (PRF 자동계산·탐촉자 등록·알림·DAQ 자동정보·Store&Forward 등). 화면 변경 시 관련 spec 동기화.
 - **화면 기획 SSOT** = Notion 화면설계서 DB(개발 인계 명세) → `/notion` 스킬로 작성·수정, Figma 프레임에서 sync.
 
