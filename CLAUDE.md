@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Claude Code 작업 지침. **ERUT** (Eroun Realtime Ultrasonic Testing) — 자석 부착 로봇 기반 초음파 검사 시스템. 윈도우 프로그램명 = **ERUT Client**. 현재 **코드 없는 사전 개발 단계 — 기획/UI mockup 작업 중**. **프로젝트는 고정형·스캔형 통합**(유형 구분 폐지) — ERUT Client가 **고정형(A-scan) + 스캔형(C-scan) 모두** 다룸.
+Claude Code 작업 지침. **ERUT** (Eroun Realtime Ultrasonic Testing) — 자석 부착 로봇 기반 초음파 검사 시스템. 윈도우 프로그램명 = **ERUT Sight**(구 ERUT Client). 현재 **코드 없는 사전 개발 단계 — 기획/UI mockup 작업 중**. **프로젝트는 고정형·스캔형 통합**(유형 구분 폐지) — ERUT Sight가 **고정형(A-scan) + 스캔형(C-scan) 모두** 다룸.
 
 ## 역할 (최우선)
 - **사용자** = 기획/디자이너, NDT 비전문가, 최종 결정권자.
@@ -73,9 +73,10 @@ Claude Code 작업 지침. **ERUT** (Eroun Realtime Ultrasonic Testing) — 자�
 ## 용어
 - 국문 probe = **'탐촉자'** ('프로브' 금지 · 영문 코드·파일명 예외). (도메인 용어 전체 → `01_materials/CLAUDE.md`.)
 - 'MC보드' → **'DAQ'** (표시 텍스트 = DAQ / 장비 ID·OEM 모델·JS 식별자는 유지).
+- **'Client' → 'Sight'**(2026-10-29 확정 · 프로그램 명칭). **예외 = 화면ID `C-` 접두 · MQTT 프로토콜 필드명 `Client ID`**.
 
 ## 화면 · 흐름 (화면설계서 = Notion DB SSOT)
-- 화면ID = **`C-` 접두**(ERUT Client) + PRJ/SET/RPT/NTF/LOG/HLP. 예 `[C-SET-04]`. `[공통] 메뉴바/상태바`만 C- 없이. **ID 정본 = Notion DB 문서명**(아래는 그 사본).
+- 화면ID = **`C-` 접두** + PRJ/SET/RPT/NTF/LOG/HLP. **프로그램명이 Sight로 바뀌어도 접두 문자는 `C-` 유지**(문서명·cross-reference 영향 회피 · 2026-10-29 확정). 예 `[C-SET-04]`. `[공통] 메뉴바/상태바`만 C- 없이. **ID 정본 = Notion DB 문서명**(아래는 그 사본).
 - 흐름(**2026-08-21 전면 재배치**): **[C-PRJ-01] 시작 → [C-PRJ-02] 대시보드 → [C-PRJ-03] 종합 결과 → [C-PRJ-04] DAQ 장비 → [C-PRJ-04-01] 탐촉자**. 교정 = **[C-PRJ-05] 교정-사이드바 / [C-PRJ-05] 교정-파형 영역** 2문서 · **모달 아님 · 우측 436px 사이드바** + **탭 없이 ①~⑤ 세로 나열**(탐촉자 선택 → ①Pulser Control → ②영점 → ③음속 → ④경사각 → ⑤감도) · Gate는 파형 영역 드래그+hover 툴팁 · **구 Gain 설정·TCG 설정 모달은 교정으로 병합·폐기**.
 - 설정(메뉴바 '장비 및 모재'·'측정'·'설정'): **[C-SET-01]** 기본 설정 / 연동 설정(같은 화면·좌 nav 2항목 → **문서 2개·ID 공유**) · **[C-SET-02]** DAQ 장비 설정(트리 구조(공통) + DAQ 3분할(Bridge PC 설정/DAQ 장비 정보/MQTT 설정) + 탐촉자/홀더/홀더-장착 탐촉자/I/O 장비 = **8문서**) · **[C-SET-03]** 모재 · **[C-SET-04]** 모재 프리셋 · **[C-SET-05]** 배치 · **[C-SET-06]** 스캔 계획(배치·스캔 계획 진입 = 메뉴바 '측정'). 
 - **단위 계층**: 모재 전체 \> **섹션**(= 타일 N개 묶음 · 시간 집계·진행률용) \> **타일**(= 스캔 계획 분할 단위 · **파일·재개 단위**).
@@ -88,8 +89,8 @@ Claude Code 작업 지침. **ERUT** (Eroun Realtime Ultrasonic Testing) — 자�
 - **검사(inspection) 엔티티**([C-PRJ-03]): 상태 3단계 **대기 / 진행중(데이터 1건 이상 수집) / 완료(마감)** — 구 측정 상태 3단계(대기·준비 완료·측정 중) 대체. **모재 1 : 스캔 계획 1 : 검사 1** · 같은 모재에 완료 검사 N건 누적. 검사명 = `YYYY-MM-DD_{모재명}_{연번}`([C-SET-06] 설정). 스캔 계획·DAQ·모재·배치를 진행중에 저장하면 현재 검사 마감 후 새검사. 기록된 검사 조회 = **[C-PRJ-06] 결과 분석** — 완료 검사를 불러와 **Gain·Gate·TCG를 사후 조정**해 C-scan 재구성(3분할 고정·뷰 탭 없음·좌 레일 2버튼 = [+] 검사 불러오기 / [🗑] 삭제 · 우측 사이드바에 **일괄 감도 교정**(전 채널에 대해 각자 목표 FSH로 맞춤 · 동일 dB 복사 아님) + 채널별 조정). **음속·영점·굴절각은 readonly**(보고서 필수 기재 교정값 · 사후 변경 = 교정 이탈과 동등) · raw 불변(**raw 1벌 + 교정 설정값 2세트** = 완료 시점·현재 값 · 상세 = `03_dev_handoff/Result_Analysis_Storage_Spec`).
 
 ## 시스템 연결 구조
-- **Client(ERUT Client) → Bridge PC → DAQ 장비** — Client와 DAQ를 직접 연결하지 않음. Client→Bridge PC 연결 후 이어서 Bridge PC→DAQ 연결(2단계·둘 다 필수 / MQTT는 '사용 여부'에 따라 선택).
-- **연결 구간 표기 = 단방향 `→`**(의미 = 연결을 거는 쪽 → 받는 쪽). 구간 4종 = `Client → Bridge PC` · `Bridge PC → DAQ 장비` · `Bridge PC → Cloud`(장비 데이터 업링크 · 통신 방식 MQTT는 라벨 미표기) · `Client → Cloud`([C-SET-01] 연동 설정 = Cloud↔Client 동기화 API). **`Cloud` = 모니터링 웹 서비스 공식 명칭**(MQTT 브로커와 다른 대상).
+- **Sight(ERUT Sight) → Bridge PC → DAQ 장비** — Sight와 DAQ를 직접 연결하지 않음. Sight→Bridge PC 연결 후 이어서 Bridge PC→DAQ 연결(2단계·둘 다 필수 / MQTT는 '사용 여부'에 따라 선택).
+- **연결 구간 표기 = 단방향 `→`**(의미 = 연결을 거는 쪽 → 받는 쪽). 구간 4종 = `Sight → Bridge PC` · `Bridge PC → DAQ 장비` · `Bridge PC → Cloud`(장비 데이터 업링크 · 통신 방식 MQTT는 라벨 미표기) · `Sight → Cloud`([C-SET-01] 연동 설정 = Cloud↔Sight 동기화 API). **`Cloud` = 모니터링 웹 서비스 공식 명칭**(MQTT 브로커와 다른 대상).
 - **Bridge PC를 두는 이유** = 서드파티 엔코더 제어 프로그램이 **API 제어 불가**(시작프로그램 등록·서비스 명령 모두 한계) → 자동 실행이 안 되어 브릿지 경유가 유일한 대안. 결선: 엔코더 박스↔PC = **USB** / 컨트롤러↔메인 PC = **이더넷**(스위칭 허브). (근거 = `01_materials/20260806_회의_요약.md`)
 
 ## 기술 스택 (구현 단계 — 참고)
