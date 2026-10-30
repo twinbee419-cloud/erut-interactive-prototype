@@ -11,7 +11,11 @@ ERUT 개발팀에 전달할 기능 사양서·API 명세·도메인 지식 문�
 | `Notification_System_Spec_v1.0.md` | 1.0 | 2026-06-12 | 통합 알림 시스템 — 메뉴바 종 + 드롭다운, 심각도 3단계, 교정/측정/통신/부착 일원화 |
 | `Store_And_Forward_Spec_v1.0.md` | 1.0 | 2026-06-24 | 서버 송신 버퍼링 — 끊김 시 로컬 보관 → 재연결 자동 재송신. 상태바 MQTT 표시 + 알림. **프로토타입 미시연 — 백엔드 구현 필요** |
 | `DAQ_Auto_Info_Spec_v1.0.md` | 1.0 | 2026-07-02 | DAQ 연결 시 자동 획득 정보(SN·펌웨어·채널수·HW rev·샘플링·MAC·Config). 제조일은 조건부(펌웨어 제공 시, 없으면 —) |
-| `Result_Analysis_Storage_Spec_v1.0.md` | 1.0 | 2026-09-23 | [C-PRJ-06] 결과 분석 저장 구조 — raw 1벌 불변 + 교정 설정값 2세트(origin/current) · 수정본 저장 시 raw 복사 금지 |
+| `Result_Analysis_Storage_Spec_v1.0.md` | 1.0 | 2026-09-23 | \[C-PRJ-06\] 결과 분석 저장 구조 — raw 1벌 불변 + 교정 설정값 2세트(origin/current) · 수정본 저장 시 raw 복사 금지 · §2-1 raw 진폭 기준(저장·복원 수식 · 포화 비가역) |
+| `Error_Code_Spec_v1.0.md` | **2.0** | 2026-06-09 → 06-11 | 에러 코드 체계 — 측정 에러 / 통신 로그. `Store_And_Forward`(E703 QoS · E604 큐 적체)와 연동 |
+| `PC_Info_Spec_v1.0.md` | 1.0 | 2026-06-11 | PC 정보 등록 및 UUID 식별 |
+| `Report_Export_Spec_v1.0.md` | 1.1 | 2026-06-11 | 채널 측정 보고서 출력 |
+| `NDT_Expert_Review_v1.0.md` | 1.6 | — | **사양서가 아닌 검토 의견서** — 서비스 플로우에 대한 NDT 전문가 검토 |
 
 ## 문서 작성 원칙
 
@@ -21,9 +25,11 @@ ERUT 개발팀에 전달할 기능 사양서·API 명세·도메인 지식 문�
 4. **변경 이력**: 문서 마지막에 변경 이력 섹션 유지
 5. **미해결 항목 명시**: 사용자/개발팀이 확정해야 할 사항은 마지막 섹션에 정리
 
-## 참고 자료 (프로젝트 루트)
+## 참고 자료
 
-- `CLAUDE.md` — 프로젝트 전체 컨텍스트 + 도메인 지식 (NDT A-scan 4종 등)
-- `ERUT_ServiceFlow_FixedProbe.html` — UI / UX 통합 산출물 (메인 기획, 최신). 이전 이름: `ERUT_ServiceFlow_Analysis.html` (v15.3에서 rename)
-- `archive/` — 산출물 버전 이력
-- `design-system/` — 디자인 SSOT
+- `CLAUDE.md` *(루트)* — 프로젝트 공통 규칙 · 화면ID 체계 · 용어 · 시스템 연결 구조
+- **Notion 화면설계서 DB** — **화면 기획·기능 명세의 정본.** 이 폴더의 사양은 화면에 드러나지 않는 백엔드·산출 로직을 담당하며, 화면 쪽 서술은 Notion이 우선
+- `01_materials/` *(루트 · 로컬 전용)* — NDT 도메인 판단 1순위 근거
+- `02_design-system/` *(루트)* — 디자인 SSOT(토큰 · `.erut-*` 컴포넌트) + 동결된 React 프로토타입
+
+> 화면 변경 시 관련 사양을 함께 동기화할 것. 단 **Notion 문서의 `완료` 상태에 이 폴더의 동기화는 포함되지 않음**(백엔드 사양이 늦게 따라오는 화면이 많음).

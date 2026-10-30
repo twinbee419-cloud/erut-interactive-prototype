@@ -58,10 +58,21 @@ dB 가감은 선형 연산이고 적용값이 `origin`에 남아 있으므로 **
       "selectedGate": "A",         // 채널 1 : 게이트 1
       "gate": { "startUs": 12.3, "widthUs": 5.0, "thresholdPct": 26, "mode": "Amp" },
       "tcgPoints": [ { "tofUs": 20, "gainDb": 5 } ]
+    },
+    {
+      "channelId": "CH 03",
+      "gain": { "digitalDb": 14.0, "analogDb": 20.0 },
+      "selectedGate": "A",
+      "gate": { "startUs": 12.3, "widthUs": 5.0, "thresholdPct": 26, "mode": "Amp" },
+      "dgs": { "curveMm": 3.00, "offsetsDb": [ -6.0, 6.0 ] }
     }
   ]
 }
 ```
+
+- **`tcgPoints`와 `dgs`는 채널의 보정 방식에 따라 둘 중 하나만 채운다** — 위 예시의 `CH 02`는 TCG 채널, `CH 03`은 DGS 채널이다. 한 채널에 둘을 함께 두지 않는다. 방식은 채널 단위로 고정되며 `current`에서 바뀌지 않는다(§5-4).
+- `dgs.offsetsDb`는 **행 순서를 그대로 보존**한다. 최대 4행이며 빈 배열이면 보조 곡선 없음.
+- **`origin`에는 DGS 패널 전 항목을 함께 보관한다** — 승계 3종(`XTAL Frequency`·`EFF. Diameter`·`Delay Velocity`) · `Reference Type` · `Ref Size` · 보정값 4종 · **기록값 3종**(기록 게이트 · 기준 음로 · 기록 Gain). `[C-PRJ-06]`의 `교정 시점 값 ⓘ` 접이식이 이 값을 읽기 전용으로 표시하므로, 교정 세션 참조만으로는 부족하다.
 
 - `SW` 게인은 화면에서 제외되었으므로 저장하지 않는다.
 - **읽기 전용 교정값**(음속 · 영점(Zero/Delay) · 굴절각 · 보정 방식 TCG/DGS)은 교정 세션에서 승계하며 이 화면의 변경 대상이 아니다. 세트에는 **참조(교정 세션 ID)** 로만 둔다.
@@ -89,7 +100,9 @@ dB 가감은 선형 연산이고 적용값이 `origin`에 남아 있으므로 **
 2. **중간 버전 미보관** — `current`는 항상 1행이며 n번 저장해도 누적하지 않는다.
 3. **raw 불변** — 사후 조정은 설정값만 바꾼다. 수집 시 100 %로 포화된 픽셀은 raw에 이미 잘려 저장되므로 dB를 올려도 복구되지 않는다.
 4. **보정 방식(TCG/DGS) 전환 금지** — `origin`의 방식을 `current`에서 바꾸지 않는다. DGS 기준 에코는 시편에 탐촉자를 대는 물리 작업이라 사후 기록이 불가능하고, TCG 포인트는 시편 다중 에코 실측이 필요한데 raw에는 모재 파형만 있다. 방식은 **채널 단위**로 저장한다.
-5. **DGS 채널의 `current` 변경 범위** — `DGS Curve`·`Offset`만. 나머지 DGS 항목은 `origin` 값을 읽기 전용으로 노출한다.
+5. **DGS 채널의 `current` 변경 범위** — **DGS 패널 항목 중에서는** `DGS Curve`·`Offset`만 바꿀 수 있고, 나머지 DGS 패널 항목은 `origin` 값을 읽기 전용으로 노출한다.
+   - **채널 공통 항목인 `Digital` Gain·Gate는 이 제한의 대상이 아니다** — DGS 채널에서도 조정 가능하다. 곡선이 **기록 Gain과의 차 Δ만큼 평행 이동**해 ERS 평가가 유지된다.
+   - `Analog` Gain은 방식과 무관하게 readonly(수신단 장비 설정 기록).
 
 ---
 
