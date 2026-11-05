@@ -178,9 +178,10 @@ interface CalibrationHistoryEntry {
   velocity: number;       // m/s (음속)
   zero: number;           // μs (영점)
   refractionAngle: number; // ° (굴절각 실측 · 표면 법선 기준 · 0 = 수직)
-  gain: number;           // dB
-  sensitivityMethod: "tcg" | "dgs";   // 보정 방식
-  tcgInputMode?: "auto" | "manual";  // TCG일 때만 · [C-PRJ-05-01] 감도 상세 모달의 안내 문구 표시 조건(auto일 때 표시)
+  gainDigitalDb: number;  // dB · [C-PRJ-05-01] 감도 상세 모달 Gain Digital
+  gainAnalogDb: number;   // dB · 같은 모달 Gain Analog
+  sensitivity: object;    // 교정 시점 불변 복사본 · 구조 = Probe_Registration_Spec §4 ProbeSettingsJson.sensitivity 그대로
+                          //   method(tcg|dgs) · tcgInputMode(auto|manual · 모달 안내 문구 조건) · tcgPoints · dgs(승계 3종 포함 전 항목)
   testpiece: string;      // "IIW V1 (25mm · 탄소강)" 등
   result: "pass" | "warn" | "fail";  // 시편 확인 결과 (state 기반)
   resultDetail?: string;  // 한국어 (예: "표준 음속 -1.0%")
