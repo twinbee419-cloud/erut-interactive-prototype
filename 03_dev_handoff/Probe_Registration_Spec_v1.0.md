@@ -86,26 +86,28 @@
   - 수신단에서 거는 이유 = ADC 다이나믹 레인지. 디지타이징 뒤에 소프트웨어로 올리면 양자화 노이즈까지 함께 증폭됨
   - 따라서 raw는 **TCG가 적용된 상태로 저장**된다(저장 구조 정본 = `Result_Analysis_Storage_Spec`)
 
-#### DGS — 탭 6종
+#### DGS — 단일 패널
 
-> **출처 = 참고한 상용 SW 화면.** 필드 구성·라벨·단위·기본값은 그 화면을 그대로 옮긴 것이며, 각 값의 의미·산출식·검증 범위는 개발 확정 대상이다. `01_materials`(1순위 도메인 자료)에는 DGS/AVG가 용어 사전의 명칭 1줄(`거리-게인-크기 선도(독일 방식)`)만 존재하고 원리·입력 파라미터·ERS는 0건이다.
+> **정본 = Notion `[C-PRJ-05] 교정-사이드바` ④ 감도 보정 · DGS.** 아래는 그 요약이며 서로 다르면 Notion이 맞다. 필드 구성은 참고한 상용 SW 화면에서 출발했고, `01_materials`(1순위 도메인 자료)에는 DGS/AVG 원리·입력 파라미터가 없다(용어 사전 명칭 1줄뿐).
 
-| 탭 | 필드 | 단위 | 비고 |
+| 구분 | 필드 | 단위 | 비고 |
 |---|---|---|---|
-| `SETUP` | `DGS Mode` | 토글 | 기본 ON |
-| | `DGS Curve` | mm | 기본 3.00 |
-| `DGS PROB` | `XTAL Frequency` | MHz | **readonly** — 탐촉자 등록값(`frequencyMHz`) 승계 |
-| | `EFF. Diameter` | mm | **구현 차단** — 탐촉자 등록의 `진동자 규격 - 가로/세로` 또는 외형 규격과 동일시하지 않음. 제조사 데이터시트의 별도 유효치수이며 입력 위치·승계 원본 확정 필요 |
-| | `Delay Velocity` | m/s | 직접 입력. 기본 2500 — 1순위 자료의 아크릴(웨지) 종파 음속은 2,730 m/s로 불일치 |
-| `REF ECHO` | `Reference Type` | select | 기본 `FBH`. 전체 옵션은 개발 확정 |
-| | `Ref Size` | mm | 기준 반사체 치수 |
-| | `Record Ref` | 토글 | 기본 OFF |
-| `REF CORR` | `Ref Atten` | dB/m | — |
-| | `Ampl Correct` | dB | — |
-| | `Delete Ref` | 버튼 | — |
-| `MAT ATTN` | `Test Atten` | dB/m | 자료의 감쇠계수 단위는 dB/cm — 환산 필요 |
-| | `Transfer Corr.` | dB/m | 용어 정의만 자료에 존재(`교정 시편과 시험체 간 표면 차이 보정`) · 산출식 없음 |
-| `OFFSET` | `Offset 1` ~ `Offset 4` | 토글 + dB/m | 기본 `Offset 1`만 ON · OFF 행은 입력 비활성 |
+| 탐촉자 승계 | `XTAL Frequency` | MHz | **readonly** — 탐촉자 등록 `주파수` 승계 |
+| | `EFF. Diameter` | mm | **readonly** — 탐촉자 등록 `진동자 규격` 승계 · 원형 = 직경 / 사각형 = 가로 × 세로(단일 직경으로 환산하지 않음) |
+| | `Delay Velocity` | m/s | **readonly** — 탐촉자 등록 `지연재 음속` 승계 |
+| 곡선 | `DGS Curve` | mm | 필수 · 기본 3.00 |
+| 기준 반사체 | `Reference Type` | select | `FBH`(기본) / `SDH` / `BW` |
+| | `Ref Size` | mm | 필수 · `BW`면 비활성·`null` |
+| 기준 에코 기록 | `측정 게이트` + `[↑ Record]` | — | 저장값 3종 = **기록 게이트 · 기준 음로(mm) · 기록 Gain(dB)** |
+| 보정값(선택 · 미입력 0) | `Ref Atten` | dB/m | 교정 시편 감쇠계수 |
+| | `Ampl Correct` | dB | 마이너스 가능 |
+| | `Test Atten` | dB/m | 실제 모재 감쇠계수 |
+| | `Transfer Corr.` | **dB** | 보정량 · 거리당 값 아님 |
+| 보조 곡선(선택) | `Offset` | **dB** | 평행 이동량 · 기본 1행 · 최대 4행 · 행 추가/삭제 |
+
+- 승계 3종 중 하나라도 미등록이면 `DGS` 라디오 비활성
+- `[↺]` = DGS 입력값 기본값 초기화(기준 에코 기록 해제 포함 · TCG 저장값은 보존)
+- 유효 조건 · 기준 에코 재기록 트리거 7종 = Notion 정본 참조
 
 - **스코프 한정 (중요)**: 보정값은 **교정 메타 + 수집 시점 Amp 정규화 기준**으로만 저장·사용한다.
   - 결함 **크기 판정·등급**은 **웹 서비스 책임**. 윈도우 앱은 판정하지 않음.
@@ -131,19 +133,19 @@
   "nominalRefractionAngleDeg": 0.0, // 표면 법선 기준 · 0 = normal / >0 = angle beam
   "beamType": "normal",           // 파생: nominalRefractionAngleDeg==0 ? normal : angle
   "prf": { "auto": true, "value": 2000, "unit": "Hz" },
+  "delayVelocityMps": 2500,       // 지연재 음속 — DGS `Delay Velocity` 승계 원본
   "sensitivity": {
     "method": "tcg",                        // tcg | dgs  (dac 폐기)
     "purpose": "amplitude_normalization",   // 판정 아님 (웹 책임)
-    "tcgPoints": [ { "tofUs": 20, "gainDb": 5 } ],
+    "tcgInputMode": "auto",                 // auto | manual — TCG 입력 방식 · [교정 완료] 시점 값 · method=tcg일 때만
+    "tcgPoints": [ { "tofUs": 20, "gainDb": 0 }, { "tofUs": 40, "gainDb": 5 } ],
     "dgs": {
-      "curveErsMm": 3.0,
-      "mode": true,
-      "effectiveDiameterMm": null,      // 제조사 데이터시트 기준 별도 값 · 입력/승계 방식 확정 전 구현 차단
-      "delayVelocityMps": 2500,
-      "refType": "FBH", "refSizeMm": 3.0, "refRecorded": false,
+      "curveMm": 3.0,
+      "refType": "FBH", "refSizeMm": 3.0,          // refType=BW면 refSizeMm = null
+      "record": { "gate": "A", "soundPathMm": 100.0, "gainDb": 32.0 },  // [↑ Record] 저장값 3종 · 미기록이면 null
       "refAttenDbPerM": 0.0, "amplCorrectDb": 0.0,
-      "testAttenDbPerM": 0.0, "transferCorrDbPerM": 0.0,
-      "offsets": [ { "enabled": true, "valueDbPerM": 0.0 } ]
+      "testAttenDbPerM": 0.0, "transferCorrDb": 0.0,
+      "offsetsDb": [ 0.0 ]                          // 최대 4 · 행 순서 보존
     }
   }
 }

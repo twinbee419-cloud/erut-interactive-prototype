@@ -179,6 +179,8 @@ interface CalibrationHistoryEntry {
   zero: number;           // μs (영점)
   refractionAngle: number; // ° (굴절각 실측 · 표면 법선 기준 · 0 = 수직)
   gain: number;           // dB
+  sensitivityMethod: "tcg" | "dgs";   // 보정 방식
+  tcgInputMode?: "auto" | "manual";  // TCG일 때만 · [C-PRJ-05-01] 감도 상세 모달의 안내 문구 표시 조건(auto일 때 표시)
   testpiece: string;      // "IIW V1 (25mm · 탄소강)" 등
   result: "pass" | "warn" | "fail";  // 시편 확인 결과 (state 기반)
   resultDetail?: string;  // 한국어 (예: "표준 음속 -1.0%")
