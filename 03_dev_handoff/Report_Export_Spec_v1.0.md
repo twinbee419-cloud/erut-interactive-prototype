@@ -77,7 +77,7 @@ A4 1장당 1개 채널. 총 4개 섹션 + 헤더/푸터.
 | 직경 / 종류 | `TB_PROBE.Diameter` (mm) + `Type` (직선/사각) | |
 | 파형 유형 | `TB_PROBE.WaveType` (종파/횡파) | |
 | 공칭 굴절각 | `TB_PROBE.NominalRefractionAngle` (°) | 표면 법선 기준 · 0° = 수직 |
-| 굴절각(실측) | `TB_CALIBRATION.RefractionAngle` (°) | 교정 시 표준시험편 실측값 · 기본값 = 공칭 굴절각 |
+| 굴절각(실측) | `TB_CALIBRATION.RefractionAngle` (°) | 교정 시 표준시험편 실측값 · 기본값 = 웨지 공칭 굴절각 → `0`이면 탐촉자 굴절각 |
 
 ### 2-4. 섹션 3. 교정 이력
 

@@ -188,7 +188,7 @@ interface CalibrationHistoryEntry {
     elementDiameterMm?: number; // EFF. Diameter — circle일 때 직경
     elementWidthMm?: number;    // EFF. Diameter — rectangle일 때 가로(단일 직경으로 환산하지 않음)
     elementHeightMm?: number;   // EFF. Diameter — rectangle일 때 세로
-    delayVelocityMps: number; // Delay Velocity
+    delayVelocityMps: number | null; // Delay Velocity · 탐촉자 등록에서 선택 항목이라 미등록이면 null(TCG 이력 가능) · DGS는 등록이 전제라 항상 값 있음
   };
   testpiece: string;      // "IIW V1 (25mm · 탄소강)" 등
   result: "pass" | "warn" | "fail";  // 시편 확인 결과 (state 기반)
