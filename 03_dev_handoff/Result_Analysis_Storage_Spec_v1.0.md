@@ -68,7 +68,7 @@ dB 가감은 선형 연산이고 적용값이 `origin`에 남아 있으므로 **
       "gate": { "startUs": 12.3, "widthUs": 5.0, "thresholdPct": 26, "mode": "Amp" },
       "dgs": {
         "curveMm": 3.00, "offsetsDb": [ -6.0, 6.0 ],            // current에서 바뀔 수 있는 2개
-        "xtalFrequencyMHz": 5.0, "effDiameterMm": 9.6, "delayVelocityMps": 2500,   // 승계 3종 = 탐촉자 레벨 frequencyMHz · 진동자 규격 · delayVelocityMps의 교정 시점 복사본
+        "frequencyMHz": 5.0, "elementWidthMm": 9.6, "elementHeightMm": 9.6, "delayVelocityMps": 2500,   // 승계 3종 · 탐촉자 레벨 필드명 그대로 · 진동자는 가로·세로 2값
         "refType": "FBH", "refSizeMm": 3.0,
         "record": { "gate": "A", "soundPathMm": 100.0, "gainDb": 32.0 },          // 기준점 3종
         "refAttenDbPerM": 0.0, "amplCorrectDb": 0.0, "testAttenDbPerM": 0.0, "transferCorrDb": 0.0
@@ -79,7 +79,7 @@ dB 가감은 선형 연산이고 적용값이 `origin`에 남아 있으므로 **
 ```
 
 - **`tcgPoints`와 `dgs`는 채널의 보정 방식에 따라 둘 중 하나만 채운다** — 위 예시의 `CH 02`는 TCG 채널, `CH 03`은 DGS 채널이다. 한 채널에 둘을 함께 두지 않는다. 방식은 채널 단위로 고정되며 `current`에서 바뀌지 않는다(§5-4).
-- **`current.dgs`는 `curveMm`·`offsetsDb`만 다를 수 있고 나머지 필드는 `origin.dgs`와 항상 같다**(§5-5). 승계 3종 외 필드명은 `Probe_Registration_Spec` §4 `sensitivity.dgs`와 동일.
+- **`current.dgs`는 `curveMm`·`offsetsDb`만 다를 수 있고 나머지 필드는 `origin.dgs`와 항상 같다**(§5-5). 승계 3종은 탐촉자 레벨 필드명 그대로(`frequencyMHz`·`elementWidthMm`·`elementHeightMm`·`delayVelocityMps` — `CalibrationHistoryEntry.probeSnapshot`과 동일), 나머지는 `Probe_Registration_Spec` §4 `sensitivity.dgs`와 동일.
 - `dgs.offsetsDb`는 **행 순서를 그대로 보존**한다. 최대 4행이며 빈 배열이면 보조 곡선 없음.
 - **`origin`에는 DGS 패널 전 항목을 함께 보관한다** — 승계 3종(`XTAL Frequency`·`EFF. Diameter`·`Delay Velocity`) · `Ref Type` · `Ref Size` · 보정값 4종 · **기준점 3종**(기준 게이트 · 기준 음로 · 기준 Gain). `[C-PRJ-06]`의 `교정 시점 값 ⓘ` 접이식이 이 값을 읽기 전용으로 표시하므로, 교정 세션 참조만으로는 부족하다.
 

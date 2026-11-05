@@ -181,7 +181,13 @@ interface CalibrationHistoryEntry {
   gainDigitalDb: number;  // dB · [C-PRJ-05-01] 감도 상세 모달 Gain Digital
   gainAnalogDb: number;   // dB · 같은 모달 Gain Analog
   sensitivity: object;    // 교정 시점 불변 복사본 · 구조 = Probe_Registration_Spec §4 ProbeSettingsJson.sensitivity 그대로
-                          //   method(tcg|dgs) · tcgInputMode(auto|manual · 모달 안내 문구 조건) · tcgPoints · dgs(승계 3종 포함 전 항목)
+                          //   method(tcg|dgs) · tcgInputMode(auto|manual · 모달 안내 문구 조건) · tcgPoints · dgs
+  probeSnapshot: {        // DGS 승계 3종 = 교정 시점 탐촉자 레벨 필드 복사본 · [C-PRJ-05-01] 모달 DGS 1행
+    frequencyMHz: number;     // XTAL Frequency
+    elementWidthMm: number;   // EFF. Diameter — 가로(사각형 2값을 단일 직경으로 환산하지 않음)
+    elementHeightMm: number;  // EFF. Diameter — 세로
+    delayVelocityMps: number; // Delay Velocity
+  };
   testpiece: string;      // "IIW V1 (25mm · 탄소강)" 등
   result: "pass" | "warn" | "fail";  // 시편 확인 결과 (state 기반)
   resultDetail?: string;  // 한국어 (예: "표준 음속 -1.0%")
