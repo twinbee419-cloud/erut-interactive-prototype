@@ -184,8 +184,10 @@ interface CalibrationHistoryEntry {
                           //   method(tcg|dgs) · tcgInputMode(auto|manual · 모달 안내 문구 조건) · tcgPoints · dgs
   probeSnapshot: {        // DGS 승계 3종 = 교정 시점 탐촉자 레벨 필드 복사본 · [C-PRJ-05-01] 모달 DGS 1행
     frequencyMHz: number;     // XTAL Frequency
-    elementWidthMm: number;   // EFF. Diameter — 가로(사각형 2값을 단일 직경으로 환산하지 않음)
-    elementHeightMm: number;  // EFF. Diameter — 세로
+    elementShape: "circle" | "rectangle";  // EFF. Diameter 표시 분기
+    elementDiameterMm?: number; // EFF. Diameter — circle일 때 직경
+    elementWidthMm?: number;    // EFF. Diameter — rectangle일 때 가로(단일 직경으로 환산하지 않음)
+    elementHeightMm?: number;   // EFF. Diameter — rectangle일 때 세로
     delayVelocityMps: number; // Delay Velocity
   };
   testpiece: string;      // "IIW V1 (25mm · 탄소강)" 등
