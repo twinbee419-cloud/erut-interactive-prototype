@@ -56,3 +56,7 @@ A 스캔, B 스캔, C 스캔이란 무엇입니까_ 2026년 전체 가이드_fil
 01_materials/
 지사장님_교육자료/
 *.ppt
+
+# ───── 에이전트 스킬 설치본 (npx skills add · node_modules 성격) ─────
+.agents/
+skills-lock.json
