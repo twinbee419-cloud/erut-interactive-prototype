@@ -185,9 +185,9 @@ interface CalibrationHistoryEntry {
   probeSnapshot: {        // DGS 승계 3종 = 교정 시점 탐촉자 레벨 필드 복사본 · [C-PRJ-05-01] 모달 DGS 1행
     frequencyMHz: number;     // XTAL Frequency
     elementShape: "circle" | "rectangle";  // EFF. Diameter 표시 분기
-    elementDiameterMm?: number; // EFF. Diameter — circle일 때 직경
-    elementWidthMm?: number;    // EFF. Diameter — rectangle일 때 가로(단일 직경으로 환산하지 않음)
-    elementHeightMm?: number;   // EFF. Diameter — rectangle일 때 세로
+    elementDiameterMm: number | null; // EFF. Diameter — circle일 때 직경 · 아니면 null
+    elementWidthMm: number | null;    // EFF. Diameter — rectangle일 때 가로(단일 직경으로 환산하지 않음) · 아니면 null
+    elementHeightMm: number | null;   // EFF. Diameter — rectangle일 때 세로 · 아니면 null
     delayVelocityMps: number | null; // Delay Velocity · 탐촉자 등록에서 선택 항목이라 미등록이면 null(TCG 이력 가능) · DGS는 등록이 전제라 항상 값 있음
   };
   testpiece: string;      // "IIW V1 (25mm · 탄소강)" 등
