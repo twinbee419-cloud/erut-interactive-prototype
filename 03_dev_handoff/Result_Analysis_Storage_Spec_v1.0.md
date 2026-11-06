@@ -107,7 +107,10 @@ dB 가감은 선형 연산이고 적용값이 `origin`에 남아 있으므로 **
   },
   "memo": "",                      // 최대 100자 · 자유 입력
   "status": "pending",             // pending | running | done | failed
-  "failReason": null,              // "결과 미확인"(재시작 복구) · "재실행 실패"(done 유지 시) · 통신·로봇 오류 사유
+  "failReason": null,              // "결과 미확인"·"재실행 결과 미확인"(재시작 복구) · "재실행 실패"(done 유지 시) · 통신·로봇 오류 사유
+  "rerunOfDone": false,            // running 저장 시 원래 done이었으면 true — 재시작 복구 분기용
+  "sentAt": null,                  // 마지막 로봇 전송 시각 (running 저장과 함께)
+  "confirmedByUser": false,        // [표시 확인됨]으로 done 전환 시 true
   "createdAt": "2026-11-06T14:02:11.000",
   "executedAt": null               // done 시점 · 재실행 시 갱신
 }
@@ -119,9 +122,11 @@ dB 가감은 선형 연산이고 적용값이 `origin`에 남아 있으므로 **
 | 추가 | **행 INSERT + `nextMarkingNo` 증가를 한 트랜잭션**으로 확정 · 실패 시 둘 다 롤백(번호 미소비) |
 | 실행 | 각 행 `running` 저장 성공 후에만 로봇으로 전송 · 한 건 실패해도 다음 건 계속 |
 | 완료 저장 실패 | 로봇 성공 회신 후 `done` 저장 실패 → 화면은 `done` + 경고 · 자동 재저장 |
-| 재시작 복구 | 프로그램 시작 시 `running` 행 → `failed` · `failReason = "결과 미확인"`(실제 표시 여부 불명) · 재실행 시 확인 팝업 대상 |
+| 실패 저장 실패 | 로봇 실패 회신 후 `failed` 저장 실패 → 화면은 `failed` + 경고 · 자동 재저장 · 다음 행 계속 |
+| 재시작 복구 | 프로그램 시작 시 `running` 행 → `rerunOfDone = false`면 `failed` · `failReason = "결과 미확인"`(실제 표시 여부 불명) / `rerunOfDone = true`면 `done` 유지 · `executedAt` 유지 · `failReason = "재실행 결과 미확인"` · 둘 다 재실행 시 확인 팝업 대상 |
+| 표시 확인됨 | `failed` + `"결과 미확인"` 행에서만 · `status = done` · `executedAt = sentAt` · `confirmedByUser = true` · `failReason = null` |
 | `done` 재실행 실패 | `status = done`·`executedAt` 유지 · `failReason = "재실행 실패"` |
-| 삭제 | `pending`·`failed`만 · `done`은 삭제 불가 |
+| 삭제 | `pending` · `failed`(통신·로봇 오류)만 · `done`과 `failReason = "결과 미확인"`은 삭제 불가 |
 | 수정 | `memo`만 · 나머지 필드 불변 |
 | 검사 삭제(`[🗑]`) | 마킹 행도 함께 삭제 |
 | 판정 필드 | 유형·등급·합격 여부 **없음** — 판정은 웹 책임 |
@@ -135,7 +140,8 @@ dB 가감은 선형 연산이고 적용값이 `origin`에 남아 있으므로 **
 | `[↻]` 초기화 | **없음** — 화면 상태만 `origin` 값으로 되돌림 | 없음 |
 | `[↻]` → `[저장]` | `current` = `origin` 값으로 덮어씀 · 수정 정보는 **갱신** | 없음 |
 | `[🗑]` 삭제 | `origin`·`current`·메타·`markings[]` 삭제 | `.bin` 삭제 |
-| 마킹 추가·수정·삭제·실행 | `markings[]`만 즉시 갱신 · `origin`·`current`·수정 정보 **변화 없음** | 없음 |
+| 마킹 추가 | `markings[]` 행 INSERT + 검사 메타 `nextMarkingNo` 증가(한 트랜잭션) · `origin`·`current`·수정 정보 **변화 없음** | 없음 |
+| 마킹 수정·삭제·실행·표시 확인됨 | `markings[]`만 즉시 갱신 · `origin`·`current`·수정 정보 **변화 없음** | 없음 |
 
 `[↻]`는 **전 채널 일괄**이며 클릭 시 확인 팝업을 띄운다. 저장하지 않고 화면을 벗어나면 `current`는 직전 상태 그대로 유지된다.
 
