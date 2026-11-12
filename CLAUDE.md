@@ -104,7 +104,7 @@ Claude Code 작업 지침. **ERUT** (Eroun Realtime Ultrasonic Testing) — 자�
 
 ## 용어
 - 국문 probe = **'탐촉자'** ('프로브' 금지 · 영문 코드·파일명 예외). (도메인 용어 전체 → `01_materials/CLAUDE.md`.)
-- 'MC보드' → **'DAQ'** (표시 텍스트 = DAQ / 장비 ID·OEM 모델·JS 식별자는 유지).
+- 'MC보드' → **'DAQ 장비'** (표시 텍스트 = **DAQ 장비** · 'DAQ' 단독 표기 금지(UI 라벨·알림 유형명 포함) / 장비 ID·OEM 모델·JS 식별자 등 영문 기술 식별자는 유지).
 - **'Client' → 'Sight'**(2026-10-29 확정 · 프로그램 명칭). **예외 = 화면ID `C-` 접두 · MQTT 프로토콜 필드명 `Client ID`**.
 
 ## 화면 · 흐름 (화면설계서 = Notion DB SSOT)
