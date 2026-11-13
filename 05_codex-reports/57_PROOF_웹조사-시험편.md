@@ -234,7 +234,7 @@
 - 지원: **Q3 최강(국내)** — 종류(명칭) + **제조 번호(S/N)**를 기록 항목으로 명시. 표준·대비 **둘 다** 대상.
 - 신뢰도: 개인 사이트의 규격 요약본 → ⚠️ **KS B 0817 원문 대조 필요**(KSSN 구매본 또는 01_materials 확인)
 
-### F3-2. ASME Sec V Art.4 T-492 기록 항목(절차서가 옮긴 것) — "calibration block identification" · [규격 인용(2차)]
+### F3-2. ASME Sec V Art.4 기록 항목(Sulzer 절차서 표기 = T-491 · T-492 귀속은 미확인 — 58 nit 반영) — "calibration block identification" · [규격 인용(2차)]
 - URL: https://www.sulzer.com/en/-/media/files/q_documents_pe/tp/tp-0009.pdf (`04_planning-review/web-extracts/2026-11-12_시험편/pdf/sulzer_tp0009.txt`)
 - 인용:
   > "For each ultrasonic examination, following information shall be recorded:
@@ -329,7 +329,7 @@
 ## 찾지 못한 것 (NOT found)
 
 - **ISO 5577 용어 정의 원문**(calibration block / reference block / test block) — 공식 OBP는 이용약관 동의 절차가 있어 지시(폼 제출 금지)에 따라 진입하지 않음. iTeh 미리보기는 목차("5.4 Calibration, reference and test blocks")까지만. 무단 전재본(BS EN ISO 5577 PDF)은 접근 거부되어 확인 안 함.
-- **ASME Sec V T-492 원문** — 유료. Scribd/studylib 전재본은 쓰지 않음. 회사 절차서(Sulzer)의 인용으로만 확인 → 판(edition)별 항목 번호·문구 차이는 미확인.
+- **ASME Sec V Art.4 기록 조항 원문(조항 번호 T-491·T-492 귀속 포함)** — 유료. Scribd/studylib 전재본은 쓰지 않음. 회사 절차서(Sulzer)의 인용으로만 확인 → 판(edition)별 항목 번호·문구 차이는 미확인.
 - **ISO 17640 §14 / ISO 16810 §13 / EN 10228-3 §16 시험 보고서 항목 원문** — 무료 미리보기 범위 밖. 보고서 항목에 '대비 시험편 식별'이 들어가는지 ISO 계열 1차 근거는 **없음**(Atlantis 기사의 요약만 있음: "the reference method and sensitivity (DAC, DGS or reference-block)").
 - **ISO 16811 §12.4.2(DGS용 reference block) 본문** — 미리보기 밖(목차만).
 - **ASTM E1316 UT Section의 'basic calibration block' 정의** — 미리보기 밖.
