@@ -86,7 +86,7 @@ Claude Code 작업 지침. **ERUT** (Eroun Realtime Ultrasonic Testing) — 자�
 - 절차·지시서 서식 정본 = `.claude/skills/erut-workflow/SKILL.md` · Orca 사용법 정본 = `orca skills get orchestration`(세션당 1회 · CLI 절대경로 = `/Applications/Orca.app/Contents/Resources/bin/orca`).
 - 흐름: 초안(`06_specs/draft/` · 변경 전/후 대조 + 영향 문서 목록) → Codex 검토 워커 → Claude 판정·수정안 → 사용자 승인 → Notion 반영·재확인 → 반영 후 재검토 1회 → 확정 MD → Manyfast 반영 워커 → (라운드 종료 시) 도움말 대기 등록 + 도움말 워커.
 - 검토 워커 = 같은 기획 건은 같은 워커에 `send`(새 워커 금지) · 지시서에 'Codex가 따로 확인할 지점'을 구체 질문으로 · Codex는 목록 밖 문서도 Notion 검색으로 대조.
-- 검토 횟수 제한 없음 · 같은 기획 건의 검토 왕복이 10회를 넘으면 사용자에게 따로 알림.
+- 검토 횟수 제한 없음 · 같은 기획 건의 검토 왕복이 **5회 · 10회에 이르면** 사용자에게 따로 알림(매번 알리지 않음).
 - 자료조사: 내부 = 기존 서브에이전트(`ndt-domain-review` 선발사 · Explore) / 외부 도메인·규격 = Claude 쪽 수집 → Claude 판정 / 외부 구현·기술 = Codex 워커. 외부 도메인 인용의 원문 재확인 = Codex 검토 단계(자기 검증 금지).
 - 진행 중인 파일 라운드(76·80번)는 파일 방식으로 마무리 · `05_codex-reports/`는 이력 보관(새 파일 생성 안 함).
 - `01_materials/`(NDA) 내용을 지시서·확정 MD에 전재하지 말 것 — 인용은 `파일명 §`만.
