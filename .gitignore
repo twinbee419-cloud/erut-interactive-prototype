@@ -60,3 +60,6 @@ A 스캔, B 스캔, C 스캔이란 무엇입니까_ 2026년 전체 가이드_fil
 # ───── 에이전트 스킬 설치본 (npx skills add · node_modules 성격) ─────
 .agents/
 skills-lock.json
+
+# ───── 기획 초안 (Orca 검토용 임시 · 확정본은 06_specs/confirmed/ 에 git 추적) ─────
+06_specs/draft/
