@@ -57,6 +57,8 @@ dB 가감은 선형 연산이고 적용값이 `origin`에 남아 있으므로 **
   "channels": [
     {
       "channelId": "CH 02",
+      "probeId": "PRB-0007",       // §3-0 · 같은 CH를 다른 홀더 탐촉자가 공유하므로 탐촉자 식별은 probeId
+      "holderId": "H-01",
       "gain": { "digitalDb": 12.0, "analogDb": 20.0 },
       "selectedGate": "A",         // 채널 1 : 게이트 1
       "gate": { "startUs": 12.3, "widthUs": 5.0, "thresholdPct": 26, "mode": "Amp" },
@@ -64,6 +66,8 @@ dB 가감은 선형 연산이고 적용값이 `origin`에 남아 있으므로 **
     },
     {
       "channelId": "CH 03",
+      "probeId": "PRB-0008",
+      "holderId": "H-01",
       "gain": { "digitalDb": 14.0, "analogDb": 20.0 },
       "selectedGate": "A",
       "gate": { "startUs": 12.3, "widthUs": 5.0, "thresholdPct": 26, "mode": "Amp" },
@@ -110,6 +114,7 @@ dB 가감은 선형 연산이고 적용값이 `origin`에 남아 있으므로 **
   "no": 3,                         // 화면 표시 M-03 · 검사 단위 연번 · 저장된 번호는 삭제해도 재사용 안 함 (검사 메타 nextMarkingNo)
   "rect": { "x1": 1200, "y1": 340, "x2": 1260, "y2": 395 },  // mm · 모재 전체 기준 · 정수 · 추가 시점에 확정
   "channel": "CH 02",
+  "probeId": "PRB-0007",          // §3-0 · 표시는 검사 메타 probeMap의 기록 당시 표시명
   "depthMm": 18.4,                 // 마킹 채널의 선택 게이트 피크 중 영역 안 최대값 · 동률이면 더 얕은 지점 · 피크 없으면 추가 불가
   "echoPct": 86.0,                 // %FSH · 같은 지점
   "frozen": {                      // 추가 시점 그 채널의 설정값 (미저장 상태였어도 그 값)
