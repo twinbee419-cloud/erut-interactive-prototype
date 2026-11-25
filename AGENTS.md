@@ -103,7 +103,7 @@ Codex 작업 지침. **ERUT** (Eroun Realtime Ultrasonic Testing) — 자석 부
 - **`01_materials/` 내용 외부 반출** — NDA. 인용만.
 
 ## 용어 (틀리기 쉬움)
-- probe = **탐촉자**('프로브' 금지 · 영문 코드·파일명 예외) · MC보드 → **DAQ 장비**('DAQ' 단독 표기 금지) · 노트북·`Client` → **Sight** · 서버/브로커 → **Cloud**(모니터링 웹 서비스) · 나침반 → **Roll Pitch Yaw**.
+- probe = **탐촉자**('프로브' 금지 · 영문 코드·파일명 예외) · MC보드 → **데이터 수집 장비**('DAQ' 단독 표기 금지) · 노트북·`Client` → **Sight** · 서버/브로커 → **Cloud**(모니터링 웹 서비스) · 나침반 → **Roll Pitch Yaw**.
 - **`Client` → `Sight` 전역 치환됨**(2026-10-29). **예외 2건 = 화면ID `C-` 접두 · MQTT 프로토콜 필드명 `Client ID`.** 문서에 `Client`가 남아 있으면 이 2건이 아닌 한 **미치환 누락**으로 보고할 것.
 - 화면ID = **`C-` 접두** + PRJ/SET/RPT/NTF/LOG/HLP. 프로그램명이 Sight로 바뀌어도 **접두 문자는 `C-` 유지**(문서명·cross-reference 영향 회피). `[공통] 메뉴바/상태바`만 예외.
 - 화면설계서 문장은 **명사 종결**(`~함`·`~임`·`~됨`) · `vN.N` 버전 표기 금지 · 폐기 기획 history 적지 않음.
