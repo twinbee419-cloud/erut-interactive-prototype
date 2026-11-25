@@ -10,7 +10,7 @@ ERUT 개발팀에 전달할 기능 사양서·API 명세·도메인 지식 문�
 | `Probe_Registration_Spec_v1.0.md` | 1.0 | 2026-06-12 | 탐촉자 등록 항목(수동 입력·재질·주파수·진동자) + PRF·감도 보정(TCG/DGS) — 교정 화면에 적용 |
 | `Notification_System_Spec_v1.0.md` | 1.0 | 2026-06-12 | 통합 알림 시스템 — 메뉴바 종 + 드롭다운, 심각도 3단계, 교정/측정/통신/부착 일원화 |
 | `Store_And_Forward_Spec_v1.0.md` | 1.0 | 2026-06-24 | 서버 송신 버퍼링 — 끊김 시 로컬 보관 → 재연결 자동 재송신. 상태바 MQTT 표시 + 알림. **프로토타입 미시연 — 백엔드 구현 필요** |
-| `DAQ_Auto_Info_Spec_v1.0.md` | 1.0 | 2026-07-02 | DAQ 연결 시 자동 획득 정보(SN·펌웨어·채널수·HW rev·샘플링·MAC·Config). 제조일은 조건부(펌웨어 제공 시, 없으면 —) |
+| `DAQ_Auto_Info_Spec_v1.0.md` | 1.0 | 2026-07-02 | 데이터 수집 장비 연결 시 자동 획득 정보(SN·펌웨어·채널수·HW rev·샘플링·MAC·Config). 제조일은 조건부(펌웨어 제공 시, 없으면 —) |
 | `Result_Analysis_Storage_Spec_v1.0.md` | 1.0 | 2026-09-23 | \[C-PRJ-06\] 결과 분석 저장 구조 — raw 1벌 불변 + 교정 설정값 2세트(origin/current) · 수정본 저장 시 raw 복사 금지 · §2-1 raw 진폭 기준(저장·복원 수식 · 포화 비가역) |
 | `Error_Code_Spec_v1.0.md` | **2.0** | 2026-06-09 → 06-11 | 에러 코드 체계 — 측정 에러 / 통신 로그. `Store_And_Forward`(E703 QoS · E604 큐 적체)와 연동 |
 | `PC_Info_Spec_v1.0.md` | 1.0 | 2026-06-11 | PC 정보 등록 및 UUID 식별 |
