@@ -59,7 +59,7 @@ dB 가감은 선형 연산이고 적용값이 `origin`에 남아 있으므로 **
       "channelId": "CH 02",
       "probeId": "PRB-0007",       // §3-0 · 같은 CH를 다른 홀더 탐촉자가 공유하므로 탐촉자 식별은 probeId
       "holderId": "H-01",
-      "gain": { "digitalDb": 12.0, "analogDb": 20.0 },
+      "gain": { "digitalDb": 12.0, "analogDb": 20.0, "type": "reference" },   // type = 게인 종류 · reference = 기준 게인 · scan = 검색 게인([C-RPT-02] 동결 항목)
       "selectedGate": "A",         // 채널 1 : 게이트 1
       "gate": { "startUs": 12.3, "widthUs": 5.0, "thresholdPct": 26, "mode": "Amp" },
       "tcgPoints": [ { "tofUs": 20, "gainDb": 5 } ]
@@ -68,7 +68,7 @@ dB 가감은 선형 연산이고 적용값이 `origin`에 남아 있으므로 **
       "channelId": "CH 03",
       "probeId": "PRB-0008",
       "holderId": "H-01",
-      "gain": { "digitalDb": 14.0, "analogDb": 20.0 },
+      "gain": { "digitalDb": 14.0, "analogDb": 20.0, "type": "scan" },
       "selectedGate": "A",
       "gate": { "startUs": 12.3, "widthUs": 5.0, "thresholdPct": 26, "mode": "Amp" },
       "dgs": {
@@ -200,7 +200,7 @@ dB 가감은 선형 연산이고 적용값이 `origin`에 남아 있으므로 **
 
 ## 6. 다른 사양과의 경계
 
-**`[C-RPT-02]` 캡처 동결값은 별개 스냅샷**이다. 마킹 목록(§3-1)과도 서로 참조하지 않는다 — 캡처 이미지에 마킹 오버레이를 넣지 않는다. 캡처 레코드에 **참조가 아니라 값으로 복사**해 저장한다 — `current`가 이후 변경되어도 캡처는 불변이어야 한다. 상세는 `Report_Export_Spec` 참조. 표기 정본 = Notion `[공통] 탐촉자 표기 규칙` §6.
+**`[C-RPT-02]` 캡처 동결값은 별개 스냅샷**이다. 마킹 목록(§3-1)과도 서로 참조하지 않는다 — 캡처 이미지에 마킹 오버레이를 넣지 않는다. 캡처 레코드에 **참조가 아니라 값으로 복사**해 저장한다 — `current`가 이후 변경되어도 캡처는 불변이어야 한다. 화면 정본 = Notion `[C-RPT-02]` 검사 결과 보고서(`Report_Export_Spec`은 고정형 A-scan 채널 보고서 사양이라 이 캡처와 무관). 표기 정본 = Notion `[공통] 탐촉자 표기 규칙` §6.
 
 **캡처 단위** = 캡처 순간 그 창에 표시된 **(채널, 게이트) 조합 전부**(겹쳐 그리기 포함 · `[C-PRJ-03]` · `[C-PRJ-06]` 공통). 채널 단위 값은 채널마다 1세트, 게이트 값은 (채널, 게이트)마다 1세트를 동결한다.
 
@@ -218,7 +218,7 @@ dB 가감은 선형 연산이고 적용값이 `origin`에 남아 있으므로 **
       "probeName": "상단-1",        // 기록 당시 탐촉자 표시명
       "holderName": "Holder-01",   // 기록 당시 홀더명 · 고정형 = null
       "calibrationSessionId": "CAL-0041",
-      "gain": { "digitalDb": 42.0, "analogDb": 20.0, "type": "..." },   // type = 게인 종류 · [C-RPT-02] 동결 항목 그대로
+      "gain": { "digitalDb": 42.0, "analogDb": 20.0, "type": "scan" },   // type = 게인 종류(reference = 기준 게인 · scan = 검색 게인) · §3 current 값 복사
       "tcgPoints": [ { "tofUs": 20, "gainDb": 5 } ],                    // §3과 같음 · tcgPoints / dgs 중 하나만
       "velocityMps": 3230,
       "probeDelayUs": 1.25,
@@ -234,7 +234,7 @@ dB 가감은 선형 연산이고 적용값이 `origin`에 남아 있으므로 **
       "probeName": "상단-2",
       "holderName": "Holder-01",
       "calibrationSessionId": "CAL-0042",
-      "gain": { "digitalDb": 44.0, "analogDb": 20.0, "type": "..." },
+      "gain": { "digitalDb": 44.0, "analogDb": 20.0, "type": "scan" },
       "dgs": { /* §3 dgs 구조 그대로 */ },
       "velocityMps": 3230,
       "probeDelayUs": 1.30,
