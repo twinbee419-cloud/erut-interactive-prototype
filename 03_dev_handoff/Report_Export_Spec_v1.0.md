@@ -163,11 +163,11 @@ public byte[] GenerateReport(Guid projectId, string reportNo, string issuer,
 }
 
 // 다운로드 — 보관본을 그대로 복사 · 2건 이상이면 ZIP 1개
-// 건별 오류 = 원본 없음 · 읽기 실패한 건은 건너뛰고 실패 건수에 셈 · 성공분만 저장
+// 1건 = 원본 없음이면 '원본 파일을 찾을 수 없습니다.'
+// 여러 건 = 원본 없음 · 읽기 실패한 건은 건너뛰고 실패 건수 토스트 하나로 안내('원본 파일을 찾을 수 없습니다.'는 띄우지 않음) · 성공분만 저장
 public void Download(List<ReportRecord> reports, string targetPath)
 {
-    int failed = 0;                                         // 실패 건수(원본 없음 포함)
-    int missing = 0;                                        // 그중 원본 없음 건수
+    int failed = 0;                                         // 실패 건수(원본 없음 · 읽기 실패 합산)
 
     if (reports.Count == 1)
     {
@@ -183,16 +183,14 @@ public void Download(List<ReportRecord> reports, string targetPath)
     var readable = new List<(ReportRecord r, byte[] bytes)>();
     foreach (var r in reports)
     {
-        if (!File.Exists(r.StoredPdfPath)) { failed++; missing++; continue; }
+        if (!File.Exists(r.StoredPdfPath)) { failed++; continue; }   // 원본 없음 = 건너뜀
         try { readable.Add((r, File.ReadAllBytes(r.StoredPdfPath))); }
         catch (IOException) { failed++; }                   // 읽기 실패 = 건너뜀
     }
 
     if (readable.Count == 0)
     {
-        ShowToast(missing == reports.Count                  // 전 건 원본 없음 / 그 외 = 저장 실패
-            ? "원본 파일을 찾을 수 없습니다."
-            : "파일을 저장하지 못했습니다. 다시 시도해 주세요.");
+        ShowToast($"{failed}건을 저장하지 못했습니다.");      // 성공 0건 = 실패 건수 토스트만
         return;                                             // ZIP 생성 안 함
     }
 
@@ -211,8 +209,7 @@ public void Download(List<ReportRecord> reports, string targetPath)
     catch (IOException) { ShowToast("파일을 저장하지 못했습니다. 다시 시도해 주세요."); return; }  // ZIP 쓰기 실패 = 전체 실패
 
     ShowToast($"총 {readable.Count}개의 파일을 성공적으로 다운로드했습니다.");   // N = ZIP 안의 PDF 수
-    if (missing > 0) ShowToast("원본 파일을 찾을 수 없습니다.");
-    if (failed > 0) ShowToast($"{failed}건을 저장하지 못했습니다.");            // 원본 없음 건 포함
+    if (failed > 0) ShowToast($"{failed}건을 저장하지 못했습니다.");            // 원본 없음 건 포함 · 토스트 최대 2개
 }
 ```
 
