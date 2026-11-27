@@ -174,7 +174,7 @@ public void Download(List<ReportRecord> reports, string targetPath)
         var r = reports[0];
         if (!File.Exists(r.StoredPdfPath)) { ShowToast("원본 파일을 찾을 수 없습니다."); return; }
         try { File.Copy(r.StoredPdfPath, targetPath); }
-        catch (IOException) { ShowToast("파일을 저장하지 못했습니다. 다시 시도해 주세요."); return; }
+        catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) { ShowToast("파일을 저장하지 못했습니다. 다시 시도해 주세요."); return; }
         ShowToast("총 1개의 파일을 성공적으로 다운로드했습니다.");
         return;
     }
@@ -185,7 +185,7 @@ public void Download(List<ReportRecord> reports, string targetPath)
     {
         if (!File.Exists(r.StoredPdfPath)) { failed++; continue; }   // 원본 없음 = 건너뜀
         try { readable.Add((r, File.ReadAllBytes(r.StoredPdfPath))); }
-        catch (IOException) { failed++; }                   // 읽기 실패 = 건너뜀
+        catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) { failed++; }  // 읽기 실패(권한 오류 포함) = 건너뜀
     }
 
     if (readable.Count == 0)
@@ -206,7 +206,7 @@ public void Download(List<ReportRecord> reports, string targetPath)
             es.Write(bytes, 0, bytes.Length);
         }
     }
-    catch (IOException) { ShowToast("파일을 저장하지 못했습니다. 다시 시도해 주세요."); return; }  // ZIP 쓰기 실패 = 전체 실패
+    catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) { ShowToast("파일을 저장하지 못했습니다. 다시 시도해 주세요."); return; }  // ZIP 쓰기 실패 = 전체 실패
 
     ShowToast($"총 {readable.Count}개의 파일을 성공적으로 다운로드했습니다.");   // N = ZIP 안의 PDF 수
     if (failed > 0) ShowToast($"{failed}건을 저장하지 못했습니다.");            // 원본 없음 건 포함 · 토스트 최대 2개
