@@ -1,5 +1,8 @@
 # 채널 측정 보고서 출력 — 개발 사양서
 
+> **⚠ 안내 — 이 사양은 일부만 현행 기준이다.** 현행 기준으로 맞춘 절 = §3-2 · §3-3 · §3-6 · 테스트 T2 · T4 · T5 · T5-1(발행 단위 · 파일명 · ZIP · 다운로드). **그 밖의 절**(§1 · 사용자 시나리오 · §2-6 서명란 · §4 진입 경로 · §6 오류 문구 · 나머지 테스트)**은 구 기준이다.** 화면 동작 정본은 Notion `[C-RPT-01] 파형 분석 보고서`이고, 충돌하면 Notion이 우선한다. 전면 현행화는 별도 작업으로 한다.
+> - 현행 기준으로 맞춘 절 = §3-2 발행 · 다운로드 단위 · §3-3 의사코드 · §3-6 파일명 규칙 · §7 T2 · T4 · T5 · T5-1
+
 ## 문서 정보
 
 | 항목 | 내용 |
@@ -131,64 +134,85 @@ __________                  __________
 
 **결정**: PdfSharp + MigraDoc (PdfSharp의 layout helper). 한글 폰트는 NanumSquare를 PDF에 임베드 (라이선스 ✓).
 
-### 3-2. 출력 방식 — 채널 수에 따라 분기 (v1.1)
+### 3-2. 발행 · 다운로드 단위
 
-**원칙 — 채널 1개 = PDF 파일 1개**. 다중 채널은 개별 PDF + ZIP 압축으로 저장 (단일 PDF 묶음 방식 폐기).
+**원칙 — 보고서 1건 = PDF 파일 1개**. 발행 시 선택한 탐촉자 N개를 탐촉자마다 페이지로 구성해 여러 페이지짜리 PDF 1개로 만든다(이력 1행 · 정본 = 화면설계서 `[C-RPT-01]` '발행 단위').
 
-| 선택 채널 수 | 출력 형식 | 비고 |
+| 다운로드 선택 건수 | 저장 형식 | 비고 |
 |---|---|---|
-| **1 채널** | 단일 PDF 파일 | 그대로 저장 다이얼로그 |
-| **2 채널 이상** | **개별 PDF N개 → ZIP 압축 1개** | 채널별 분리 보관·공유·일부 재출력 용이. NDT 채널 단위 추적성 ↑ |
+| **1건** | 보고서 PDF 1개 | 발행 때 만든 보관본을 그대로 복사 |
+| **2건 이상** | **보고서 PDF N개 → ZIP 1개** | 보고서별 보관본을 묶기만 함(재생성 없음) |
 
 **ZIP 라이브러리**: `System.IO.Compression.ZipArchive` (.NET 표준, 추가 의존성 없음).
 
-### 3-3. 페이지 생성 의사코드 (v1.1 — 채널별 분리 + ZIP 압축)
+### 3-3. 발행 · 다운로드 의사코드
 
 ```csharp
-public byte[] GenerateChannelReport(
-    Guid projectId, Guid itemId, List<string> channelIds,
-    bool includeSign)
-{
-    // 단일 채널 — PDF 1개 그대로 반환
-    if (channelIds.Count == 1)
-    {
-        return GenerateSinglePdf(projectId, itemId, channelIds[0], includeSign);
-    }
-
-    // 다중 채널 — 채널별 PDF 생성 후 ZIP 묶음
-    using var zipStream = new MemoryStream();
-    using (var zip = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true))
-    {
-        foreach (var chId in channelIds)
-        {
-            var pdfBytes = GenerateSinglePdf(projectId, itemId, chId, includeSign);
-            var fileName = BuildSinglePdfFileName(projectId, itemId, chId);
-            var entry = zip.CreateEntry(fileName, CompressionLevel.Optimal);
-            using var entryStream = entry.Open();
-            entryStream.Write(pdfBytes, 0, pdfBytes.Length);
-        }
-    }
-    return zipStream.ToArray();
-}
-
-private byte[] GenerateSinglePdf(Guid projectId, Guid itemId, string chId, bool includeSign)
+// 발행 — 보고서 1건 = 선택 탐촉자 N개 → 여러 페이지 PDF 1개
+public byte[] GenerateReport(Guid projectId, string reportNo, string issuer,
+                             List<string> probeChannelIds)   // 출력 목록 순서
 {
     var doc = new PdfDocument();
-    var page = doc.AddPage();
-    page.Size = PdfSharp.PageSize.A4;
-    page.Orientation = PdfSharp.PageOrientation.Portrait;
-
-    var gfx = XGraphics.FromPdfPage(page);
-    DrawHeader(gfx, projectId, itemId, chId);
-    DrawSection1_Standard(gfx, itemId, chId);
-    DrawSection2_Probe(gfx, chId);
-    DrawSection3_Calibration(gfx, chId);
-    DrawSection4_Ascan(gfx, chId);  // ★ AScanRaw 디시리얼라이즈 후 path 그리기
-    if (includeSign) DrawFooter_Sign(gfx);
-
+    DrawHeaderBlock(doc, reportNo, issuer);                 // 문서 번호 · 발행자 · 작성일자 · 검사 대상 · 장비
+    foreach (var chId in probeChannelIds)                   // 탐촉자 1개 = 페이지 구성 1회
+        AddProbeSection(doc, projectId, chId);              // 탐촉자 스펙 · A-Scan 그래프 · 교정
+    DrawPageNumbers(doc);                                   // {현재}/{전체}
     using var ms = new MemoryStream();
     doc.Save(ms);
-    return ms.ToArray();
+    return ms.ToArray();                                    // 보고서 저장 경로에 보관본 저장 + 이력 1행
+}
+
+// 다운로드 — 보관본을 그대로 복사 · 2건 이상이면 ZIP 1개
+// 건별 오류 = 원본 없음 · 읽기 실패한 건은 건너뛰고 실패 건수에 셈 · 성공분만 저장
+public void Download(List<ReportRecord> reports, string targetPath)
+{
+    int failed = 0;                                         // 실패 건수(원본 없음 포함)
+    int missing = 0;                                        // 그중 원본 없음 건수
+
+    if (reports.Count == 1)
+    {
+        var r = reports[0];
+        if (!File.Exists(r.StoredPdfPath)) { ShowToast("원본 파일을 찾을 수 없습니다."); return; }
+        try { File.Copy(r.StoredPdfPath, targetPath); }
+        catch (IOException) { ShowToast("파일을 저장하지 못했습니다. 다시 시도해 주세요."); return; }
+        ShowToast("총 1개의 파일을 성공적으로 다운로드했습니다.");
+        return;
+    }
+
+    // 먼저 읽을 수 있는 건만 추림 — 성공 0건이면 ZIP을 만들지 않음
+    var readable = new List<(ReportRecord r, byte[] bytes)>();
+    foreach (var r in reports)
+    {
+        if (!File.Exists(r.StoredPdfPath)) { failed++; missing++; continue; }
+        try { readable.Add((r, File.ReadAllBytes(r.StoredPdfPath))); }
+        catch (IOException) { failed++; }                   // 읽기 실패 = 건너뜀
+    }
+
+    if (readable.Count == 0)
+    {
+        ShowToast(missing == reports.Count                  // 전 건 원본 없음 / 그 외 = 저장 실패
+            ? "원본 파일을 찾을 수 없습니다."
+            : "파일을 저장하지 못했습니다. 다시 시도해 주세요.");
+        return;                                             // ZIP 생성 안 함
+    }
+
+    try
+    {
+        using var zip = ZipFile.Open(targetPath, ZipArchiveMode.Create);
+        var used = new HashSet<string>();
+        foreach (var (r, bytes) in readable)
+        {
+            // 이미 발행된 건 = 보관본 파일명 그대로(StoredPdfPath) · 새 규칙 이름은 신규 발행 때만 생성(BuildPdfFileName은 발행 시점에 호출)
+            var name = UniqueName(Path.GetFileName(r.StoredPdfPath), used);  // 같은 이름이면 " (2)" · " (3)" …
+            using var es = zip.CreateEntry(name, CompressionLevel.Optimal).Open();
+            es.Write(bytes, 0, bytes.Length);
+        }
+    }
+    catch (IOException) { ShowToast("파일을 저장하지 못했습니다. 다시 시도해 주세요."); return; }  // ZIP 쓰기 실패 = 전체 실패
+
+    ShowToast($"총 {readable.Count}개의 파일을 성공적으로 다운로드했습니다.");   // N = ZIP 안의 PDF 수
+    if (missing > 0) ShowToast("원본 파일을 찾을 수 없습니다.");
+    if (failed > 0) ShowToast($"{failed}건을 저장하지 못했습니다.");            // 원본 없음 건 포함
 }
 ```
 
@@ -219,39 +243,25 @@ void DrawSection4_Ascan(XGraphics gfx, string chId)
 - NanumSquare R/B/acR/acB 4종 (`design-system/project/fonts/`)
 - PdfSharp `XFont`에 임베드: `XFont.Subset` 모드로 크기 ↓
 
-### 3-6. 파일명 규칙 (v1.1 — ZIP 압축 반영)
+### 3-6. 파일명 규칙
 
-**단일 채널 (PDF 1개)**:
+**보고서 PDF (1건)**:
 ```
-{프로젝트코드}_{검사대상명}_{채널ID}_{YYYY-MM-DD}.pdf
+{보고서 번호}_{첫 모재명}[ 외 N]_{YYYYMMDD}.pdf      — 모재 1개면 " 외 N" 생략 · YYYYMMDD = 발행 일자
 
-예시: SK-ULSN_PIPE-A-204_CH07_2026-06-11.pdf
-```
-
-**다중 채널 (ZIP 1개 + 내부 PDF N개)**:
-```
-ZIP 파일명: {프로젝트코드}_{MC보드ID}_보고서_{N}ch_{YYYY-MM-DD}.zip
-ZIP 내부 각 PDF: {검사대상명}_{채널ID}.pdf
-
-예시:
-ZIP — SK-ULSN_MCuF-001_보고서_8ch_2026-06-11.zip
-  ├── PIPE-A-204_CH07.pdf
-  ├── PIPE-A-204_CH08.pdf
-  ├── PIPE-A-204_CH09.pdf
-  ├── TANK-B-101_CH25.pdf
-  ├── TANK-B-101_CH26.pdf
-  ├── VESSEL-C-301_CH49.pdf
-  ├── VESSEL-C-301_CH50.pdf
-  └── VESSEL-C-301_CH51.pdf
+예시: RPT-P-PROBE-20261125-0005_곡판-1 외 1_20261125.pdf
 ```
 
-**ZIP 사용 근거 (NDT 워크플로우 정합)**:
-- 채널별 분리 보관 → 일부 채널만 재출력 / 공유 / 보관 용이
-- 검사 대상별 폴더 구조와 자연스럽게 매핑
-- 단일 PDF 묶음 방식보다 채널 단위 추적성 ↑
-- 검사 이력 관리 시 채널별 파일 인덱싱 가능
+**다운로드 2건 이상 (ZIP 1개 + 내부 보고서 PDF N개)**:
+```
+ZIP 파일명: 파형 분석 보고서_{YYYYMMDD}_{HHMMSS}.zip  — 일시 = 다운로드 시각
+ZIP 내부 각 PDF: 위 보고서 PDF 이름 · 같은 이름이 둘 이상이면 둘째부터 " (2)" · " (3)" …
+```
 
-저장 다이얼로그 기본 확장자는 채널 수에 따라 자동 변경 (`*.pdf` / `*.zip`).
+- 이미 발행된 PDF의 이름은 바꾸지 않음(구 규칙 이름과 공존)
+- 첫 모재 = 이름 오름차순 첫 항목 · 파일명에 쓸 수 없는 문자(`\ / : * ? " < > |`) = `_`로 바꿈
+- 저장 대화상자 기본 확장자는 선택 건수에 따라 자동 변경 (`*.pdf` / `*.zip`) · 초기 경로 = `[C-SET-01]` 프로그램 설정 '보고서 저장 경로'
+- 검사 결과 보고서(PDF `{보고서 번호}_{모재명}_{YYYYMMDD}.pdf` · ZIP `검사 결과 보고서_{YYYYMMDD}_{HHMMSS}.zip`) = 화면설계서 `[C-RPT-02]` · `[C-RPT-03]` 정본(이 사양 범위 밖)
 
 ---
 
@@ -349,16 +359,16 @@ ALTER TABLE TB_INSPECTION_ITEM ADD COLUMN ApplicableStandard TEXT;
 | # | 입력 | 예상 결과 |
 |---|---|---|
 | T1 | [2] CH07 선택 → "보고서 출력" 클릭 | 모달 표시, CH07 선택됨 + 미리보기 |
-| T2 | "PDF 출력 (1 장)" 클릭 | 1페이지 A4 PDF 생성. 파일명 `{...}_CH07_{date}.pdf` |
+| T2 | 탐촉자 1개 선택 → [다음] → 발행자 입력 → [저장] | 보고서 1건 · PDF 1개(탐촉자 1개분 페이지) · 이력 1행. 파일명 `RPT-P-PROBE-{YYYYMMDD}-{연번 4자리}_{모재명}_{YYYYMMDD}.pdf` |
 | T3 | 모달 옵션 "서명란 포함" 해제 후 출력 | 푸터 없는 PDF |
 
-### 다중 채널 출력 (v1.1 — ZIP 압축)
+### 발행 · 다운로드
 
 | # | 입력 | 예상 결과 |
 |---|---|---|
-| T4 | CH07 → 모달에서 CH08·CH11 추가 선택 → 출력 | **ZIP 파일 1개** (`{...}_MCuF-001_보고서_3ch_{date}.zip`). 내부 3개 PDF 각각 1페이지 |
-| T5 | "전체 선택" 클릭 → 64채널 선택 → 출력 | **ZIP 파일 1개** (`{...}_MCuF-001_보고서_64ch_{date}.zip`). 내부 64개 PDF, 검사 대상별 PDF 명명 |
-| T5-1 | 다중 채널 출력 후 ZIP 압축 해제 | 채널별 개별 PDF 파일 N개 확인. 각 PDF는 단일 채널 형식 (1페이지) |
+| T4 | 데이터 수집 장비 2대에 걸쳐 탐촉자 3개 선택 → 발행 | 보고서 1건 · **여러 페이지 PDF 1개**(탐촉자 3개분) · 이력 1행 · 모재 2개면 파일명 `…_{첫 모재명} 외 1_…` |
+| T5 | 이력에서 보고서 3건 체크 → [다운로드] → 저장 위치 지정 | **ZIP 파일 1개** (`파형 분석 보고서_{YYYYMMDD}_{HHMMSS}.zip`) · 내부 보고서 PDF 3개 · 토스트 `총 3개의 파일을 성공적으로 다운로드했습니다.` |
+| T5-1 | 같은 이름 PDF가 둘인 보고서 2건을 다운로드 | ZIP 안 둘째 파일 이름 뒤 ` (2)` · 구 규칙 이름으로 발행된 보고서는 원래 이름 그대로 |
 
 ### 진입 경로
 
